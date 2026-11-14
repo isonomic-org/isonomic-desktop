@@ -2,13 +2,15 @@
 
 Newest first.
 
-## 2026-11-14 · Milestone 0 in progress; gate not attempted
+## 2026-11-14 (later) · Engine half of the gate passes on Linux
 
 | Gate item | Status |
 | --- | --- |
-| 1. Window shows the rail and a healthy database | Not started (no window, no broker) |
-| 2. Force-kill recovers and the window shows it | Engine half proven against a real PostgreSQL on Linux: restart on its own in 6.0 s. Window half not started |
-| 3. Quit stops everything in order, nothing left behind | Engine half proven on Linux. Window half not started |
-| 4. Report prints cold-start time and bundle size | Not started. Cold start measured by hand: 5.0 s, all of it probe cadence |
+| 1. Window shows the rail and a healthy database | Engine side ready: `system.subscribe` reports the database healthy. No window yet |
+| 2. Force-kill recovers and the window shows it | Engine side proven with the real binary and a real PostgreSQL: `starting` event at once, `healthy` with one restart 6.0 s later. No window yet |
+| 3. Quit stops everything in order, nothing left behind | Engine side proven: `system.shutdown` is acknowledged, exit code 0, no process left, socket removed. No window yet |
+| 4. Report prints cold-start time and bundle size | The engine logs and reports cold start (5.0 s, all of it probe cadence). No report command, no bundle yet |
 
-Open question raised by the numbers: the probe cadence while starting (see `engine-supervisor/status.md`).
+Not yet run anywhere on macOS. The gate itself is on Omar's Intel Mac and needs the window, the bundled PostgreSQL and the report command.
+
+## 2026-11-14 · Milestone 0 in progress; gate not attempted
