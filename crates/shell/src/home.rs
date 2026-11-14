@@ -39,7 +39,8 @@ fn state_label(status: &ServiceStatus) -> &'static str {
     }
 }
 
-fn headline(live: &Live) -> &'static str {
+/// One line for the whole engine, shared with the menu bar.
+pub fn headline(live: &Live) -> &'static str {
     match live.system.as_ref().map(|system| system.aggregate) {
         None => "Connecting to the engine",
         Some(ServiceState::Healthy) => "All services healthy",

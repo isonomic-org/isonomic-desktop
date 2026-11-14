@@ -30,4 +30,15 @@ pub mod tokens {
     pub fn status_dot() -> Pixels {
         px(8.)
     }
+
+    /// Colors of the menu bar status light, as RGBA bytes. The menu bar icon
+    /// is drawn outside GPUI, so it cannot read the theme.
+    pub mod light {
+        pub const HEALTHY: [u8; 4] = [52, 199, 89, 255];
+        pub const STARTING: [u8; 4] = [255, 179, 0, 255];
+        pub const DEGRADED: [u8; 4] = [255, 69, 58, 255];
+        pub const STOPPED: [u8; 4] = [142, 142, 147, 255];
+        /// Side of the square icon, in pixels.
+        pub const ICON_SIZE: u32 = 36;
+    }
 }

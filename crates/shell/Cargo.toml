@@ -1,6 +1,6 @@
 [package]
 name = "shell"
-description = "The window: left rail, tab host and the Home tab"
+description = "The window: left rail, tab host, Home tab, menu bar icon and lifecycle"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -10,6 +10,11 @@ isonomic-client.workspace = true
 isonomic-proto.workspace = true
 tokio.workspace = true
 ui.workspace = true
+futures.workspace = true
+
+# GPUI has no API for a menu bar status item; this crate owns one on macOS.
+[target.'cfg(target_os = "macos")'.dependencies]
+tray-icon.workspace = true
 
 [dev-dependencies]
 ui = { workspace = true, features = ["test-support"] }
