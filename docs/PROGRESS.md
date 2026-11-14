@@ -2,65 +2,72 @@
 
 Newest first. Updated at every issue boundary so a new session can resume from this repo alone. Detail lives in the status files under `docs/architecture/`.
 
-## 2026-11-14 (third entry) · Engine, SDK and window skeleton all exist; two repos still missing
-
-**Done**
-
-| Repo | Built | Tests | On GitHub |
-| --- | --- | --- | --- |
-| `isonomic-capsule` | `capsule-core`, `registry`, `supervisor`, `broker`, `packaging`, `xtask fetch-sidecars`, the engine binary | 74, 12 green runs in a row | No: the repo does not exist |
-| `isonomic-sdk` | `proto`, `client`, `testkit` | 14, 12 green runs in a row | No: the repo does not exist |
-| `isonomic-desktop` | `ui`, `engine-link`, `shell`, the window binary | 7, 6 green runs in a row | Yes: pull request #2 |
-
-All three pass `cargo fmt` and `cargo clippy -D warnings` on Linux x86_64 with Rust 1.97.
-
-**Proven end to end on Linux**
-
-- The engine fetched its own pinned PostgreSQL 18.4, verified it, and ran it: first-time setup, healthy, force-kill and automatic restart, ordered stop with nothing left behind.
-- Both Apple builds of PostgreSQL were downloaded and matched their pins and their architectures.
-- The real shell, in a headless window, shows the rail and follows the database through healthy, restarting and healthy again.
-
-**Not proven**
-
-- Anything on macOS. Nothing has been compiled or run on a Mac.
-- The window and the engine running together.
+## 2026-11-14 (fourth entry) · All three repos on GitHub; first runs on the Intel Mac
 
 **Where the code is**
 
-- The window is in pull request #2. It cannot build from GitHub until `isonomic-sdk` exists, because it uses a sibling checkout of the SDK.
-- The engine and SDK are in the build sandbox and in the archive handed to Omar (`isonomic-workspaces.tar.gz`, all three workspaces).
+| Repo | Pull requests | CI |
+| --- | --- | --- |
+| `isonomic-sdk` | #1 proto, #2 client and testkit (stacked on #1) | Green on Linux and macOS |
+| `isonomic-capsule` | #1 engine core, #2 broker, packaging and engine program (stacked on #1) | Stops at the SDK checkout: needs the deploy key |
+| `isonomic-desktop` | #1 docs (this file), #2 window skeleton | Stops at the SDK checkout: needs the deploy key |
+
+Pushed from Omar's Mac with the `gh` login for @QadmiriOmar, as Omar Qadmiri <omar@isonomic.com>. Working copies are in `~/Code/isonomic/repos`.
+
+**Proven on the 2020 Intel MacBook Pro (macOS 15.7, Rust 1.98)**
+
+- Engine: 74 tests pass. Both Apple builds of PostgreSQL 18.4 fetched and verified. The engine ran end to end twice: first-time setup, healthy, force-kill and restart in 6.1 s, clean shutdown, nothing left running. Cold start 5.0 s (probe cadence).
+- SDK: 14 tests pass.
+- Window: 7 tests pass, including the two headless window tests. The window binary builds with only the Command Line Tools (first build about 40 minutes), launches, starts the engine itself, and the engine runs PostgreSQL. Window process memory: 38 MB.
+
+**Found on the Mac and fixed**
+
+- macOS holds the first run of a brand-new script for 9 to 15 s on this machine. A ported test with a fixed 300 ms wait failed there; it now waits for the log line.
+- The log pump stopped silently on a read error; it now writes the error to the log.
+
+**Not proven**
+
+- That the window draws correctly on screen: no person has looked at it yet.
+
+**Deviations**
+
+- No org-level shared workflow: each repo has its own `ci.yml`. The SDK is a sibling checkout pinned by the commit in `SDK_REF`, not a git dependency, so local builds and CI use the same layout. CI pins Rust 1.97.
+- `gh` on the Mac is version 1.14 (2021) and holds one account, so it is now signed in as @QadmiriOmar only.
 
 **Blocked on Omar**
 
-1. Create `isonomic-capsule` and `isonomic-sdk` and add CI: the GitHub connector is refused both (403). The bootstrap script does all of it.
-2. Approve or change the message shapes (`docs/architecture/sdk/status.md`).
-3. Decide the probe cadence (`docs/architecture/engine-supervisor/status.md`).
+1. Approve adding a read-only deploy key to `isonomic-sdk`, stored as the secret `SDK_DEPLOY_KEY` in `isonomic-capsule` and `isonomic-desktop`. Without it their CI cannot check out the private SDK.
+2. Look at the window and say whether it shows the rail and a healthy database.
+3. Probe cadence and message shapes, as before.
 
 **Next, in order**
 
-1. Once the repos exist: push the engine and SDK as pull requests, switch the sibling checkouts to pinned git dependencies, get CI green on Linux and macOS.
-2. First real run on the Intel test machine, before any UI investment.
-3. Menu bar icon spike, hide on close, Quit that stops the engine.
-4. `cargo xtask report` and the universal unsigned app.
+1. Deploy key, then CI green in all three repos.
+2. Menu bar icon spike, hide on close, Quit that stops the engine.
+3. `cargo xtask report`, then the universal unsigned app.
 
-**Leftover to tidy**
+## 2026-11-14 (third entry) · Engine, SDK and window skeleton all exist; two repos still missing
 
-- The empty branch `chore/ci-file-size` can be deleted. It was for a file-size check that could not be pushed because it is a workflow file.
+| Repo | Built | Tests |
+| --- | --- | --- |
+| `isonomic-capsule` | `capsule-core`, `registry`, `supervisor`, `broker`, `packaging`, `xtask fetch-sidecars`, the engine binary | 74 |
+| `isonomic-sdk` | `proto`, `client`, `testkit` | 14 |
+| `isonomic-desktop` | `ui`, `engine-link`, `shell`, the window binary | 7 |
+
+All three passed fmt, clippy and their tests on Linux x86_64 with Rust 1.97. The engine fetched its own pinned PostgreSQL and ran it end to end on Linux; the shell was tested in a headless window.
 
 ## 2026-11-14 · Milestone 0, Step 0 (push, build, see)
 
-| Check | Result | Evidence |
-| --- | --- | --- |
-| Repos exist | **Failed** | `isonomic-capsule`, `isonomic-sdk` and the org-level `.github` repo return 404. |
-| Push | Works in this repo for ordinary files | Creating a repo and writing under `.github/workflows/` are refused. |
-| Engine builds off-Mac | Confirmed | See the entry above. |
-| Window builds off-Mac | Confirmed on Linux | GPUI Kit 0.9.1 compiles there. macOS itself is unverified. |
-| Window builds on macOS CI | **Not possible yet** | There is no workflow. |
-| File size | Rule adopted | Every source and doc file stays under 20 KB. |
-| CI files | **Cannot be written** | They have to be added by Omar or by the bootstrap script. |
+| Check | Result |
+| --- | --- |
+| Repos exist | Failed at first: `isonomic-capsule` and `isonomic-sdk` did not exist. Created later from the Mac |
+| Push | The GitHub connector can push ordinary files to existing repos, but cannot create repos or write under `.github/workflows/` (403) |
+| Engine builds off-Mac | Confirmed on Linux |
+| Window builds off-Mac | Confirmed on Linux: GPUI Kit 0.9.1 compiles there |
+| File size | Every source and doc file stays under 20 KB; CI checks it |
 
 **Notes for whoever resumes**
 
-- The build sandbox has no git access to this org. Reads and writes go through the GitHub connector, one file at a time, so the sandbox copy is the working tree and the connector push is the publish step.
-- CI results are readable through the connector (check runs on a pull request).
+- Pushing to new repos and workflow files goes through `git` on Omar's Mac with his `gh` login. The connector can still push docs and open pull requests, and its tokens cannot read check runs (403); use `gh api` on the Mac for CI status.
 - GPUI Kit needs these system packages to compile on Linux: `libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libasound2-dev libvulkan-dev libx11-xcb-dev libfontconfig-dev libssl-dev`.
+- The empty branch `chore/ci-file-size` can be deleted.
