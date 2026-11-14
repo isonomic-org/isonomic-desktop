@@ -1,0 +1,11 @@
+[package]
+name = "isonomic-desktop"
+description = "Isonomic Desktop: the window"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+engine-link.workspace = true
+shell.workspace = true
+ui.workspace = true

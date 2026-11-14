@@ -1,0 +1,18 @@
+[package]
+name = "engine-link"
+description = "Finds the engine's socket, starts the engine when it is not running, and keeps one reconnecting client"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+isonomic-client.workspace = true
+isonomic-proto.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+isonomic-testkit.workspace = true
