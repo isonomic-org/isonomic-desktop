@@ -37,7 +37,7 @@ Milestone 0 builds only `capsule-core`, `supervisor`, `registry`, `broker`, `pac
 | 2 | Vector database, model workers | On first use; model workers only if the RAM gate admits |
 | 3 | App functions, Cells | When the services they declare are healthy |
 
-- **Health.** Port or socket check, then a protocol probe. Every 5 seconds while starting, every 30 seconds after, and immediately when a consumer reports an error.
+- **Health.** Port or socket check, then a protocol probe. While starting, probes begin 50 ms apart and double up to 5 seconds; every 30 seconds after; and immediately when a consumer reports an error.
 - **Hung services.** Two failed steady-state probes with the process alive means kill and restart.
 - **Recovery.** Backoff from 1 second doubling to 60. More than five restarts in ten minutes marks the service degraded, keeps its last 50 log lines, and offers report and retry. Dependents pause; they are not killed.
 - **Shutdown.** Reverse order by tier, each service with its own signal and a 15 second grace before a forced stop.
