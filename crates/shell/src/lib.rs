@@ -6,6 +6,9 @@
 //! Home tab; it never touches a process, a socket or a path.
 
 pub mod home;
+pub mod lifecycle;
+pub mod light;
+pub mod menubar;
 
 use isonomic_client::Live;
 use tokio::sync::watch;

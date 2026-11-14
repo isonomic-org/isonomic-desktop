@@ -11,11 +11,14 @@ publish = false
 ui = { path = "crates/ui" }
 engine-link = { path = "crates/engine-link" }
 shell = { path = "crates/shell" }
-# The SDK lives in the isonomic-sdk repo. Until that repo is on GitHub this is
-# a sibling checkout; it becomes a pinned git dependency.
+# The SDK is a sibling checkout (../isonomic-sdk). CI checks it out at the
+# commit in SDK_REF.
 isonomic-client = { path = "../isonomic-sdk/crates/client" }
 isonomic-proto = { path = "../isonomic-sdk/crates/proto" }
 isonomic-testkit = { path = "../isonomic-sdk/crates/testkit" }
+futures = "0.3"
 libc = "0.2"
+# Menu bar status item on macOS. Pinned exactly: it drives native APIs.
+tray-icon = { version = "=0.26.1", default-features = false }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "net", "time", "macros"] }
