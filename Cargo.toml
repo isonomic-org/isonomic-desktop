@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = ["crates/ui", "crates/engine-link", "crates/shell", "bin/isonomic-desktop"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[workspace.dependencies]
+ui = { path = "crates/ui" }
+engine-link = { path = "crates/engine-link" }
+shell = { path = "crates/shell" }
+# The SDK lives in the isonomic-sdk repo. Until that repo is on GitHub this is
+# a sibling checkout; it becomes a pinned git dependency.
+isonomic-client = { path = "../isonomic-sdk/crates/client" }
+isonomic-proto = { path = "../isonomic-sdk/crates/proto" }
+isonomic-testkit = { path = "../isonomic-sdk/crates/testkit" }
+libc = "0.2"
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "net", "time", "macros"] }
