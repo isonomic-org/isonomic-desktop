@@ -1,0 +1,339 @@
+//! `cargo xtask report`: build, run the Milestone 0 gate against a scratch
+//! Capsule, and print one block to paste back.
+//!
+//! On macOS the engine under test is the one inside `dist/Isonomic.app`, so
+//! the report also proves the app finds its own PostgreSQL. Elsewhere it is
+//! the engine repo's release build with its fetched `sidecars/`.
+
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
+
+use crate::bundle::{self, Built};
+use crate::gate::{self, Check, Engine, Outcome};
+use crate::util::{self, megabytes};
+
+pub struct Options {
+    pub host_only: bool,
+    pub build: bool,
+}
+
+/// Engine log lines worth repeating in the report.
+const ENGINE_FACTS: [&str; 4] = ["binary ", "hardware profile:", "postgres: ", "cold start:"];
+const TAIL_LINES: usize = 25;
+
+pub fn run(options: &Options) -> Result<(), String> {
+    let (engine, app) = prepare(options)?;
+    let scratch = std::env::temp_dir().join(format!("isonomic-report-{}", std::process::id()));
+    if scratch.exists() {
+        std::fs::remove_dir_all(&scratch).map_err(|e| e.to_string())?;
+    }
+    std::fs::create_dir_all(&scratch).map_err(|e| e.to_string())?;
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| e.to_string())?;
+    let outcome = runtime.block_on(gate::run(&engine, &scratch));
+    drop(runtime);
+
+    let block = render(&engine, app.as_ref(), &outcome);
+    print!("{block}");
+    let saved = util::desktop_root().join("dist").join("report.txt");
+    if std::fs::create_dir_all(saved.parent().expect("dist has a parent")).is_ok()
+        && std::fs::write(&saved, &block).is_ok()
+    {
+        println!("saved to {}", saved.display());
+    }
+    let measured = app.is_some() || !cfg!(target_os = "macos");
+    if outcome.passed() && measured {
+        let _ = std::fs::remove_dir_all(&scratch);
+        Ok(())
+    } else {
+        Err(format!(
+            "gate failed; the scratch Capsule and logs are kept at {}",
+            scratch.display()
+        ))
+    }
+}
+
+fn prepare(options: &Options) -> Result<(Engine, Option<Built>), String> {
+    if cfg!(target_os = "macos") {
+        let built = if options.build {
+            bundle::run(&bundle::Options {
+                host_only: options.host_only,
+            })?
+        } else {
+            Built::existing(bundle::app_path())?
+        };
+        let engine = Engine {
+            program: built.app.join("Contents/MacOS").join(bundle::ENGINE_BIN),
+            bundle_dir: None,
+        };
+        return Ok((engine, Some(built)));
+    }
+    let capsule = util::capsule_root()?;
+    if options.build {
+        util::run(
+            util::cargo(&capsule).args(["build", "--release", "--package", bundle::ENGINE_BIN]),
+            "building the engine",
+        )?;
+        util::run(
+            util::cargo(&capsule).args(["xtask", "fetch-sidecars"]),
+            "fetching PostgreSQL (cargo xtask fetch-sidecars)",
+        )?;
+    }
+    let engine = Engine {
+        program: util::target_dir(&capsule)
+            .join("release")
+            .join(bundle::ENGINE_BIN),
+        bundle_dir: Some(capsule.join("sidecars")),
+    };
+    Ok((engine, None))
+}
+
+fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
+    let desktop = util::desktop_root();
+    let capsule = util::sibling("isonomic-capsule");
+    let sdk = util::sibling("isonomic-sdk");
+    let engine_log = util::tail(&outcome.engine_log, 400);
+    let mut out = Vec::new();
+    let mut row = |label: &str, value: String| out.push(format!("{label:<11} {value}"));
+
+    row(
+        "report",
+        format!("Isonomic Desktop, Milestone 0 · {}", utc_now()),
+    );
+    row("machine", machine(outcome));
+    row(
+        "toolchain",
+        util::output("rustc", &["-V"], Some(&desktop)).unwrap_or_else(|| "?".into()),
+    );
+    row(
+        "window",
+        format!(
+            "{} · isonomic-desktop {}",
+            env!("CARGO_PKG_VERSION"),
+            util::git_rev(&desktop)
+        ),
+    );
+    row(
+        "engine",
+        format!(
+            "{} · isonomic-capsule {}",
+            outcome.engine_version.as_deref().unwrap_or("?"),
+            util::git_rev(&capsule)
+        ),
+    );
+    row(
+        "sdk",
+        format!(
+            "isonomic-sdk {} · SDK_REF window {} · engine {}",
+            util::git_rev(&sdk),
+            sdk_ref(&desktop),
+            sdk_ref(&capsule)
+        ),
+    );
+    row("postgresql", postgres_version(&engine_log));
+    match app {
+        Some(built) => {
+            row(
+                "app",
+                format!(
+                    "{} · {} · {} · ad-hoc signed",
+                    built.app.display(),
+                    built.architectures(),
+                    megabytes(built.bytes)
+                ),
+            );
+            for (part, bytes) in &built.parts {
+                row("", format!("  {part:<52} {:>9}", megabytes(*bytes)));
+            }
+        }
+        None => row("app", "not built: the app bundle is macOS only".into()),
+    }
+    row("engine bin", engine.program.display().to_string());
+    let mut first = true;
+    for line in engine_log
+        .iter()
+        .filter(|l| ENGINE_FACTS.iter().any(|f| fact(l, f)))
+    {
+        let label = if first { "engine log" } else { "" };
+        first = false;
+        row(label, strip_prefix(line).to_string());
+    }
+    row(
+        "cold start",
+        match (outcome.cold_start_ms, outcome.healthy_after) {
+            (Some(ms), Some(after)) => format!(
+                "{ms} ms (engine: core services up) · healthy {:.1} s after launch",
+                after.as_secs_f64()
+            ),
+            _ => "not reached".into(),
+        },
+    );
+
+    out.push("gate".to_string());
+    let measured = Check {
+        passed: outcome.cold_start_ms.is_some() && app.is_some(),
+        detail: match app {
+            Some(b) => format!("cold start above; app {}", megabytes(b.bytes)),
+            None => "no app bundle on this platform".into(),
+        },
+    };
+    // Item 4 is about the app, which only exists on macOS.
+    let on_mac = cfg!(target_os = "macos");
+    let items = [
+        ("1 engine and PostgreSQL healthy", outcome.started.as_ref()),
+        (
+            "2 force-killed PostgreSQL comes back",
+            outcome.recovered.as_ref(),
+        ),
+        (
+            "3 ordered stop, nothing left running",
+            outcome.stopped.as_ref(),
+        ),
+        ("4 cold start and bundle size reported", Some(&measured)),
+    ];
+    for (index, (name, check)) in items.into_iter().enumerate() {
+        let (verdict, detail) = match check {
+            None => ("skip", "not run"),
+            Some(_) if index == 3 && !on_mac => ("n/a ", measured.detail.as_str()),
+            Some(check) if check.passed => ("PASS", check.detail.as_str()),
+            Some(check) => ("FAIL", check.detail.as_str()),
+        };
+        out.push(format!("  {name:<40} {verdict}  {detail}"));
+    }
+    out.push(
+        "  window: the rail, the light through kill and recovery, and Quit are checked by eye"
+            .into(),
+    );
+    let result = match (outcome.passed(), measured.passed || !on_mac) {
+        (true, true) if on_mac => "PASS",
+        (true, true) => "PASS for items 1-3; item 4 needs the Mac",
+        _ => "FAIL",
+    };
+    out.push(format!("result      {result}"));
+
+    if !outcome.passed() {
+        for (name, path) in [
+            ("engine", &outcome.engine_log),
+            ("postgres", &outcome.postgres_log),
+        ] {
+            out.push(format!(
+                "--- last {TAIL_LINES} lines: {name} ({})",
+                path.display()
+            ));
+            out.extend(util::tail(path, TAIL_LINES));
+        }
+    }
+    let rule = "-".repeat(72);
+    format!("{rule}\n{}\n{rule}\n", out.join("\n"))
+}
+
+fn fact(line: &str, prefix: &str) -> bool {
+    strip_prefix(line).starts_with(prefix)
+}
+
+fn strip_prefix(line: &str) -> &str {
+    line.strip_prefix("[isonomic-capsule] ").unwrap_or(line)
+}
+
+fn sdk_ref(repo: &Path) -> String {
+    std::fs::read_to_string(repo.join("SDK_REF"))
+        .map(|s| s.trim().chars().take(7).collect())
+        .unwrap_or_else(|_| "?".into())
+}
+
+/// Ask the PostgreSQL the engine resolved for its version.
+fn postgres_version(engine_log: &[String]) -> String {
+    let path = engine_log.iter().find_map(|l| {
+        let rest = strip_prefix(l).strip_prefix("binary postgres: ")?;
+        Some(PathBuf::from(
+            rest.rsplit_once(" (").map_or(rest, |(p, _)| p),
+        ))
+    });
+    path.and_then(|p| util::output(&p.to_string_lossy(), &["--version"], None))
+        .unwrap_or_else(|| "?".into())
+}
+
+fn machine(outcome: &Outcome) -> String {
+    let mut parts = Vec::new();
+    if cfg!(target_os = "macos") {
+        let sysctl = |key: &str| util::output("sysctl", &["-n", key], None);
+        parts.extend(sysctl("hw.model"));
+        parts.extend(sysctl("machdep.cpu.brand_string"));
+        if let Some(version) = util::output("sw_vers", &["-productVersion"], None) {
+            parts.push(format!("macOS {version}"));
+        }
+    } else {
+        let cpu = std::fs::read_to_string("/proc/cpuinfo")
+            .ok()
+            .and_then(|info| {
+                info.lines()
+                    .find(|l| l.starts_with("model name"))
+                    .and_then(|l| l.split_once(':'))
+                    .map(|(_, v)| v.trim().to_string())
+            });
+        parts.extend(cpu);
+        parts.extend(util::output("uname", &["-sr"], None));
+    }
+    parts.push(std::env::consts::ARCH.to_string());
+    if let Some(bytes) = outcome.memory_bytes {
+        parts.push(format!("{} GB", bytes / (1 << 30)));
+    }
+    if let Some(profile) = &outcome.profile {
+        parts.push(format!("profile {profile}"));
+    }
+    parts.join(" · ")
+}
+
+/// `YYYY-MM-DD HH:MM UTC`, without a date library.
+fn utc_now() -> String {
+    let secs = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let (days, rem) = (secs / 86_400, secs % 86_400);
+    let (y, m, d) = civil_from_days(days as i64);
+    format!(
+        "{y:04}-{m:02}-{d:02} {:02}:{:02} UTC",
+        rem / 3600,
+        rem % 3600 / 60
+    )
+}
+
+/// Days since 1970-01-01 to a calendar date (proleptic Gregorian).
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    (y, m, d)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dates() {
+        assert_eq!(civil_from_days(0), (1970, 1, 1));
+        assert_eq!(civil_from_days(20_406), (2025, 11, 14));
+        assert_eq!(civil_from_days(20_771), (2026, 11, 14));
+    }
+
+    #[test]
+    fn reads_the_resolved_postgres_path() {
+        let lines = vec![
+            "[isonomic-capsule] hardware profile: standard".to_string(),
+            "[isonomic-capsule] binary postgres: /nowhere/bin/postgres (missing)".to_string(),
+        ];
+        assert!(fact(&lines[0], "hardware profile:"));
+        // The path does not exist, so the version is unknown, not an error.
+        assert_eq!(postgres_version(&lines), "?");
+    }
+}
