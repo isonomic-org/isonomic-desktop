@@ -9,6 +9,7 @@ Newest first.
 - **The `ui` package is renamed `desktop-ui`.** Chat's workspace has its own package named `ui`, and cargo can't write two path packages of the same name and version to one lockfile. Code still names the crate `ui`, through the dependency key, so nothing else changes.
 - **The workspace applies Isonomic UI's patch for GPUI's macros** (`vendor/gpui-pre-macros`), as the UI, SDK and Chat workspaces do. Chat's extra components need it. This repo's own code builds and tests the same with it.
 - **CI:** `ci.yml` passes `chat: true`, so the shared workflow checks out isonomic-chat at `CHAT_REF` with the `CHAT_DEPLOY_KEY` secret.
+- **Debug info:** with Chat in the build, CI's runner ran out of disk. Debug builds now keep line tables for this repo's crates and no debug info for dependencies (`[profile.dev]` in `Cargo.toml`).
 
 ## 2026-11-15 (late) · Failure states: the window says why it can't reach the engine
 

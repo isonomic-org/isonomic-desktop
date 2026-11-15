@@ -45,3 +45,12 @@ tokio = { version = "1", features = ["rt-multi-thread", "sync", "net", "time", "
 # extra components need it.
 [patch.crates-io]
 gpui-pre-macros = { path = "../isonomic-ui/vendor/gpui-pre-macros" }
+
+# Debug builds keep line tables for this repo's own crates and no debug info
+# for dependencies. With GPUI, Isonomic UI and Chat, full debug info filled
+# CI's disk.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
