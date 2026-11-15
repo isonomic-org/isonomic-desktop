@@ -7,10 +7,11 @@ extern crate ui as gpui;
 use std::sync::Arc;
 
 use engine_link::agent::LoginAgent;
+use engine_link::settings::FileSettings;
 use engine_link::setup::Capsule;
 use engine_link::{EngineLink, LinkConfig};
 use futures::future::BoxFuture;
-use isonomic_app::{MemorySettings, Registration};
+use isonomic_app::{Registration, SettingsStore};
 use isonomic_client::Client;
 use isonomic_proto::HardwareProfile;
 use shell::apps::AppHost;
@@ -37,6 +38,23 @@ impl Setup for FirstRunSetup {
     fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
         let capsule = self.capsule.clone();
         Box::pin(async move { capsule.mark_set_up().map_err(|e| e.to_string()) })
+    }
+}
+
+/// App settings in the Capsule, through the engine link.
+struct CapsuleSettings(FileSettings);
+
+impl SettingsStore for CapsuleSettings {
+    fn get(&self, app: &str, key: &str) -> Option<serde_json::Value> {
+        self.0.get(app, key)
+    }
+
+    fn set(&self, app: &str, key: &str, value: serde_json::Value) {
+        self.0.set(app, key, value)
+    }
+
+    fn remove(&self, app: &str, key: &str) {
+        self.0.remove(app, key)
     }
 }
 
@@ -85,6 +103,12 @@ fn main() {
             Err(error) => eprintln!("[isonomic-desktop] start at login not set up: {error}"),
         }
     }
+    // Read before the event loop; later writes run on their own thread.
+    let settings = FileSettings::open(&config.root).unwrap_or_else(|error| {
+        eprintln!("[isonomic-desktop] fatal: cannot read app settings: {error}");
+        std::process::exit(1);
+    });
+    let settings: Arc<dyn SettingsStore> = Arc::new(CapsuleSettings(settings));
     let link = EngineLink::start(config, agent.clone()).unwrap_or_else(|error| {
         eprintln!("[isonomic-desktop] fatal: {error}");
         std::process::exit(1);
@@ -122,8 +146,8 @@ fn main() {
         };
         let live = client.live();
         let logs = client.clone();
-        // Settings live in memory until the engine stores them.
-        let host = AppHost::new(client.clone(), Arc::new(MemorySettings::default()));
+        // Settings live in the Capsule until the engine stores them.
+        let host = AppHost::new(client.clone(), settings);
         let host_client = client.clone();
         ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);

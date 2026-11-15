@@ -14,6 +14,7 @@
 //! restarts after a crash.
 
 pub mod agent;
+pub mod settings;
 pub mod setup;
 
 use std::io;

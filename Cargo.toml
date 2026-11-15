@@ -32,6 +32,7 @@ futures = "0.3"
 libc = "0.2"
 # Menu bar status item on macOS. Pinned exactly: it drives native APIs.
 tray-icon = { version = "=0.26.1", default-features = false }
+serde_json = "1"
 tempfile = "3"
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "net", "time", "macros"] }

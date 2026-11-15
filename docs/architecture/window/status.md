@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-15 (night) · App settings kept in the Capsule
+
+- An app's settings (`AppContext::settings`) now survive a quit. `engine_link::settings::FileSettings` keeps one JSON object per app at `settings/apps/<app id>.json` in the Capsule. Only ids made of lowercase letters, digits, dots and dashes become file names; any other id stays in memory.
+- Everything is read once, before the event loop. After that, reads come from memory, and each change is written by a background thread to a temporary file that is then renamed over the old one, so an app setting a value never waits on the disk. A file that doesn't parse reads as empty and doesn't stop the window.
+- Tested: settings survive a reopen and stay per app; unsafe ids and bad files are ignored.
+- **Deviation:** the spec keeps shell state in the engine. The engine has no settings store yet, so this is the interim store. When the engine gets one, only `CapsuleSettings` in the window's startup changes; apps don't.
 ## 2026-11-15 (night) · First run: the Capsule and the memory check
 
 **Built** (`engine_link::setup`, `shell::first_run`, the window's startup)
