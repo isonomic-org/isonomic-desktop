@@ -14,6 +14,7 @@
 //! restarts after a crash.
 
 pub mod agent;
+pub mod problems;
 pub mod settings;
 pub mod setup;
 
@@ -25,6 +26,7 @@ use std::time::{Duration, Instant};
 use agent::{in_app_bundle, LoginAgent, SystemLaunchctl};
 use isonomic_client::{unix_connector, Client, Connector, Options};
 use isonomic_proto::locate;
+use problems::Problems;
 
 /// Path of the engine binary, when it is not next to the window binary.
 pub const ENV_ENGINE_BIN: &str = "ISONOMIC_ENGINE_BIN";
@@ -50,24 +52,51 @@ impl<F: Fn() -> io::Result<()> + Send + Sync + 'static> Launcher for F {
 /// environment from an allow-list.
 pub struct EngineBinary {
     pub path: PathBuf,
+    /// Where its standard error goes (appended), so an engine that dies on
+    /// start leaves its reason. `None` discards it.
+    pub log: Option<PathBuf>,
+    /// Told when the engine can't start or exits with a failure.
+    pub problems: Problems,
 }
 
 impl Launcher for EngineBinary {
     fn launch(&self) -> io::Result<()> {
         let mut command = std::process::Command::new(&self.path);
+        let stderr = match &self.log {
+            Some(log) => {
+                if let Some(dir) = log.parent() {
+                    std::fs::create_dir_all(dir)?;
+                }
+                let file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(log)?;
+                std::process::Stdio::from(file)
+            }
+            None => std::process::Stdio::null(),
+        };
         command
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null());
+            .stderr(stderr);
         #[cfg(unix)]
         {
             use std::os::unix::process::CommandExt;
             command.process_group(0);
         }
-        let mut child = command.spawn()?;
-        // Reap it if it exits while the window is still alive.
+        let mut child = command.spawn().inspect_err(|error| {
+            self.problems
+                .report(problems::not_started(&self.path, error));
+        })?;
+        // Reap it if it exits while the window is still alive, and say why
+        // when it failed.
+        let (problems, log) = (self.problems.clone(), self.log.clone());
         std::thread::spawn(move || {
-            let _ = child.wait();
+            if let Ok(status) = child.wait() {
+                if !status.success() {
+                    problems.report(problems::exited(&status, log.as_deref()));
+                }
+            }
         });
         Ok(())
     }
@@ -97,15 +126,19 @@ pub fn launching_connector(
     inner: Connector,
     launcher: Arc<dyn Launcher>,
     relaunch_after: Duration,
+    problems: Problems,
 ) -> Connector {
     let last_launch: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
     Arc::new(move || {
         let attempt = inner();
         let launcher = Arc::clone(&launcher);
         let last_launch = Arc::clone(&last_launch);
+        let problems = problems.clone();
         Box::pin(async move {
             let result = attempt.await;
-            if result.is_err() {
+            if result.is_ok() {
+                problems.clear();
+            } else {
                 let mut last = last_launch.lock().expect("launch lock");
                 let due = last
                     .map(|at| at.elapsed() >= relaunch_after)
@@ -215,6 +248,7 @@ impl LinkConfig {
 /// The running link. Keep it alive for as long as the window process lives.
 pub struct EngineLink {
     client: Client,
+    problems: Problems,
     runtime: Option<tokio::runtime::Runtime>,
 }
 
@@ -231,16 +265,23 @@ impl EngineLink {
     /// Start connecting in the background and return at once. With a login
     /// agent, a missing engine is started through it.
     pub fn start(config: LinkConfig, agent: Option<Arc<LoginAgent>>) -> Result<Self, LinkError> {
+        let problems = Problems::default();
         let mut connector = unix_connector(config.socket);
         if let Some(path) = config.engine {
-            let binary = EngineBinary { path };
+            let binary = EngineBinary {
+                path,
+                log: Some(config.root.join("logs").join("engine.log")),
+                problems: problems.clone(),
+            };
             let launcher: Arc<dyn Launcher> = match agent {
                 Some(agent) => Arc::new(AgentFirst { agent, binary }),
                 None => Arc::new(binary),
             };
-            connector = launching_connector(connector, launcher, RELAUNCH_AFTER);
+            connector = launching_connector(connector, launcher, RELAUNCH_AFTER, problems.clone());
         }
-        Self::with_connector(connector, Options::new(config.client_name))
+        let mut link = Self::with_connector(connector, Options::new(config.client_name))?;
+        link.problems = problems;
+        Ok(link)
     }
 
     /// Start with any connector. Tests pass the in-memory engine's.
@@ -253,11 +294,18 @@ impl EngineLink {
         let client = Client::start(runtime.handle(), connector, options);
         Ok(Self {
             client,
+            problems: Problems::default(),
             runtime: Some(runtime),
         })
     }
 
     pub fn client(&self) -> &Client {
         &self.client
+    }
+
+    /// Why the engine can't be reached, in plain words; `None` once
+    /// connected.
+    pub fn problems(&self) -> tokio::sync::watch::Receiver<Option<String>> {
+        self.problems.watch()
     }
 }

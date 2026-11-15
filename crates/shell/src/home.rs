@@ -26,6 +26,8 @@ pub struct HomeTab {
     updates: watch::Receiver<Live>,
     source: Arc<dyn LogSource>,
     logs: Option<Entity<LogsView>>,
+    /// Why the engine can't be reached, from the engine link.
+    problem: Option<String>,
 }
 
 /// Wire name of a state, used in element ids.
@@ -114,7 +116,35 @@ impl HomeTab {
             updates: kept,
             source,
             logs: None,
+            problem: None,
         }
+    }
+
+    /// Follow the engine link's problems: shown while not connected.
+    pub fn follow_problems(
+        &mut self,
+        mut problems: watch::Receiver<Option<String>>,
+        cx: &mut Context<Self>,
+    ) {
+        self.problem = problems.borrow_and_update().clone();
+        cx.spawn(async move |tab, cx| {
+            while problems.changed().await.is_ok() {
+                let latest = problems.borrow_and_update().clone();
+                let redrawn = tab.update(cx, |tab, cx| {
+                    tab.problem = latest;
+                    cx.notify();
+                });
+                if redrawn.is_err() {
+                    break;
+                }
+            }
+        })
+        .detach();
+    }
+
+    /// The problem on screen, if any.
+    pub fn problem(&self) -> Option<&str> {
+        self.problem.as_deref().filter(|_| !self.live.connected)
     }
 
     /// The value currently drawn.
@@ -222,6 +252,13 @@ impl Render for HomeTab {
                     .text_lg()
                     .child(headline(&self.live)),
             )
+            .children(self.problem().map(|problem| {
+                div()
+                    .id("engine-problem")
+                    .test_support()
+                    .text_color(cx.theme().danger)
+                    .child(SharedString::from(problem.to_string()))
+            }))
             .children(schema_warning(&self.live).map(|warning| {
                 div()
                     .id("schema-unreadable")

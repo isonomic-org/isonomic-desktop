@@ -182,6 +182,10 @@ fn main() {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
                 let mut shell = Shell::new(live, Arc::new(logs), cx);
+                let problems = link.problems();
+                shell
+                    .home()
+                    .update(cx, |home, cx| home.follow_problems(problems, cx));
                 for app in first_party() {
                     shell.mount(app, host.clone(), cx);
                 }
