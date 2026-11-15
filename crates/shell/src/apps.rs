@@ -7,17 +7,32 @@
 //! manifest), scopes a client to it and hands the app its context. From then
 //! on the tab draws the app's root view and the rail follows its attention
 //! signal. The shell never calls the engine for the app.
+//!
+//! The hardware profile caps how many apps stay loaded ([`loaded_cap`]).
+//! Past the cap the shell unloads the least recently used: the app's
+//! `on_unload` runs, its view is dropped, and the next open builds it
+//! again with the token it already has.
 
 use std::sync::Arc;
 
 use isonomic_app::{AppContext, Attention, LoadedApp, Registration, SettingsStore};
-use isonomic_client::Client;
+use isonomic_client::{AppClient, Client};
 use tokio::sync::watch;
 use ui::component::theme::ActiveTheme as _;
 use ui::{
     div, AppContext as _, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, TestSupportExt as _, Window,
 };
+
+/// How many apps stay loaded on a machine of `profile` (the engine
+/// supervisor's spec): `None` means no cap.
+pub fn loaded_cap(profile: &str) -> Option<usize> {
+    match profile {
+        "low" => Some(2),
+        "high" => None,
+        _ => Some(4),
+    }
+}
 
 /// What the window gives every app: the engine and a settings store.
 #[derive(Clone)]
@@ -51,6 +66,9 @@ pub struct AppTab {
     host: AppHost,
     state: AppState,
     attention: Attention,
+    /// The app's client, once the engine has granted its token. Kept
+    /// across an unload.
+    client: Option<AppClient>,
 }
 
 impl AppTab {
@@ -60,6 +78,7 @@ impl AppTab {
             host,
             state: AppState::Closed,
             attention: Attention::None,
+            client: None,
         }
     }
 
@@ -82,6 +101,10 @@ impl AppTab {
         if !matches!(self.state, AppState::Closed | AppState::Failed(_)) {
             return;
         }
+        if let Some(client) = self.client.clone() {
+            self.open(client, window, cx);
+            return;
+        }
         self.state = AppState::Granting;
         cx.notify();
         let client = self.host.client.clone();
@@ -99,12 +122,27 @@ impl AppTab {
         .detach();
     }
 
-    fn open(
-        &mut self,
-        client: isonomic_client::AppClient,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
+    /// Built, or being built: it counts against the cap.
+    pub fn is_loaded(&self) -> bool {
+        matches!(self.state, AppState::Open(_) | AppState::Granting)
+    }
+
+    /// Tell the app, then drop its view. The next activation builds it
+    /// again.
+    pub fn unload(&mut self, cx: &mut Context<Self>) {
+        if !matches!(self.state, AppState::Open(_)) {
+            return;
+        }
+        if let AppState::Open(app) = std::mem::replace(&mut self.state, AppState::Closed) {
+            app.unload(cx);
+        }
+        // An unloaded app can't ask for attention.
+        self.attention = Attention::None;
+        cx.notify();
+    }
+
+    fn open(&mut self, client: AppClient, window: &mut Window, cx: &mut Context<Self>) {
+        self.client = Some(client.clone());
         let id = self.registration.manifest().id.clone();
         let (context, attention) = AppContext::new(&id, client, Arc::clone(&self.host.settings));
         self.state = AppState::Open(self.registration.open(context, window, cx));

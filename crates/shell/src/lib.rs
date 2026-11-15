@@ -49,6 +49,11 @@ pub struct Shell {
     selected: usize,
     /// Shown in place of the tabs until it finishes.
     first_run: Option<Entity<FirstRun>>,
+    /// How many apps stay loaded; `None` until the profile is known, and
+    /// on machines with no cap.
+    cap: Option<usize>,
+    /// App tabs by index, least recently opened first.
+    recent: Vec<usize>,
 }
 
 impl Shell {
@@ -70,7 +75,59 @@ impl Shell {
             }],
             selected: 0,
             first_run: None,
+            cap: None,
+            recent: Vec::new(),
         }
+    }
+
+    /// Cap how many apps stay loaded (see [`apps::loaded_cap`]).
+    pub fn set_loaded_cap(&mut self, cap: Option<usize>, cx: &mut Context<Self>) {
+        self.cap = cap;
+        self.enforce_cap(cx);
+    }
+
+    /// Set the cap from the machine's hardware profile once the engine
+    /// answers. Until then, no app is unloaded.
+    pub fn follow_profile(
+        &mut self,
+        profile: futures::future::BoxFuture<'static, Result<String, String>>,
+        cx: &mut Context<Self>,
+    ) {
+        cx.spawn(async move |shell, cx| {
+            if let Ok(profile) = profile.await {
+                let _ = shell.update(cx, |shell, cx| {
+                    shell.set_loaded_cap(apps::loaded_cap(&profile), cx)
+                });
+            }
+        })
+        .detach();
+    }
+
+    /// Unload the least recently opened apps past the cap, never the one
+    /// on screen.
+    fn enforce_cap(&mut self, cx: &mut Context<Self>) {
+        let Some(cap) = self.cap else {
+            return;
+        };
+        let loaded: Vec<usize> = self
+            .recent
+            .iter()
+            .copied()
+            .filter(|&index| self.loaded(index, cx))
+            .collect();
+        let excess = loaded.len().saturating_sub(cap);
+        for &index in loaded.iter().filter(|&&i| i != self.selected).take(excess) {
+            if let Some(app) = &self.tabs[index].app {
+                app.update(cx, |app, cx| app.unload(cx));
+            }
+        }
+    }
+
+    fn loaded(&self, index: usize, cx: &Context<Self>) -> bool {
+        self.tabs[index]
+            .app
+            .as_ref()
+            .is_some_and(|app| app.read(cx).is_loaded())
     }
 
     /// Show the first-run flow until it finishes. `created`: the Capsule
@@ -135,6 +192,9 @@ impl Shell {
         self.selected = index;
         if let Some(app) = &self.tabs[index].app {
             app.update(cx, |app, cx| app.activate(window, cx));
+            self.recent.retain(|&i| i != index);
+            self.recent.push(index);
+            self.enforce_cap(cx);
         }
         cx.notify();
     }

@@ -149,6 +149,7 @@ fn main() {
         // Settings live in the Capsule until the engine stores them.
         let host = AppHost::new(client.clone(), settings);
         let host_client = client.clone();
+        let profile_client = client.clone();
         ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
@@ -156,6 +157,18 @@ fn main() {
                 for app in first_party() {
                     shell.mount(app, host.clone(), cx);
                 }
+                // The hardware profile caps how many apps stay loaded.
+                let profile_client = profile_client.clone();
+                shell.follow_profile(
+                    Box::pin(async move {
+                        // Ask once the engine is connected.
+                        let mut live = profile_client.live();
+                        let _ = live.wait_for(|live| live.connected).await;
+                        let profile = profile_client.profile().await;
+                        profile.map(|p| p.profile).map_err(|e| e.to_string())
+                    }),
+                    cx,
+                );
                 if !state.set_up {
                     let setup = FirstRunSetup {
                         client: host_client,
