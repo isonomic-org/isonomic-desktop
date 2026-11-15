@@ -15,7 +15,24 @@ The Isonomic window: a GPUI app with a rail of app icons on the left. The spec i
 
 ## Workflow
 
-- One task per branch and pull request. A merge needs green checks and Omar's approval.
+- One task per branch and pull request. Merging follows the standing rules below.
 - Before pushing: `cargo fmt --all`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-features`.
 - The SDK and Isonomic UI are sibling checkouts (`../isonomic-sdk`, `../isonomic-ui`). CI checks them out at the commits in `SDK_REF` and `UI_REF`. `isonomic-sdk` and `isonomic-ui` belong to other sessions: move the pin, never edit them.
 - On Linux, GPUI needs: `libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libasound2-dev libvulkan-dev libx11-xcb-dev libfontconfig-dev libssl-dev`.
+
+## Standing rules
+
+Report by adding a comment to the open issue titled "Worker reports" in your own repo (create it if missing); the orchestrator reads those every 30 minutes. Start every report with one line: what this is and PASS, FAIL, DONE or BLOCKED.
+
+- Only work in isonomic-desktop. If you need a change in another repo, file it in that repo's docs/requests.md or as an issue, and tell the orchestrator.
+- Start from main, the open pull requests and docs/status.md. Open pull requests and branches from earlier sessions are yours now: finish, rebase or close them.
+- Commit as Omar Qadmiri <omar@isonomic.com>; check `git config user.email` first. Commit and push work in progress often.
+- Repos stay private. No license files. Never rename or delete a repo.
+- In code, comments, commits, branches, issues and pull requests, never name a third-party product or company, another AI system, or an older product name.
+- Branch from main and open a pull request. Required checks: "rust / fmt, clippy, test (ubuntu-latest)" and "rust / file sizes and names". macOS runs after merge.
+- Merge your own pull request once every required check is green. Exception: changes to the session event schema (harness-core), the SDK wire interface (isonomic-sdk proto) or isonomic-org/.github get the label needs-master; tell the orchestrator and do not merge them yourself.
+- GitHub Actions has a hard $40/month budget. Don't trigger extra macOS runs.
+- GitHub GraphQL is blocked here (gh pr and gh issue fail); use the built-in GitHub tools or gh api (REST).
+- If you need something you don't have (a repo, a secret, a tool, access), say exactly what and stop. Don't mock or guess around it.
+- Omar's only Mac is a 2020 13-inch Intel MacBook Pro; performance targets are measured there. Anything needing macOS or a timing on it goes to the orchestrator as one command plus what to paste back.
+- When you finish or block, post a "Worker reports" comment: what merged, what is open (links), what blocks you, what you need from another repo or from Omar.
