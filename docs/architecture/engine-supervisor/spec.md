@@ -19,7 +19,7 @@ crates/
   archive          checkpoint, snapshot, restore
   cells            Cell supervisor behind one backend trait
   packaging        bundled binaries, architecture checks
-xtask/             fetch-sidecars, dist, report
+xtask/             fetch-sidecars (the app is built and reported on by the window repo's xtask: bundle, report)
 bin/isonomic-capsule
 ```
 
