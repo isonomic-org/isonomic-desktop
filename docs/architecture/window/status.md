@@ -4,7 +4,7 @@ Newest first.
 
 ## 2026-11-15 (late) · Isonomic Chat mounted
 
-- The window mounts `isonomic_chat::Chat` (`com.isonomic.chat`), first in the rail after Home. It comes from the sibling checkout `../isonomic-chat`, pinned to the commit in `CHAT_REF`. The pin is c9c91a8, isonomic-chat #8's merge on Chat's `main`. Chat pins SDK 7c488c2, while the window pins 21ed50d; both use the one sibling SDK checkout, so Chat builds against the window's pin (21ed50d), which it passes.
+- The window mounts `isonomic_chat::Chat` (`com.isonomic.chat`), first in the rail after Home. It comes from the sibling checkout `../isonomic-chat`, pinned to the commit in `CHAT_REF`. The pin is 64dcd18 on Chat's `main` (its #11), which pins SDK 21ed50d like the window and asks for `agents` in its manifest.
 - Headless test: Chat in the real shell against the SDK testkit is on the rail, gets its token and draws its own view (`bin/isonomic-desktop/tests/chat.rs`).
 - **The `ui` package is renamed `desktop-ui`.** Chat's workspace has its own package named `ui`, and cargo can't write two path packages of the same name and version to one lockfile. Code still names the crate `ui`, through the dependency key, so nothing else changes.
 - **The workspace applies Isonomic UI's patch for GPUI's macros** (`vendor/gpui-pre-macros`), as the UI, SDK and Chat workspaces do. Chat's extra components need it. This repo's own code builds and tests the same with it.
