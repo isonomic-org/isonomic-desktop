@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-15 (late) · SDK c0d2bf7 and Chat 6e2b6dc; Isonomic UI only through the SDK
+
+- `CHAT_REF` moves with it to 6e2b6dc on Chat's `main`, which pins the same SDK and the same harness rev, so cargo builds one harness-core. Chat now asks for `agents` and `sql` and declares the schema `chat`. The window grants from the manifest, and the headless Chat test mounts it through that grant against the testkit. A refused grant shows on the tab (`apps.rs`).
+- `SDK_REF` moves to c0d2bf7: the new harness rev (f061211, through the SDK only), model install, and Isonomic UI's `component` and `assets` features forwarded by `isonomic-app` (isonomic-sdk #27, on by default).
+- The `ui` crate re-exports `isonomic_app::ui` and no longer depends on isonomic-ui. This repo's `UI_REF` is gone; the SDK's is the one pin, and the shared workflow reads it from the SDK checkout (isonomic-org/.github #8). `../isonomic-ui` stays checked out for the GPUI macros patch and the SDK's path dependency.
+- `cargo xtask report` prints the SDK's `UI_REF`.
 ## 2026-11-15 (late) · Isonomic Chat mounted
 
 - The window mounts `isonomic_chat::Chat` (`com.isonomic.chat`), first in the rail after Home. It comes from the sibling checkout `../isonomic-chat`, pinned to the commit in `CHAT_REF`. The pin is 64dcd18 on Chat's `main` (its #11), which pins SDK 21ed50d like the window and asks for `agents` in its manifest.

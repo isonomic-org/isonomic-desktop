@@ -1,20 +1,21 @@
 //! The single re-export of the component library.
 //!
-//! The library is Isonomic UI, a sibling checkout pinned to the commit in
-//! `UI_REF`. Every other crate in this repo depends on `ui` and nothing else
-//! for its interface: no crate names GPUI or Isonomic UI directly, so moving
-//! the pin is a change to `UI_REF` alone.
+//! The library is Isonomic UI, reached through the SDK (`isonomic_app::ui`)
+//! at the commit in the SDK's `UI_REF`, the one pin. Every other crate in
+//! this repo depends on `ui` and nothing else for its interface: no crate
+//! names GPUI or Isonomic UI directly, so moving the pin is a change to
+//! `SDK_REF` alone.
 //!
 //! GPUI's macros expand to paths that start with `gpui::`. A crate that uses
 //! them (`#[ui::test]`, derives) adds `extern crate ui as gpui;` at its root;
 //! that is an alias for this crate, not a dependency on GPUI.
 
-pub use isonomic_ui::*;
+pub use isonomic_app::ui::*;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
 /// colors come from the theme, sizes from here or from the spacing scale.
 pub mod tokens {
-    use isonomic_ui::{px, size, Pixels, Size};
+    use isonomic_app::ui::{px, size, Pixels, Size};
 
     /// Size of the main window when it first opens.
     pub fn window_size() -> Size<Pixels> {

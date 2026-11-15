@@ -11,11 +11,11 @@ Clone the three repos side by side:
 ```
 isonomic-capsule/   the engine
 isonomic-sdk/       the API between window and engine (pinned by SDK_REF)
-isonomic-ui/        the component library (pinned by UI_REF)
+isonomic-ui/        the component library (pinned by the SDK's UI_REF)
 isonomic-desktop/   this repo
 ```
 
-Check out `isonomic-sdk` and `isonomic-ui` at the commits in `SDK_REF` and `UI_REF`; CI does the same.
+Check out `isonomic-sdk` at the commit in `SDK_REF` and `isonomic-ui` at the SDK's `UI_REF`; CI does the same.
 
 ## Develop
 

@@ -158,9 +158,9 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
     row(
         "ui",
         format!(
-            "isonomic-ui {} · UI_REF {}",
+            "isonomic-ui {} · UI_REF (the SDK's) {}",
             util::git_rev(&ui),
-            pin(&desktop, "UI_REF")
+            pin(&sdk, "UI_REF")
         ),
     );
     row("postgresql", postgres_version(&engine_log));
