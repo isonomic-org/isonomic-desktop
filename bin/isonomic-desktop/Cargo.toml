@@ -16,6 +16,7 @@ futures.workspace = true
 isonomic-app.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true
+serde_json.workspace = true
 engine-link.workspace = true
 shell.workspace = true
 ui.workspace = true
