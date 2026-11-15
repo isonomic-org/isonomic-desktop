@@ -1,6 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["crates/ui", "crates/engine-link", "crates/shell", "bin/isonomic-desktop"]
+members = [
+    "crates/ui",
+    "crates/engine-link",
+    "crates/shell",
+    "bin/isonomic-desktop",
+    "xtask",
+]
 
 [workspace.package]
 version = "0.0.1"

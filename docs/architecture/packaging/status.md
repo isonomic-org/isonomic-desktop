@@ -2,6 +2,42 @@
 
 Newest first.
 
+## 2026-11-14 (night) · The universal app (PR #4)
+
+**Built** (`cargo xtask bundle` in this repo)
+
+- `dist/Isonomic.app`, bundle id `com.isonomic.desktop`. The window and the engine are each built in release for `x86_64-apple-darwin` and `aarch64-apple-darwin` and fused with `lipo`. Both PostgreSQL trees ship under `Contents/Resources/sidecars/`; the engine picks the tree for its own slice, so the app needs no launcher logic.
+- The engine repo must be cloned beside this one. The task runs its `cargo xtask fetch-sidecars`, which verifies every hash and architecture, cache hits included.
+- From each PostgreSQL tree the app ships `bin` (`postgres`, `initdb`), `lib`, `share` and the two licence files. Headers and the upstream readme stay out.
+- Signing is ad hoc: every Mach-O file inside, then the bundle. `codesign --verify --strict` must pass or the task fails.
+- `--host-only` builds one architecture for quick local runs.
+
+**Measured** (on the Intel test Mac)
+
+| Part | Size |
+| --- | --- |
+| Window, both architectures | 42.4 MB |
+| Engine, both architectures | 7.8 MB |
+| PostgreSQL tree, Intel | 27.2 MB |
+| PostgreSQL tree, Apple Silicon | 28.3 MB |
+| **The app** | **106.0 MB** (one architecture only: 52.8 MB) |
+
+- Leaving out the headers took each PostgreSQL tree from about 36 MB to 27 to 28 MB.
+- First universal build from clean: about 75 minutes on the Intel Mac while other sessions were compiling (window: about 40 minutes for Intel, 26 for Apple Silicon; engine: 7 and 3). A rebuild with nothing changed takes seconds.
+- `codesign --verify --strict` passes. `lipo` confirms both programs hold x86_64 and arm64.
+- Launched from `dist/` the app runs the window, the engine and PostgreSQL from inside the bundle, and its Capsule goes to the default location under Application Support.
+
+**Found on the Mac and fixed**
+
+- Signing everything in one call failed: `codesign` refuses an app's main program while nested code is unsigned. Nested programs are now signed first and the bundle last.
+
+**Deviations**
+
+- The bundling task lives in this repo's xtask, not the engine's (the engine-supervisor spec lists `dist` there). The app's main program is the window, and the report that measures the app is here too.
+- `LSMinimumSystemVersion` is 11.0, the first macOS that runs on Apple Silicon. The real minimum is open decision 1.
+- No app icon: there is no approved design for one.
+- `Cargo.lock` on `main` lacked the menu bar's dependencies because CI builds without `--locked`; this PR regenerates it.
+
 ## 2026-11-14 (later) · Fetch task and bundle lookup ported; local only
 
 **Built** (`packaging` crate and `cargo xtask fetch-sidecars`)

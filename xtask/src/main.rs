@@ -1,0 +1,48 @@
+//! Build tasks for the window repo.
+//!
+//! ```text
+//! cargo xtask bundle [--host-only]
+//!     Build dist/Isonomic.app: the window, the engine and PostgreSQL, as one
+//!     universal (Intel + Apple Silicon) app, ad-hoc signed. macOS only.
+//!
+//! cargo xtask report [--host-only] [--no-build]
+//!     Build, start the engine against a scratch Capsule, run the Milestone 0
+//!     gate, and print one block to paste back.
+//! ```
+//!
+//! The engine repo must be cloned next to this one (`../isonomic-capsule`),
+//! like the SDK (`../isonomic-sdk`).
+
+mod bundle;
+mod gate;
+mod report;
+mod util;
+
+use std::process::ExitCode;
+
+const USAGE: &str = "usage:
+  cargo xtask bundle [--host-only]
+  cargo xtask report [--host-only] [--no-build]";
+
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let flag = |name: &str| args.iter().any(|arg| arg == name);
+    let result = match args.first().map(String::as_str) {
+        Some("bundle") => bundle::run(&bundle::Options {
+            host_only: flag("--host-only"),
+        })
+        .map(|built| built.print()),
+        Some("report") => report::run(&report::Options {
+            host_only: flag("--host-only"),
+            build: !flag("--no-build"),
+        }),
+        _ => Err(USAGE.to_string()),
+    };
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(message) => {
+            eprintln!("{message}");
+            ExitCode::FAILURE
+        }
+    }
+}
