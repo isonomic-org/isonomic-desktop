@@ -2,6 +2,29 @@
 
 Newest first.
 
+## 2026-11-15 · The cache; the vector database pinned; object storage deferred (isonomic-capsule PRs #14, #16, #17, #19)
+
+**Built**
+
+- The cache and queue service (#16), tier 1, started in parallel with PostgreSQL. Built from the pinned source (#14). A Unix socket in a user-only directory, no TCP port. Persistence off (no snapshots, no append log) until a use needs it. Memory capped by the profile: on Low the least recently used keys go first; elsewhere a full cache refuses writes rather than dropping queued work. Readiness is `PING` over the socket.
+- PostgreSQL's buffers come from the profile (#17).
+- The vector database (#19) is defined for the lazy tier: loopback on an engine-chosen port, a 256-bit key generated once into the Capsule (0600, never logged), its RPC listener and telemetry off, payloads on disk on Low, readiness `GET /readyz`. Pinned (1.20.1) for both Macs and Linux, but deferred: 75 MB (arm64) and 84 MB (x86_64) unpacked, so it ships with its first user in wave 3 (Omar, 15 Nov). The engine doesn't register it yet.
+
+**Measured** (Intel Mac)
+
+- Cache: warm start healthy in 0.28 s; force-killed, back in 1.08 s.
+- The vector config against the real program: telemetry and the RPC listener reported off, listening on 127.0.0.1 only, 401 without the key and 200 with it, `/readyz` 200, clean stop on the termination signal.
+
+**Deviations**
+
+- Low's "memory-mapped" vector storage is only the payload setting so far. Vector storage is set per collection, so it lands with the first collection in wave 3.
+
+**Deferred**
+
+- Object storage: Milestone 4 (Omar, 15 Nov). Its program is 134 to 146 MB per architecture and stripping doesn't shrink it (capsule #10).
+- Local models: the model gateway.
+- From the entry below, now done: bundled binaries, profile-driven buffers and a run on macOS. Still open: one database and one role per app (Milestone 4) and hunting down a still-running orphan.
+
 ## 2026-11-14 · PostgreSQL supervised end to end; built locally, not yet on GitHub
 
 **Built** (`supervisor::postgres`)

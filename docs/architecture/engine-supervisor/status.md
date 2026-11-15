@@ -2,6 +2,27 @@
 
 Newest first. Every deviation and deferral is recorded here.
 
+## 2026-11-15 · Profiles applied, the lazy tier and the RAM gate (isonomic-capsule PRs #17, #19, #20)
+
+**Built**
+
+- Profiles drive configuration (#17): the engine picks one at start (detected from total memory, or `ISONOMIC_PROFILE`; an unreadable override is logged and a fresh probe used) and renders it into each service's config: database buffers and cache memory per the table. The log line says which profile and why.
+- The lazy tier (#19): `Stack::ensure_started` starts a tier-2 service on first use. Concurrent callers share one start; a failed start reaches every caller that waited on it, and the next call tries again. A tier-2 service that hasn't started is left out of `system.status`, so it doesn't hold the light off green.
+- The RAM gate (#20), carried over from the earlier build with its tests: the profile ceiling first (4 GiB Low, 10 GiB Standard, none on High), then free memory plus 2 GiB headroom. The refusal has the SDK's `memory` error fields and points to a smaller model or a remote one. A tier-2 service registered with a footprint is checked before every start; a refusal starts nothing. A gated service with no gate is refused, not started unchecked.
+
+**Decision: one gate.** The inference workspace declares the same seam and ships only a fixed-budget gate for tests, leaving the hardware-aware gate to the engine. So the engine's gate is the only real one; the model gateway adapts it to the inference trait when it takes that dependency.
+
+**Deviations**
+
+- `Stack::aggregate_state` keeps its ported behaviour (an idle tier-2 service counts as stopped). The broker filters idle lazy services out of the status instead.
+- The stack tests count launches from the supervisor's log, not from the stand-in script: on the Intel Mac a freshly written script can miss a whole two-second start (the first-run hold noted below).
+
+**Deferred**
+
+- Model workers behind the gate, and a refusal on the wire (`insufficient_memory`): the model gateway, with the SDK's R2.
+- The other profile rows (model idle unload, apps kept loaded) have values but no consumer yet.
+- Pausing dependents and the consumer-reported probe trigger, unchanged from below.
+
 ## 2026-11-14 (later) · Startup probe ramp; Mac results (isonomic-capsule PRs #1 to #3)
 
 **Changed, with Omar's approval** (PR #3)
