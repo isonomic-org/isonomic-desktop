@@ -29,8 +29,6 @@ hello-app = { path = "../isonomic-sdk/examples/hello-app" }
 # Isonomic Chat is a sibling checkout (../isonomic-chat), pinned to the
 # commit in CHAT_REF.
 isonomic-chat = { path = "../isonomic-chat/crates/chat" }
-# Isonomic UI is a sibling checkout too, pinned to the commit in UI_REF.
-isonomic-ui = { path = "../isonomic-ui/crates/ui" }
 futures = "0.3"
 libc = "0.2"
 # Menu bar status item on macOS. Pinned exactly: it drives native APIs.

@@ -17,7 +17,7 @@ The Isonomic window: a GPUI app with a rail of app icons on the left. The spec i
 
 - One task per branch and pull request. Merging follows the standing rules below.
 - Before pushing: `cargo fmt --all`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-features`.
-- The SDK and Isonomic UI are sibling checkouts (`../isonomic-sdk`, `../isonomic-ui`). CI checks them out at the commits in `SDK_REF` and `UI_REF`. `isonomic-sdk` and `isonomic-ui` belong to other sessions: move the pin, never edit them.
+- The SDK and Isonomic UI are sibling checkouts (`../isonomic-sdk`, `../isonomic-ui`). CI checks them out at the commit in `SDK_REF` and at the SDK's own `UI_REF`. `isonomic-sdk` and `isonomic-ui` belong to other sessions: move the pin, never edit them.
 - On Linux, GPUI needs: `libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libasound2-dev libvulkan-dev libx11-xcb-dev libfontconfig-dev libssl-dev`.
 
 ## Standing rules
