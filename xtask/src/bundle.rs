@@ -37,6 +37,8 @@ pub struct Options {
     /// Mount the SDK's example app in the window, to check app hosting and
     /// deep links by eye. Never for a release.
     pub example_app: bool,
+    /// Print what Developer ID signing would run (or that it is skipped).
+    pub sign_dry_run: bool,
 }
 
 /// What `bundle` produced.
@@ -177,6 +179,9 @@ pub fn run(options: &Options) -> Result<Built, String> {
     let app = app_path();
     assemble(&app, &targets, &desktop, &capsule)?;
     sign(&app)?;
+    if options.sign_dry_run {
+        crate::release::sign_dry_run(&app);
+    }
     Ok(Built::measure(app, targets))
 }
 
@@ -225,7 +230,10 @@ fn assemble(app: &Path, targets: &[String], desktop: &Path, capsule: &Path) -> R
 
     crate::sidecars::ship(capsule, targets, &sidecars)?;
 
-    let plist = info_plist(env!("CARGO_PKG_VERSION"));
+    let icon = crate::release::icon(desktop, &contents.join("Resources"))?;
+    let build = crate::release::build_number(desktop);
+    println!("version {} (build {build})", env!("CARGO_PKG_VERSION"));
+    let plist = info_plist(env!("CARGO_PKG_VERSION"), &build, icon);
     std::fs::write(contents.join("Info.plist"), plist).map_err(|e| format!("Info.plist: {e}"))
 }
 
@@ -250,7 +258,7 @@ pub fn fuse(slices: &[PathBuf], out: &Path) -> Result<(), String> {
     )
 }
 
-pub fn info_plist(version: &str) -> String {
+pub fn info_plist(version: &str, build: &str, icon: bool) -> String {
     let entries = [
         ("CFBundleDevelopmentRegion", "en"),
         ("CFBundleDisplayName", APP_NAME),
@@ -260,12 +268,18 @@ pub fn info_plist(version: &str) -> String {
         ("CFBundleName", APP_NAME),
         ("CFBundlePackageType", "APPL"),
         ("CFBundleShortVersionString", version),
-        ("CFBundleVersion", version),
+        ("CFBundleVersion", build),
         ("LSMinimumSystemVersion", MINIMUM_MACOS),
     ];
     let mut body = String::new();
     for (key, value) in entries {
         body.push_str(&format!("  <key>{key}</key>\n  <string>{value}</string>\n"));
+    }
+    if icon {
+        body.push_str(&format!(
+            "  <key>CFBundleIconFile</key>\n  <string>{}</string>\n",
+            crate::release::ICON_NAME
+        ));
     }
     body.push_str("  <key>NSHighResolutionCapable</key>\n  <true/>\n");
     // Deep links: macOS opens isonomic:// URLs in this app.
@@ -349,7 +363,10 @@ mod tests {
 
     #[test]
     fn plist_names_the_window_and_the_isonomic_id() {
-        let plist = info_plist("1.2.3");
+        let plist = info_plist("1.2.3", "42", true);
+        assert!(plist.contains("<key>CFBundleVersion</key>\n  <string>42</string>"));
+        assert!(plist.contains("<key>CFBundleIconFile</key>\n  <string>AppIcon</string>"));
+        assert!(!info_plist("1.2.3", "42", false).contains("CFBundleIconFile"));
         assert!(plist
             .contains("<key>CFBundleIdentifier</key>\n  <string>com.isonomic.desktop</string>"));
         assert!(
