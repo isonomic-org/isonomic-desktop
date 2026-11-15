@@ -9,10 +9,13 @@
 //!   MacOS/isonomic-capsule        the engine, both architectures fused
 //!   Resources/sidecars/postgres-x86_64-apple-darwin/{bin,lib,share,...}
 //!   Resources/sidecars/postgres-aarch64-apple-darwin/{bin,lib,share,...}
+//!   Resources/sidecars/<name>/<program>        single programs, both architectures fused
 //! ```
 //!
 //! Directory trees ship once per architecture; the running engine picks the
-//! tree for its own slice. Everything is signed ad hoc.
+//! tree for its own slice. Single programs are fused. What ships comes from
+//! the engine repo's `sidecars.json` (see `sidecars`). Everything is signed
+//! ad hoc.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -27,9 +30,6 @@ pub const ENGINE_BIN: &str = "isonomic-capsule";
 /// Apple Silicon. Nothing older has been tried.
 const MINIMUM_MACOS: &str = "11.0";
 const APPLE_SLICES: [&str; 2] = ["x86_64-apple-darwin", "aarch64-apple-darwin"];
-/// What the app ships of each PostgreSQL tree. Headers (`include`) and the
-/// upstream readme are left out: the engine never reads them.
-const POSTGRES_PARTS: [&str; 5] = ["bin", "lib", "share", "COPYRIGHT", "LICENSE"];
 
 pub struct Options {
     /// Build for this Mac's architecture only (faster; not universal).
@@ -57,7 +57,15 @@ impl Built {
         let sidecars = app.join("Contents/Resources/sidecars");
         let targets = APPLE_SLICES
             .iter()
-            .filter(|t| sidecars.join(format!("postgres-{t}")).is_dir())
+            .filter(|t| {
+                std::fs::read_dir(&sidecars)
+                    .map(|entries| {
+                        entries
+                            .flatten()
+                            .any(|e| e.file_name().to_string_lossy().ends_with(&format!("-{t}")))
+                    })
+                    .unwrap_or(false)
+            })
             .map(|t| t.to_string())
             .collect();
         Ok(Self::measure(app, targets))
@@ -72,12 +80,19 @@ impl Built {
                 .unwrap_or_else(|| "?".into());
             parts.push((format!("MacOS/{name} ({arches})"), util::dir_size(&file)));
         }
-        for target in &targets {
-            let tree = format!("Resources/sidecars/postgres-{target}");
-            parts.push((
-                tree.clone(),
-                util::dir_size(&app.join("Contents").join(tree)),
-            ));
+        let sidecars = app.join("Contents/Resources/sidecars");
+        let mut shipped: Vec<String> = std::fs::read_dir(&sidecars)
+            .map(|entries| {
+                entries
+                    .flatten()
+                    .map(|e| e.file_name().to_string_lossy().to_string())
+                    .collect()
+            })
+            .unwrap_or_default();
+        shipped.sort();
+        for name in shipped {
+            let part = format!("Resources/sidecars/{name}");
+            parts.push((part, util::dir_size(&sidecars.join(&name))));
         }
         let bytes = util::dir_size(&app);
         Self {
@@ -198,34 +213,14 @@ fn assemble(app: &Path, targets: &[String], desktop: &Path, capsule: &Path) -> R
         fuse(&slices, &macos.join(name))?;
     }
 
-    for target in targets {
-        let tree = format!("postgres-{target}");
-        let source = capsule.join("sidecars").join(&tree);
-        if !source.join("bin/postgres").is_file() {
-            return Err(format!(
-                "{} is missing: run `cargo xtask fetch-sidecars` in the engine repo",
-                source.display()
-            ));
-        }
-        for part in POSTGRES_PARTS {
-            let from = source.join(part);
-            if from.exists() {
-                // ditto keeps symlinks (the shared libraries use them) and modes.
-                let to = sidecars.join(&tree).join(part);
-                util::run(
-                    Command::new("ditto").arg(&from).arg(&to),
-                    &format!("copying {}", from.display()),
-                )?;
-            }
-        }
-    }
+    crate::sidecars::ship(capsule, targets, &sidecars)?;
 
     let plist = info_plist(env!("CARGO_PKG_VERSION"));
     std::fs::write(contents.join("Info.plist"), plist).map_err(|e| format!("Info.plist: {e}"))
 }
 
 /// One slice is copied; several are fused into one universal file.
-fn fuse(slices: &[PathBuf], out: &Path) -> Result<(), String> {
+pub fn fuse(slices: &[PathBuf], out: &Path) -> Result<(), String> {
     for slice in slices {
         if !slice.is_file() {
             return Err(format!("missing build output {}", slice.display()));

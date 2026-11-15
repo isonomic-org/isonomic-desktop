@@ -9,4 +9,5 @@ publish.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true
 libc.workspace = true
+serde_json = "1"
 tokio.workspace = true

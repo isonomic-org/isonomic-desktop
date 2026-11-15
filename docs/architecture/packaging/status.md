@@ -2,6 +2,25 @@
 
 Newest first.
 
+## 2026-11-15 · Every bundled service ships, and single programs are fused
+
+**Built** (`cargo xtask bundle`, with the engine's install shapes from capsule #14)
+
+- The app ships what the engine repo's `sidecars.json` bundles (not deferred, not draft), no longer PostgreSQL alone. A tree ships once per architecture as `<name>-<triple>/`, minus headers, readmes, stamps and build logs. A single program (the cache, built from source) is fused for every target into `<name>/<program>`, where the engine finds it when it has no per-architecture tree.
+- Object storage stays out: deferred to Milestone 4 (Omar, 15 Nov), because its program is 134 MB (arm64) and 146 MB (x86_64) and stripping doesn't shrink it.
+
+**Measured** (Intel Mac, one architecture)
+
+| Part | Size |
+| --- | --- |
+| Window | 24.4 MB |
+| Engine | 3.9 MB |
+| PostgreSQL tree | 27.2 MB |
+| Cache, one program | 3.8 MB |
+| **The app** | **59.5 MB** (universal: about 113 MB) |
+
+The cache build is 3.6 MB (x86_64) and 3.4 MB (arm64); the engine builds it from the pinned source on the Intel Mac for both architectures.
+
 ## 2026-11-14 (night) · The universal app (PR #4)
 
 **Built** (`cargo xtask bundle` in this repo)

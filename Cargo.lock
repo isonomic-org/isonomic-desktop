@@ -8870,6 +8870,7 @@ dependencies = [
  "isonomic-client",
  "isonomic-proto",
  "libc",
+ "serde_json",
  "tokio",
 ]
 
