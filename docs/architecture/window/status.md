@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 2026-11-15 · On Isonomic UI (PR #9)
+
+**Built**
+
+- `ui` re-exports Isonomic UI, a sibling checkout pinned to the commit in `UI_REF` (`15f2f4c`), instead of GPUI Kit 0.9.1. No other crate changed: they reach the library only through `ui`, and `extern crate ui as gpui;` still resolves GPUI's macros (Isonomic UI rewrites macro paths only for crates that name it directly).
+- CI checks Isonomic UI out with the org's `UI_DEPLOY_KEY` (`ui: true` in the shared workflow).
+- The report prints the Isonomic UI revision and `UI_REF`.
+
+**Verified**
+
+- Linux: clippy `-D warnings` and 15 tests with `--locked`, including the two headless window tests.
+- Intel Mac: the release window builds (8 minutes, dependencies reused) and the Milestone 0 report passes from the app (healthy 3.0 s after launch, PostgreSQL back in 1.4 s, nothing left after stop). Window program 24.4 MB, up from 21.6 MB.
+- Launched as an app, the window shows the rail and "All services healthy" in Isonomic UI's theme (IBM Plex Sans); Quit from the app menu stops the engine and PostgreSQL cleanly.
+
+**Deviations**
+
+- None. The typeface and theme are Isonomic UI's defaults; no screen has an approved design yet.
+
 ## 2026-11-14 (evening) · Menu bar icon, close to hide, Quit (PR #3)
 
 **Spike result: menu bar icon**
