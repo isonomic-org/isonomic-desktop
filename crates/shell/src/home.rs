@@ -28,6 +28,8 @@ pub struct HomeTab {
     logs: Option<Entity<LogsView>>,
     /// Why the engine can't be reached, from the engine link.
     problem: Option<String>,
+    /// Something the person should do, shown until the next launch.
+    notice: Option<String>,
 }
 
 /// Wire name of a state, used in element ids.
@@ -117,7 +119,14 @@ impl HomeTab {
             source,
             logs: None,
             problem: None,
+            notice: None,
         }
+    }
+
+    /// Show `notice` at the top of Home, such as "move the app".
+    pub fn set_notice(&mut self, notice: String, cx: &mut Context<Self>) {
+        self.notice = Some(notice);
+        cx.notify();
     }
 
     /// Follow the engine link's problems: shown while not connected.
@@ -252,6 +261,13 @@ impl Render for HomeTab {
                     .text_lg()
                     .child(headline(&self.live)),
             )
+            .children(self.notice.clone().map(|notice| {
+                div()
+                    .id("home-notice")
+                    .test_support()
+                    .text_color(cx.theme().warning)
+                    .child(SharedString::from(notice))
+            }))
             .children(self.problem().map(|problem| {
                 div()
                     .id("engine-problem")

@@ -17,3 +17,39 @@ Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go 
 - **Signing dry run:** `--sign-dry-run` looks for a Developer ID Application certificate (`security find-identity`; `ISONOMIC_SIGN_IDENTITY` picks one) and prints the codesign commands a release would run: hardened runtime, secure timestamp, nested code first. Without a certificate it prints "signing: skipped". It never signs; the app stays ad-hoc signed.
 - **The model server's layout:** the engine looks for `llama-server` in `Resources/sidecars/llama-server-<triple>/` and also accepts a fused `Resources/sidecars/llama-server/` (isonomic-capsule `packaging::Bundle::binary`). The bundle ships whatever the engine's `sidecars.json` declares, so the model server lands there once the engine un-defers it. Nothing changes here.
 - **Not checked on a Mac:** the icon and the dry run run only on macOS; their logic is unit-tested on Linux.
+
+## 2026-11-15 · The app icon
+
+- The artwork is `assets/icon/app-icon-1024.png` (desktop #36, from Omar's design file). It fills its canvas edge to edge, so the bundle places it on the macOS icon grid: scaled to 824 pixels with Lanczos3 and centred on a transparent 1024 canvas. It then writes all ten iconset sizes itself, so only `iconutil` runs on the Mac to make `Resources/AppIcon.icns`.
+- The empty slot at `packaging/macos/AppIcon-1024.png` is gone.
+- Tested on Linux with the supplied artwork: the grid margin is transparent, the middle is the artwork, and every iconset size has the right dimensions.
+
+## 2026-11-15 · The unsigned release folder: `cargo xtask release`
+
+Version 1 ships without a Developer ID (no account for at least two weeks), as a download.
+
+- **`cargo xtask release`** (macOS) builds the universal, ad-hoc signed app and writes `dist/release/`, which is what gets handed over:
+  - `Isonomic-<version>-<build>.dmg`: the app, a link to Applications, and the first-open note; the app icon is on the volume.
+  - `….dmg.sha256` in `shasum -a 256` format.
+  - `….json`: version, build, file, size, hash, minimum macOS, architectures, `signed: ad-hoc`, `notarized: false`.
+  - `Opening Isonomic the first time.md`: the same note, beside the download.
+  
+  Nothing here builds, links to or knows about a website.
+- **First open:** `packaging/macos/first-open.md` covers moving the app to Applications, the Gatekeeper dialog, **Open Anyway** in Privacy & Security, and checking the hash. Its key steps are unit-tested to stay in the note.
+- **Signing later is a switch, not new work:**
+  - `packaging/macos/entitlements.plist` holds the hardened runtime's one exception: library validation off, for the bundled services' own libraries.
+  - The signing dry run passes the entitlements, and a notarization dry run prints `notarytool submit`, `stapler staple` and `spctl`.
+  - Both are skipped with one line when the keychain has no Developer ID certificate.
+
+**What assumes a signed build, checked:**
+
+| Part | Unsigned (ad hoc) |
+| --- | --- |
+| The engine's token key | A file in the Capsule (`secrets/token.key`), not the keychain: unaffected |
+| Keychain access groups | None used anywhere in the window or engine |
+| The `isonomic` URL scheme | Registered from `Info.plist` when the app is first opened or moved; signing isn't required |
+| Start at login (launch agent) | Works, but only once the app is in Applications: see translocation below |
+| App Translocation | **Degrades.** A quarantined app opened from the disk image or Downloads runs from a random read-only path that changes every launch. The window now detects it (`engine_link::translocated`), installs no login agent and asks the person on Home to move the app |
+| Permissions macOS remembers per app (microphone and the like) | None used yet. An ad-hoc signature changes with every build, so any such grant would be asked again after each update |
+
+**To check on the Mac:** a real first open from the disk image (Gatekeeper's dialog, Open Anyway, then the engine started by the launch agent at the next login).

@@ -10,4 +10,7 @@ isonomic-client.workspace = true
 isonomic-proto.workspace = true
 libc.workspace = true
 serde_json = "1"
+sha2 = "0.10"
+# The app icon: placing the artwork on the macOS icon grid, and the iconset.
+image = { version = "0.25", default-features = false, features = ["png"] }
 tokio.workspace = true

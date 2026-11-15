@@ -122,7 +122,13 @@ fn main() {
     // A self-check runs in a scratch Capsule: it must never install or
     // change the person's own login agent, so it runs without one.
     let check = self_check::mode();
-    let agent = if check.is_some() {
+    // Opened from the disk image or Downloads without being moved: macOS
+    // runs it from a path that changes every launch, so no login agent may
+    // point at it, and the person is asked to move it.
+    let translocated = std::env::current_exe()
+        .map(|exe| engine_link::translocated(&exe))
+        .unwrap_or(false);
+    let agent = if check.is_some() || translocated {
         None
     } else {
         config.login_agent().map(Arc::new)
@@ -207,6 +213,16 @@ fn main() {
                 shell
                     .home()
                     .update(cx, |home, cx| home.follow_problems(problems, cx));
+                if translocated {
+                    shell.home().update(cx, |home, cx| {
+                        home.set_notice(
+                            "Move Isonomic to the Applications folder and open it from there. \
+                             Until then it can't start at login."
+                                .into(),
+                            cx,
+                        )
+                    });
+                }
                 for app in first_party() {
                     shell.mount(app, host.clone(), cx);
                 }
