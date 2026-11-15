@@ -14,6 +14,7 @@
 //! restarts after a crash.
 
 pub mod agent;
+pub mod setup;
 
 use std::io;
 use std::path::PathBuf;
@@ -176,6 +177,11 @@ impl LinkConfig {
             user_id,
             client_name: "isonomic-desktop".to_string(),
         })
+    }
+
+    /// The Capsule directory, for first-run setup.
+    pub fn capsule(&self) -> setup::Capsule {
+        setup::Capsule::new(self.root.clone())
     }
 
     /// The login agent, on macOS when the engine is inside an app bundle.

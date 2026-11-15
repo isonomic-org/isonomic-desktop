@@ -7,6 +7,7 @@
 //! First-party apps are mounted as further tabs through [`apps`].
 
 pub mod apps;
+pub mod first_run;
 pub mod home;
 pub mod lifecycle;
 pub mod light;
@@ -27,6 +28,7 @@ use ui::{
 };
 
 use apps::{AppHost, AppTab};
+use first_run::{Finished, FirstRun, Setup};
 use home::HomeTab;
 use logs::LogSource;
 
@@ -45,6 +47,8 @@ pub struct Shell {
     home: Entity<HomeTab>,
     tabs: Vec<Tab>,
     selected: usize,
+    /// Shown in place of the tabs until it finishes.
+    first_run: Option<Entity<FirstRun>>,
 }
 
 impl Shell {
@@ -65,7 +69,31 @@ impl Shell {
                 app: None,
             }],
             selected: 0,
+            first_run: None,
         }
+    }
+
+    /// Show the first-run flow until it finishes. `created`: the Capsule
+    /// was made at this launch.
+    pub fn start_first_run(
+        &mut self,
+        setup: Arc<dyn Setup>,
+        created: bool,
+        cx: &mut Context<Self>,
+    ) {
+        let first_run = cx.new(|cx| FirstRun::new(setup, created, cx));
+        cx.subscribe(&first_run, |shell, _, _: &Finished, cx| {
+            shell.first_run = None;
+            cx.notify();
+        })
+        .detach();
+        self.first_run = Some(first_run);
+        cx.notify();
+    }
+
+    /// The first-run flow, while it is showing.
+    pub fn first_run(&self) -> Option<&Entity<FirstRun>> {
+        self.first_run.as_ref()
     }
 
     /// The Home tab.
@@ -114,6 +142,9 @@ impl Shell {
 
 impl Render for Shell {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        if let Some(first_run) = &self.first_run {
+            return div().id("shell").size_full().child(first_run.clone());
+        }
         let theme = cx.theme();
         let (accent, accent_text) = (theme.sidebar_accent, theme.sidebar_accent_foreground);
         let (badge, badge_text) = (theme.primary, theme.primary_foreground);

@@ -12,7 +12,10 @@ example-app = ["dep:hello-app"]
 
 [dependencies]
 hello-app = { workspace = true, optional = true }
+futures.workspace = true
 isonomic-app.workspace = true
+isonomic-client.workspace = true
+isonomic-proto.workspace = true
 engine-link.workspace = true
 shell.workspace = true
 ui.workspace = true

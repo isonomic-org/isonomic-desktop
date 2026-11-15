@@ -3677,8 +3677,11 @@ name = "isonomic-desktop"
 version = "0.0.1"
 dependencies = [
  "engine-link",
+ "futures",
  "hello-app",
  "isonomic-app",
+ "isonomic-client",
+ "isonomic-proto",
  "shell",
  "ui",
 ]
