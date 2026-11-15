@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-15 (night) · Unloading app tabs under the profile's cap
+
+- The hardware profile caps how many apps stay loaded, using the supervisor spec's numbers: `low` 2, `standard` 4, `high` no cap (`apps::loaded_cap`). The window asks `system.profile` once the engine is connected. Until it answers, nothing is unloaded.
+- Opening an app past the cap unloads the least recently opened one, never the tab on screen. That app's `on_unload` runs, its view is dropped and its rail marker clears. Reopening builds it again with the token it already has, so there is no second `apps.grant`. Its data comes back from the engine, as the product spec says.
+- Tested headless against the testkit with three small test apps on a `low` machine: the oldest is told and unloaded, reopening it unloads the next oldest, and there are three grants in all (`crates/shell/tests/unload.rs`).
+- **Deviation:** an unrecognized profile name gets the `standard` cap.
 ## 2026-11-15 (night) · App settings kept in the Capsule
 
 - An app's settings (`AppContext::settings`) now survive a quit. `engine_link::settings::FileSettings` keeps one JSON object per app at `settings/apps/<app id>.json` in the Capsule. Only ids made of lowercase letters, digits, dots and dashes become file names; any other id stays in memory.
