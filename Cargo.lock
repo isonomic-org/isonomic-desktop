@@ -6555,6 +6555,7 @@ dependencies = [
  "futures",
  "isonomic-client",
  "isonomic-proto",
+ "isonomic-testkit",
  "tokio",
  "tray-icon",
  "ui",

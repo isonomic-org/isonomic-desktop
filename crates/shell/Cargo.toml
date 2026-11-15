@@ -18,3 +18,4 @@ tray-icon.workspace = true
 
 [dev-dependencies]
 ui = { workspace = true, features = ["test-support"] }
+isonomic-testkit.workspace = true

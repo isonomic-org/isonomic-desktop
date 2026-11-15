@@ -4,8 +4,12 @@
 
 extern crate ui as gpui;
 
+use std::sync::Arc;
+
+use futures::future::BoxFuture;
 use isonomic_client::Live;
 use isonomic_proto::{ServiceState, ServiceStatus, SystemStatus};
+use shell::logs::LogSource;
 use shell::Shell;
 use tokio::sync::watch;
 use ui::test::TestWindowExt as _;
@@ -13,6 +17,15 @@ use ui::{
     px, size, AnyWindowHandle, AppContext as _, Bounds, Entity, Point, TestAppContext,
     WindowBounds, WindowOptions,
 };
+
+/// No lines for any service: these tests are about status.
+struct NoLogs;
+
+impl LogSource for NoLogs {
+    fn last_lines(&self, _: &str) -> BoxFuture<'static, Result<Vec<String>, String>> {
+        Box::pin(async { Ok(Vec::new()) })
+    }
+}
 
 fn open(cx: &mut TestAppContext, live: watch::Receiver<Live>) -> (AnyWindowHandle, Entity<Shell>) {
     cx.update(|cx| {
@@ -24,8 +37,10 @@ fn open(cx: &mut TestAppContext, live: watch::Receiver<Live>) -> (AnyWindowHandl
             })),
             ..Default::default()
         };
-        ui::open_window(options, cx, |_, cx| cx.new(|cx| Shell::new(live, cx)))
-            .expect("open test window")
+        ui::open_window(options, cx, |_, cx| {
+            cx.new(|cx| Shell::new(live, Arc::new(NoLogs), cx))
+        })
+        .expect("open test window")
     })
 }
 

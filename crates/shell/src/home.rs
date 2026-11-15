@@ -1,20 +1,30 @@
-//! The Home tab: every service's live state.
+//! The Home tab: every service's live state. Clicking a service opens its
+//! logs; Back returns to the list.
 //!
 //! The tab holds the latest `Live` value and redraws when the engine link's
 //! watch changes. It never polls and never calls the engine while drawing.
+
+use std::sync::Arc;
 
 use isonomic_client::Live;
 use isonomic_proto::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
+use ui::component::button::Button;
 use ui::component::theme::ActiveTheme as _;
 use ui::{
-    div, tokens, App, Context, Hsla, InteractiveElement as _, IntoElement, ParentElement as _,
-    Render, SharedString, Styled as _, TestSupportExt as _, Window,
+    div, tokens, App, AppContext as _, Context, Entity, Hsla, InteractiveElement as _, IntoElement,
+    ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
+    TestSupportExt as _, Window,
 };
+
+use crate::logs::{LogSource, LogsView};
 
 pub struct HomeTab {
     live: Live,
+    updates: watch::Receiver<Live>,
+    source: Arc<dyn LogSource>,
+    logs: Option<Entity<LogsView>>,
 }
 
 /// Wire name of a state, used in element ids.
@@ -61,8 +71,13 @@ fn state_color(state: ServiceState, cx: &App) -> Hsla {
 }
 
 impl HomeTab {
-    pub fn new(live: watch::Receiver<Live>, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        live: watch::Receiver<Live>,
+        source: Arc<dyn LogSource>,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let current = live.borrow().clone();
+        let kept = live.clone();
         let mut updates = live;
         cx.spawn(async move |tab, cx| {
             // Wakes only when the engine link publishes a change.
@@ -78,17 +93,54 @@ impl HomeTab {
             }
         })
         .detach();
-        Self { live: current }
+        Self {
+            live: current,
+            updates: kept,
+            source,
+            logs: None,
+        }
     }
 
     /// The value currently drawn.
     pub fn live(&self) -> &Live {
         &self.live
     }
+
+    /// The service whose logs are open, if any.
+    pub fn open_logs(&self) -> Option<&Entity<LogsView>> {
+        self.logs.as_ref()
+    }
+
+    fn show_logs(&mut self, service: String, cx: &mut Context<Self>) {
+        let source = Arc::clone(&self.source);
+        let live = self.updates.clone();
+        self.logs = Some(cx.new(|cx| LogsView::new(service, source, live, cx)));
+        cx.notify();
+    }
+
+    fn close_logs(&mut self, cx: &mut Context<Self>) {
+        self.logs = None;
+        cx.notify();
+    }
 }
 
 impl Render for HomeTab {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        if let Some(logs) = &self.logs {
+            return v_flex()
+                .id("home")
+                .size_full()
+                .p_6()
+                .gap_4()
+                .child(
+                    h_flex().child(
+                        Button::new("logs-back")
+                            .label("Back")
+                            .on_click(cx.listener(|tab, _, _, cx| tab.close_logs(cx))),
+                    ),
+                )
+                .child(logs.clone());
+        }
         let muted = cx.theme().muted_foreground;
         let border = cx.theme().border;
         let aggregate = self.live.system.as_ref().map(|system| system.aggregate);
@@ -111,9 +163,12 @@ impl Render for HomeTab {
                     1 => "1 restart".into(),
                     n => format!("{n} restarts").into(),
                 };
+                let name = service.name.clone();
                 h_flex()
                     .id(SharedString::from(format!("service-{}", service.name)))
                     .test_support()
+                    .cursor_pointer()
+                    .on_click(cx.listener(move |tab, _, _, cx| tab.show_logs(name.clone(), cx)))
                     .gap_3()
                     .py_2()
                     .border_b_1()
