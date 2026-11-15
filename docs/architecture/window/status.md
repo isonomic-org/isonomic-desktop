@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 2026-11-15 (night) · The app host: first-party app crates as tabs
+
+**Built** (`shell::apps`, `Shell::mount`, the window's startup)
+
+- An app is a crate that implements the SDK's `isonomic_app::App` (manifest, `build`, and optional `open_link`, `search`, `on_unload`). The window does not define a second interface: it links app crates and registers each with `isonomic_app::register`. The list is `first_party()` in `bin/isonomic-desktop`, in rail order.
+- Each registration is a rail entry. The app is built the first time its tab is opened: the shell calls `apps.grant` with the app's own manifest, scopes a client to the token, and hands the app an `AppContext` (that client, its settings, its attention signal). The tab then draws the app's root view and stays alive. A refused grant shows on the tab and is tried again the next time the tab is opened.
+- The rail follows the app's attention signal: a dot, or a count. It wakes on the signal; nothing polls.
+- Tested in a headless window against the SDK testkit with the SDK's smallest app (`hello-app`): the grant goes out once, every later call carries the app's token, the attention dot shows, and a refused grant recovers (`crates/shell/tests/apps.rs`). Nothing waits on the engine.
+- `cargo run -p isonomic-desktop --features example-app` mounts that app in the real window, to look at by eye. Release builds mount no app until Chat lands.
+
+**Deviations**
+
+- `shell` depends on the SDK's `isonomic-app`, which depends on Isonomic UI. `shell` still names only `ui`; the two are the same checkout, so the types match.
+- App settings are kept in memory (`MemorySettings`) until the engine stores settings: they are lost on quit.
+- Not yet routed: deep links and global search to `open_link`/`search`, and unloading tabs under the hardware profile's cap (`on_unload`). The SDK hooks are there; the window has no deep-link handler, search box or profile cap yet.
+- Monograms stand in for app icons on the rail, as for Home.
+- Isonomic Chat has no crate yet (its repo holds only a README). Requested in isonomic-chat (see the "Worker reports" issue for the link).
+
 ## 2026-11-15 (evening) · Pins: SDK 7c488c2, Isonomic UI 4c912f6
 
 - `SDK_REF` moves to the SDK's `main` (7c488c2: `system.retry`, the app crate, conformance, sql, blobs and events). `UI_REF` moves to 4c912f6, the commit every V1 repo now pins.

@@ -4,7 +4,9 @@
 //! Each tab is an entity that is built once and stays alive. The shell knows
 //! nothing about the engine beyond the live status watch and the log source
 //! it hands to the Home tab; it never touches a process, a socket or a path.
+//! First-party apps are mounted as further tabs through [`apps`].
 
+pub mod apps;
 pub mod home;
 pub mod lifecycle;
 pub mod light;
@@ -13,6 +15,7 @@ pub mod menubar;
 
 use std::sync::Arc;
 
+use isonomic_app::{Attention, Registration};
 use isonomic_client::Live;
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
@@ -23,15 +26,19 @@ use ui::{
     TestSupportExt as _, Window,
 };
 
+use apps::{AppHost, AppTab};
 use home::HomeTab;
 use logs::LogSource;
 
 /// One entry in the rail and the view it opens.
 struct Tab {
-    /// Stable identifier, used for the rail item's element id.
-    id: &'static str,
+    /// Stable identifier, used for the rail item's element id: `home`, or
+    /// an app's id.
+    id: SharedString,
     title: SharedString,
     view: AnyView,
+    /// Set for an app's tab.
+    app: Option<Entity<AppTab>>,
 }
 
 pub struct Shell {
@@ -52,9 +59,10 @@ impl Shell {
         Self {
             home: home.clone(),
             tabs: vec![Tab {
-                id: "home",
+                id: "home".into(),
                 title: "Home".into(),
                 view: home.into(),
+                app: None,
             }],
             selected: 0,
         }
@@ -66,15 +74,41 @@ impl Shell {
     }
 
     /// Identifier of the tab on screen.
-    pub fn selected_tab(&self) -> &'static str {
-        self.tabs[self.selected].id
+    pub fn selected_tab(&self) -> &str {
+        &self.tabs[self.selected].id
     }
 
-    fn select(&mut self, index: usize, cx: &mut Context<Self>) {
-        if index < self.tabs.len() && index != self.selected {
-            self.selected = index;
-            cx.notify();
+    /// Add an app crate's tab to the rail. The app is built when the tab is
+    /// first opened.
+    pub fn mount(&mut self, registration: Registration, host: AppHost, cx: &mut Context<Self>) {
+        let manifest = registration.manifest();
+        let (id, title) = (manifest.id.clone(), manifest.name.clone());
+        let app = apps::tab(registration, host, cx);
+        // The rail redraws when the app asks for attention.
+        cx.observe(&app, |_, _, cx| cx.notify()).detach();
+        self.tabs.push(Tab {
+            id: id.into(),
+            title: title.into(),
+            view: app.clone().into(),
+            app: Some(app),
+        });
+        cx.notify();
+    }
+
+    /// The tab of the app with `id`, if it is mounted.
+    pub fn app(&self, id: &str) -> Option<&Entity<AppTab>> {
+        self.tabs.iter().find(|tab| tab.id == id)?.app.as_ref()
+    }
+
+    fn select(&mut self, index: usize, window: &mut Window, cx: &mut Context<Self>) {
+        if index >= self.tabs.len() || index == self.selected {
+            return;
         }
+        self.selected = index;
+        if let Some(app) = &self.tabs[index].app {
+            app.update(cx, |app, cx| app.activate(window, cx));
+        }
+        cx.notify();
     }
 }
 
@@ -82,6 +116,7 @@ impl Render for Shell {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.theme();
         let (accent, accent_text) = (theme.sidebar_accent, theme.sidebar_accent_foreground);
+        let (badge, badge_text) = (theme.primary, theme.primary_foreground);
         let rail_items: Vec<_> = self
             .tabs
             .iter()
@@ -90,8 +125,13 @@ impl Render for Shell {
                 let selected = index == self.selected;
                 // A monogram stands in for the icon until the icon set lands.
                 let monogram: SharedString = tab.title.chars().take(1).collect::<String>().into();
+                let attention = tab
+                    .app
+                    .as_ref()
+                    .map_or(Attention::None, |app| app.read(cx).attention());
                 let mut item = div()
                     .id(SharedString::from(format!("rail-{}", tab.id)))
+                    .relative()
                     .test_support()
                     .size_9()
                     .flex()
@@ -100,9 +140,29 @@ impl Render for Shell {
                     .rounded_md()
                     .cursor_pointer()
                     .child(monogram)
-                    .on_click(cx.listener(move |shell, _, _, cx| shell.select(index, cx)));
+                    .on_click(
+                        cx.listener(move |shell, _, window, cx| shell.select(index, window, cx)),
+                    );
                 if selected {
                     item = item.bg(accent).text_color(accent_text);
+                }
+                let marker = match attention {
+                    Attention::None => None,
+                    Attention::Dot => Some(div().size(tokens::status_dot())),
+                    Attention::Count(n) => Some(div().px_1().text_xs().child(n.to_string())),
+                };
+                if let Some(marker) = marker {
+                    item = item.child(
+                        marker
+                            .id(SharedString::from(format!("attention-{}", tab.id)))
+                            .test_support()
+                            .absolute()
+                            .top_0()
+                            .right_0()
+                            .rounded_full()
+                            .bg(badge)
+                            .text_color(badge_text),
+                    );
                 }
                 item
             })
