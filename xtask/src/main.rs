@@ -1,7 +1,7 @@
 //! Build tasks for the window repo.
 //!
 //! ```text
-//! cargo xtask bundle [--host-only] [--example-app]
+//! cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
 //!     Build dist/Isonomic.app: the window, the engine and PostgreSQL, as one
 //!     universal (Intel + Apple Silicon) app, ad-hoc signed. macOS only.
 //!
@@ -21,6 +21,7 @@ mod bundle;
 mod e2e;
 mod gate;
 mod procs;
+mod release;
 mod report;
 mod sidecars;
 mod util;
@@ -28,7 +29,7 @@ mod util;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:
-  cargo xtask bundle [--host-only] [--example-app]
+  cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
   cargo xtask report [--host-only] [--no-build]
   cargo xtask e2e";
 
@@ -39,6 +40,7 @@ fn main() -> ExitCode {
         Some("bundle") => bundle::run(&bundle::Options {
             host_only: flag("--host-only"),
             example_app: flag("--example-app"),
+            sign_dry_run: flag("--sign-dry-run"),
         })
         .map(|built| built.print()),
         Some("e2e") => e2e::run(),
