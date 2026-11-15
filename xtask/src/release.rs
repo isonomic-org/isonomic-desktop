@@ -33,6 +33,10 @@ pub const ICON_NAME: &str = "AppIcon";
 pub const ENV_BUILD_NUMBER: &str = "ISONOMIC_BUILD_NUMBER";
 /// Picks one Developer ID identity when the keychain holds several.
 pub const ENV_SIGN_IDENTITY: &str = "ISONOMIC_SIGN_IDENTITY";
+/// The `notarytool` keychain profile a signed release submits with.
+pub const ENV_NOTARY_PROFILE: &str = "ISONOMIC_NOTARY_PROFILE";
+/// The entitlements a Developer ID signature carries, relative to the repo.
+pub const ENTITLEMENTS: &str = "packaging/macos/entitlements.plist";
 
 /// The build number: the override, else this branch's commit count.
 pub fn build_number(repo: &Path) -> String {
@@ -130,8 +134,9 @@ pub fn developer_ids(listing: &str) -> Vec<String> {
         .collect()
 }
 
-/// Print what a signed release would run, or that signing is skipped.
-pub fn sign_dry_run(app: &Path) {
+/// The Developer ID identity a signed release would use, if the keychain
+/// has one.
+pub fn identity() -> Option<String> {
     let listing = util::output(
         "security",
         &["find-identity", "-v", "-p", "codesigning"],
@@ -139,12 +144,39 @@ pub fn sign_dry_run(app: &Path) {
     )
     .unwrap_or_default();
     let ids = developer_ids(&listing);
-    let wanted = std::env::var(ENV_SIGN_IDENTITY).ok();
-    let chosen = match &wanted {
-        Some(name) => ids.iter().find(|id| id.contains(name.as_str())).cloned(),
-        None => ids.first().cloned(),
-    };
-    let Some(identity) = chosen else {
+    match std::env::var(ENV_SIGN_IDENTITY).ok() {
+        Some(name) => ids.into_iter().find(|id| id.contains(name.as_str())),
+        None => ids.into_iter().next(),
+    }
+}
+
+/// Print the notarization a signed release would run for `dmg`, or that it
+/// is skipped.
+pub fn notarize_dry_run(dmg: &Path) {
+    if identity().is_none() {
+        println!("notarization: skipped (no Developer ID Application certificate)");
+        return;
+    }
+    let profile = std::env::var(ENV_NOTARY_PROFILE).unwrap_or_else(|_| "<keychain profile>".into());
+    println!("notarization (dry run, nothing submitted):");
+    for line in notarize_commands(dmg, &profile) {
+        println!("  {line}");
+    }
+}
+
+pub fn notarize_commands(dmg: &Path, profile: &str) -> Vec<String> {
+    let dmg = dmg.display();
+    vec![
+        format!("codesign --force --timestamp --sign \"$IDENTITY\" \"{dmg}\""),
+        format!("xcrun notarytool submit \"{dmg}\" --keychain-profile \"{profile}\" --wait"),
+        format!("xcrun stapler staple \"{dmg}\""),
+        format!("spctl --assess --type open --context context:primary-signature -v \"{dmg}\""),
+    ]
+}
+
+/// Print what a signed release would run, or that signing is skipped.
+pub fn sign_dry_run(app: &Path) {
+    let Some(identity) = identity() else {
         println!("signing: skipped (no Developer ID Application certificate in the keychain)");
         return;
     };
@@ -162,8 +194,8 @@ pub fn sign_commands(app: &Path, identity: &str) -> Vec<String> {
         format!(
             "find \"{app}/Contents/Resources/sidecars\" -type f -perm +111 -exec codesign --force --options runtime --timestamp --sign \"{identity}\" {{}} +"
         ),
-        format!("codesign --force --options runtime --timestamp --sign \"{identity}\" \"{app}/Contents/MacOS/isonomic-capsule\""),
-        format!("codesign --force --options runtime --timestamp --sign \"{identity}\" \"{app}\""),
+        format!("codesign --force --options runtime --timestamp --entitlements {ENTITLEMENTS} --sign \"{identity}\" \"{app}/Contents/MacOS/isonomic-capsule\""),
+        format!("codesign --force --options runtime --timestamp --entitlements {ENTITLEMENTS} --sign \"{identity}\" \"{app}\""),
         format!("codesign --verify --strict --deep \"{app}\""),
     ]
 }
@@ -238,6 +270,11 @@ mod tests {
             "not ad hoc"
         );
         assert!(commands[3].starts_with("codesign --verify"));
+        assert!(commands[2].contains(ENTITLEMENTS), "{}", commands[2]);
+        assert!(util::desktop_root().join(ENTITLEMENTS).is_file());
+        let notarize = notarize_commands(Path::new("/x/I.dmg"), "p");
+        assert!(notarize[1].starts_with("xcrun notarytool submit"));
+        assert!(notarize[2].starts_with("xcrun stapler staple"));
     }
 
     #[test]

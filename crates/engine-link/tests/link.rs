@@ -171,3 +171,14 @@ fn an_engine_that_is_missing_or_dies_on_start_says_why() {
     problems.clear();
     assert_eq!(problems.current(), None);
 }
+
+#[test]
+fn a_translocated_app_is_recognised() {
+    use engine_link::translocated;
+    let moved = PathBuf::from("/Applications/Isonomic.app/Contents/MacOS/isonomic-desktop");
+    let random = PathBuf::from(
+        "/private/var/folders/x/T/AppTranslocation/1A2B/d/Isonomic.app/Contents/MacOS/isonomic-desktop",
+    );
+    assert!(!translocated(&moved));
+    assert!(translocated(&random));
+}

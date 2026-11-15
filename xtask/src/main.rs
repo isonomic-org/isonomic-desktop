@@ -9,6 +9,10 @@
 //!     Build, start the engine against a scratch Capsule, run the Milestone 0
 //!     gate, and print one block to paste back.
 //!
+//! cargo xtask release
+//!     The release folder: the universal app in a disk image, its SHA-256,
+//!     a JSON manifest and the first-open note. macOS only.
+//!
 //! cargo xtask e2e
 //!     Build the engine, fetch its services, and run the window's engine
 //!     link against it in a scratch Capsule. Not as root.
@@ -18,6 +22,7 @@
 //! like the SDK (`../isonomic-sdk`).
 
 mod bundle;
+mod dist;
 mod e2e;
 mod gate;
 mod procs;
@@ -31,6 +36,7 @@ use std::process::ExitCode;
 const USAGE: &str = "usage:
   cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
   cargo xtask report [--host-only] [--no-build]
+  cargo xtask release
   cargo xtask e2e";
 
 fn main() -> ExitCode {
@@ -44,6 +50,7 @@ fn main() -> ExitCode {
         })
         .map(|built| built.print()),
         Some("e2e") => e2e::run(),
+        Some("release") => dist::run(),
         Some("report") => report::run(&report::Options {
             host_only: flag("--host-only"),
             build: !flag("--no-build"),

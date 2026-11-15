@@ -28,7 +28,7 @@ pub const WINDOW_BIN: &str = "isonomic-desktop";
 pub const ENGINE_BIN: &str = "isonomic-capsule";
 /// The oldest macOS the app declares: 11, the first release that runs on
 /// Apple Silicon. Nothing older has been tried.
-const MINIMUM_MACOS: &str = "11.0";
+pub const MINIMUM_MACOS: &str = "11.0";
 const APPLE_SLICES: [&str; 2] = ["x86_64-apple-darwin", "aarch64-apple-darwin"];
 
 pub struct Options {

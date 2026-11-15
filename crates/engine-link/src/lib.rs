@@ -245,6 +245,15 @@ impl LinkConfig {
     }
 }
 
+/// Whether the window runs from a path macOS made up for an app that was
+/// opened without being moved first (App Translocation): a quarantined,
+/// unnotarized download opened from the disk image or Downloads. Its path
+/// changes every launch, so nothing may point at it.
+pub fn translocated(exe: &std::path::Path) -> bool {
+    exe.components()
+        .any(|part| part.as_os_str() == "AppTranslocation")
+}
+
 /// The running link. Keep it alive for as long as the window process lives.
 pub struct EngineLink {
     client: Client,
