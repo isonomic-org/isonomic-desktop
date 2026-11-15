@@ -208,6 +208,26 @@ impl Shell {
         true
     }
 
+    /// Select the tab of the app with `id` and build it if needed, as a
+    /// click on the rail would. `false` if no such app is mounted.
+    pub fn open_app(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        let Some(index) = self
+            .tabs
+            .iter()
+            .position(|tab| tab.app.is_some() && tab.id == id)
+        else {
+            return false;
+        };
+        if index == self.selected {
+            if let Some(app) = &self.tabs[index].app {
+                app.update(cx, |app, cx| app.activate(window, cx));
+            }
+        } else {
+            self.select(index, window, cx);
+        }
+        true
+    }
+
     /// Search every loaded app, in rail order. Each hit names its app.
     /// Unloaded apps are not asked.
     pub fn search(

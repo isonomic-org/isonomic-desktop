@@ -2,6 +2,22 @@
 
 Newest first.
 
+## 2026-11-15 (late) · The window checks itself: `ISONOMIC_SELF_CHECK`
+
+For a Mac nobody can click on, the real app drives itself and reports in text on standard error. It exits 0 (PASS) or 1 (FAIL).
+
+- **`ISONOMIC_SELF_CHECK=<prompt>`**, with `ISONOMIC_CAPSULE_DIR` naming a scratch Capsule, runs these steps:
+  1. The real window, engine and model start.
+  2. It waits for the engine.
+  3. First run goes ahead once its memory check passes and its model is installed.
+  4. Chat opens. The prompt is typed into Chat's composer and sent with Enter, through Chat's own path, as a person would.
+  5. It prints the reply and the times to first text and to the end of the turn.
+  6. It sends the prompt again, stops it at the first text, continues it, and prints the same numbers.
+  7. It stops the scratch engine and exits.
+- **`ISONOMIC_SELF_CHECK=link`** with an `isonomic://` link as a launch argument opens the link inside the app, never through the system's URL handling. It passes when the named app is on screen and, for Chat, received the link.
+- **It leaves the person's own setup alone:** no login agent is installed or changed, and there's no menu bar item. Run it as the binary inside the bundle, a second instance with its own Capsule. Never run it through `open` or the URL scheme.
+- **Tested headless:** a draft followed by Enter starts a Chat conversation through Chat's composer (`bin/isonomic-desktop/tests/chat.rs`). The full check needs a model and a display, so it runs on the Mac.
+
 ## 2026-11-15 (late) · The window against the real engine: `cargo xtask e2e`
 
 **Built:** `cargo xtask e2e` builds the engine from `../isonomic-capsule` and fetches its services for this machine. It then runs `crates/engine-link/tests/real_engine.rs` against them, in a fresh scratch Capsule. A plain `cargo test` skips that test.

@@ -81,3 +81,56 @@ fn chat_mounts_and_opens(cx: &mut TestAppContext) {
         .unwrap();
     assert_eq!(drawn, Some(true));
 }
+
+#[ui::test]
+fn a_draft_and_enter_start_a_chat(cx: &mut TestAppContext) {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()
+        .unwrap();
+    let engine = runtime.block_on(async { TestEngine::new() });
+    let host = AppHost::new(
+        engine.client_on(runtime.handle()),
+        Arc::new(MemorySettings::default()),
+    );
+    let (_, live) = watch::channel(Live::default());
+    let (window, shell) = cx.update(|cx| {
+        ui::init(cx);
+        let options = WindowOptions::default();
+        ui::open_window(options, cx, |_, cx| {
+            cx.new(|cx| {
+                let mut shell = Shell::new(live, Arc::new(NoLogs), cx);
+                shell.mount(register::<isonomic_chat::Chat>(), host, cx);
+                shell
+            })
+        })
+        .expect("open test window")
+    });
+    cx.update_window(window, |_, window, cx| {
+        window.render_frame(cx);
+        window.click("rail-com.isonomic.chat", cx);
+    })
+    .unwrap();
+    let tab = shell
+        .read_with(cx, |s, _| s.app("com.isonomic.chat").cloned())
+        .unwrap();
+    wait_until(cx, &tab, |tab| matches!(tab.state(), AppState::Open(_)));
+    let chat = tab.read_with(cx, |tab, _| match tab.state() {
+        AppState::Open(app) => app.view().downcast::<isonomic_chat::Chat>().ok(),
+        _ => None,
+    });
+    let chat_shell = chat.unwrap().read_with(cx, |chat, _| chat.shell().clone());
+    cx.update_window(window, |_, window, cx| {
+        chat_shell.update(cx, |s, cx| {
+            s.set_draft("Plan one day in Lisbon", window, cx)
+        });
+        window.render_frame(cx);
+        let handled = window.dispatch_keystroke(ui::Keystroke::parse("enter").unwrap(), cx);
+        eprintln!("enter handled: {handled}");
+    })
+    .unwrap();
+    cx.run_until_parked();
+    let route = chat_shell.read_with(cx, |s, _| s.route().clone());
+    eprintln!("route after enter: {route:?}");
+}
