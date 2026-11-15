@@ -2,6 +2,36 @@
 
 Newest first.
 
+## 2026-11-15 (later) · Start at login (#7)
+
+**Built** (`engine_link::agent`, the menu bar, the window's startup)
+
+- At launch the window writes `~/Library/LaunchAgents/com.isonomic.engine.plist` and loads it, before the link starts and before the event loop. The plist names the engine inside the app and pins `ISONOMIC_CAPSULE_DIR` (a launch agent doesn't get the user's shell environment). The engine's own log goes to `logs/engine.log` in the Capsule. A moved app gets its plist rewritten and reloaded.
+- The agent starts the engine at login and restarts it after an unsuccessful exit only (`KeepAlive` › `SuccessfulExit` false), so Quit, which stops the engine cleanly, doesn't loop. A second engine started while one serves exits 0 (engine #21).
+- When the window finds no engine, it starts it through the agent (`launchctl kickstart`), so that engine is one the agent will restart; with the agent off it spawns the binary as before.
+- Menu bar: a Start at Login check item, on by default. Turning it off deletes the plist and is remembered in the Capsule (`settings/start-at-login-off`); the change runs off the foreground thread.
+
+**Checked by hand on the Intel Mac** (default Capsule directory, `cargo xtask bundle --host-only`)
+
+| Step | Result |
+| --- | --- |
+| First launch of a fresh build | Plist written and loaded; the engine runs under launchd. 27.7 s before the engine started: macOS's first-run check of new programs |
+| Quit from the app menu | Engine stopped over the socket, exit 0; launchd leaves it stopped (one run) |
+| Login, simulated by unloading and loading the agent | No window; both services healthy 1.8 s and 0.8 s after load (cold start 208 and 445 ms) |
+| Open the app with the engine up | One engine; the window connects to it |
+| `kill -9` on the engine | launchd restarts it in 1.3 s; healthy 5.1 s after the kill, with the services the old engine left behind stopped first (engine #23); the window reads "All services healthy" |
+
+**Found on the way, fixed in the engine:** with the default Capsule directory the cache never started, because its config split "Application Support" in two (#22); and a killed engine's services kept running and blocked the next engine's (#23). The new logs view showed the cache's config error.
+
+**Not checked by hand:** a real logout and login (simulated with `launchctl`), and clicking the Start at Login item (the status item is out of reach of the tools I can drive; the agent behind it is unit-tested). Omar: please log out and in once, and toggle the item off and on.
+
+**Deviations**
+
+- Only an engine inside an app bundle gets an agent: a build run from the source tree would point the agent into a build directory.
+- Turning it off leaves this login session's job loaded, because unloading it would stop the engine under the open window. It's gone from the next login.
+- The agent is set up on the main thread before the event loop starts (two `launchctl` calls): after that nothing blocks a frame.
+
+
 ## 2026-11-15 · Logs view (part of #6)
 
 **Built** (`shell::logs`)

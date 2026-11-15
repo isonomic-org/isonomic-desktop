@@ -16,3 +16,4 @@ libc.workspace = true
 
 [dev-dependencies]
 isonomic-testkit.workspace = true
+tempfile.workspace = true
