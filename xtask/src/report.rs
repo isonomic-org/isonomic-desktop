@@ -226,7 +226,13 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
         }
     }
     let rule = "-".repeat(72);
-    format!("{rule}\n{}\n{rule}\n", out.join("\n"))
+    let block = format!("{rule}\n{}\n{rule}\n", out.join("\n"));
+    // Paths under the home folder print as `~/...`, so a pasted block does
+    // not carry the machine's user name.
+    match std::env::var("HOME") {
+        Ok(home) if home.len() > 1 => block.replace(&home, "~"),
+        _ => block,
+    }
 }
 
 fn fact(line: &str, prefix: &str) -> bool {
