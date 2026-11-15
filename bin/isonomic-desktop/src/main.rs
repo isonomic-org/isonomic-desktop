@@ -11,6 +11,7 @@ use engine_link::settings::FileSettings;
 use engine_link::setup::Capsule;
 use engine_link::{EngineLink, LinkConfig};
 use futures::future::BoxFuture;
+use futures::StreamExt as _;
 use isonomic_app::{Registration, SettingsStore};
 use isonomic_client::Client;
 use isonomic_proto::HardwareProfile;
@@ -119,6 +120,14 @@ fn main() {
     let app = ui::application();
     // Dock icon clicked while the window is hidden.
     app.on_reopen(lifecycle::show);
+    // Deep links (isonomic://...) arrive outside the app's context; they
+    // are queued here and handed to the shell once its window is open.
+    let (links, mut opened_links) = futures::channel::mpsc::unbounded::<String>();
+    app.on_open_urls(move |urls| {
+        for url in urls {
+            let _ = links.unbounded_send(url);
+        }
+    });
     app.run(move |cx| {
         ui::init(cx);
         let client = link.client().clone();
@@ -150,7 +159,7 @@ fn main() {
         let host = AppHost::new(client.clone(), settings);
         let host_client = client.clone();
         let profile_client = client.clone();
-        ui::open_window(options, cx, |window, cx| {
+        let (window, shell) = ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
                 let mut shell = Shell::new(live, Arc::new(logs), cx);
@@ -180,6 +189,18 @@ fn main() {
             })
         })
         .expect("failed to open the window");
+        cx.spawn(async move |cx| {
+            while let Some(url) = opened_links.next().await {
+                let _ = cx.update_window(window, |_, window, cx| {
+                    lifecycle::show(cx);
+                    let handled = shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
+                    if !handled {
+                        eprintln!("[isonomic-desktop] no app opens {url}");
+                    }
+                });
+            }
+        })
+        .detach();
 
         let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
         menubar::install(client, link.client().live(), login, cx);

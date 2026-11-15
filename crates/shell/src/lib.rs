@@ -180,6 +180,50 @@ impl Shell {
         cx.notify();
     }
 
+    /// Open a deep link: select the app it names, building it if needed,
+    /// and hand it the link. `false` if no mounted app has that name.
+    pub fn open_link(&mut self, url: &str, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        let Some(target) = apps::link_target(url) else {
+            return false;
+        };
+        let found = self
+            .tabs
+            .iter()
+            .position(|tab| tab.app.is_some() && apps::link_segment(&tab.id) == target);
+        let Some(index) = found else {
+            return false;
+        };
+        if let Some(app) = self.tabs[index].app.clone() {
+            app.update(cx, |app, cx| app.open_link(url, cx));
+        }
+        if index == self.selected {
+            // Already on screen; make sure it is built.
+            if let Some(app) = &self.tabs[index].app {
+                app.update(cx, |app, cx| app.activate(window, cx));
+            }
+        } else {
+            self.select(index, window, cx);
+        }
+        true
+    }
+
+    /// Search every loaded app, in rail order. Each hit names its app.
+    /// Unloaded apps are not asked.
+    pub fn search(
+        &self,
+        q: &str,
+        cx: &mut Context<Self>,
+    ) -> Vec<(SharedString, isonomic_app::SearchHit)> {
+        let mut hits = Vec::new();
+        for tab in &self.tabs {
+            if let Some(app) = &tab.app {
+                let found = app.update(cx, |app, cx| app.search(q, cx));
+                hits.extend(found.into_iter().map(|hit| (tab.id.clone(), hit)));
+            }
+        }
+        hits
+    }
+
     /// The tab of the app with `id`, if it is mounted.
     pub fn app(&self, id: &str) -> Option<&Entity<AppTab>> {
         self.tabs.iter().find(|tab| tab.id == id)?.app.as_ref()

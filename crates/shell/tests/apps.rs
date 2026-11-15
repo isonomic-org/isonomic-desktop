@@ -170,3 +170,57 @@ fn a_refused_grant_shows_and_is_tried_again(cx: &mut TestAppContext) {
     wait_until(cx, &tab, |tab| matches!(tab.state(), AppState::Open(_)));
     assert_eq!(Hello::manifest().id, HELLO);
 }
+
+#[test]
+fn a_link_names_its_app_by_the_last_part_of_the_id() {
+    use shell::apps::{link_segment, link_target};
+    assert_eq!(link_segment("com.isonomic.chat"), "chat");
+    assert_eq!(link_target("isonomic://chat/threads/t-1"), Some("chat"));
+    assert_eq!(link_target("isonomic://hello?x=1"), Some("hello"));
+    assert_eq!(link_target("isonomic:///x"), None);
+    assert_eq!(link_target("https://chat/x"), None);
+}
+
+#[ui::test]
+fn a_deep_link_opens_its_app_and_reaches_it_once_built(cx: &mut TestAppContext) {
+    let engine = engine();
+    let (window, shell) = open(cx, engine.host.clone());
+    let link = "isonomic://hello/models/chat-small";
+
+    // Not built yet: the link selects the tab, builds it, then arrives.
+    let handled = cx
+        .update_window(window, |_, window, cx| {
+            shell.update(cx, |shell, cx| shell.open_link(link, window, cx))
+        })
+        .unwrap();
+    assert!(handled);
+    assert_eq!(
+        shell.read_with(cx, |s, _| s.selected_tab().to_string()),
+        HELLO
+    );
+    let tab = shell.read_with(cx, |s, _| s.app(HELLO).cloned()).unwrap();
+    wait_until(cx, &tab, |tab| matches!(tab.state(), AppState::Open(_)));
+    let hello = tab.read_with(cx, |tab, _| match tab.state() {
+        AppState::Open(app) => app.view().downcast::<Hello>().ok(),
+        _ => None,
+    });
+    let hello = hello.unwrap();
+    assert_eq!(hello.read_with(cx, |h, _| h.opened().to_vec()), [link]);
+
+    // A link for an app that isn't mounted is not handled.
+    let other = cx
+        .update_window(window, |_, window, cx| {
+            shell.update(cx, |shell, cx| {
+                shell.open_link("isonomic://notes/x", window, cx)
+            })
+        })
+        .unwrap();
+    assert!(!other);
+
+    // Search reaches loaded apps, and each hit names its app.
+    wait_until(cx, &hello, |hello| *hello.phase() == Phase::Done);
+    let hits = shell.update(cx, |shell, cx| shell.search("chat", cx));
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0].0.as_ref(), HELLO);
+    assert_eq!(hits[0].1.link, "isonomic://hello/models/chat-small");
+}

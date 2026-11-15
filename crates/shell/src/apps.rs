@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use isonomic_app::{AppContext, Attention, LoadedApp, Registration, SettingsStore};
+use isonomic_app::{AppContext, Attention, LoadedApp, Registration, SearchHit, SettingsStore};
 use isonomic_client::{AppClient, Client};
 use tokio::sync::watch;
 use ui::component::theme::ActiveTheme as _;
@@ -23,6 +23,19 @@ use ui::{
     div, AppContext as _, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, TestSupportExt as _, Window,
 };
+
+/// The rail segment of a deep link to the app with `id`: its id's last
+/// part, so `isonomic://chat/...` goes to `com.isonomic.chat`.
+pub fn link_segment(id: &str) -> &str {
+    id.rsplit('.').next().unwrap_or(id)
+}
+
+/// The segment a deep link names, if it is an `isonomic://` link.
+pub fn link_target(url: &str) -> Option<&str> {
+    let rest = url.strip_prefix("isonomic://")?;
+    let segment = rest.split(['/', '?', '#']).next()?;
+    (!segment.is_empty()).then_some(segment)
+}
 
 /// How many apps stay loaded on a machine of `profile` (the engine
 /// supervisor's spec): `None` means no cap.
@@ -69,6 +82,8 @@ pub struct AppTab {
     /// The app's client, once the engine has granted its token. Kept
     /// across an unload.
     client: Option<AppClient>,
+    /// Deep links that arrived before the app was built.
+    pending_links: Vec<String>,
 }
 
 impl AppTab {
@@ -79,6 +94,7 @@ impl AppTab {
             state: AppState::Closed,
             attention: Attention::None,
             client: None,
+            pending_links: Vec::new(),
         }
     }
 
@@ -122,6 +138,25 @@ impl AppTab {
         .detach();
     }
 
+    /// Hand the app a deep link. An app that isn't built yet gets it once
+    /// it is; the caller activates the tab.
+    pub fn open_link(&mut self, url: &str, cx: &mut Context<Self>) {
+        match &self.state {
+            AppState::Open(app) => {
+                app.open_link(url, cx);
+            }
+            _ => self.pending_links.push(url.to_string()),
+        }
+    }
+
+    /// Ask the app for search hits. An app that isn't built has none.
+    pub fn search(&self, q: &str, cx: &mut Context<Self>) -> Vec<SearchHit> {
+        match &self.state {
+            AppState::Open(app) => app.search(q, cx),
+            _ => Vec::new(),
+        }
+    }
+
     /// Built, or being built: it counts against the cap.
     pub fn is_loaded(&self) -> bool {
         matches!(self.state, AppState::Open(_) | AppState::Granting)
@@ -145,7 +180,11 @@ impl AppTab {
         self.client = Some(client.clone());
         let id = self.registration.manifest().id.clone();
         let (context, attention) = AppContext::new(&id, client, Arc::clone(&self.host.settings));
-        self.state = AppState::Open(self.registration.open(context, window, cx));
+        let app = self.registration.open(context, window, cx);
+        for url in std::mem::take(&mut self.pending_links) {
+            app.open_link(&url, cx);
+        }
+        self.state = AppState::Open(app);
         self.follow(attention, cx);
         cx.notify();
     }

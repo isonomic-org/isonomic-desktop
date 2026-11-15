@@ -258,6 +258,13 @@ pub fn info_plist(version: &str) -> String {
         body.push_str(&format!("  <key>{key}</key>\n  <string>{value}</string>\n"));
     }
     body.push_str("  <key>NSHighResolutionCapable</key>\n  <true/>\n");
+    // Deep links: macOS opens isonomic:// URLs in this app.
+    body.push_str(&format!(
+        "  <key>CFBundleURLTypes</key>\n  <array>\n    <dict>\n      \
+         <key>CFBundleURLName</key>\n      <string>{BUNDLE_ID}</string>\n      \
+         <key>CFBundleURLSchemes</key>\n      <array>\n        \
+         <string>isonomic</string>\n      </array>\n    </dict>\n  </array>\n"
+    ));
     format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
          <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \
@@ -339,6 +346,8 @@ mod tests {
             plist.contains("<key>CFBundleExecutable</key>\n  <string>isonomic-desktop</string>")
         );
         assert!(plist.contains("<string>1.2.3</string>"));
+        assert!(plist.contains("<key>CFBundleURLSchemes</key>"));
+        assert!(plist.contains("<string>isonomic</string>"));
         assert!(plist.trim_end().ends_with("</plist>"));
     }
 

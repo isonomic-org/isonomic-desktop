@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-15 (late) · Deep links and search reach apps
+
+- **Deep links.** The bundle registers the `isonomic` URL scheme (`CFBundleURLTypes`). GPUI hands opened URLs to the window outside the app's context. They are queued and passed to the shell once its window is open, and the window is shown. `isonomic://<name>/...` goes to the mounted app whose id ends in `.<name>` (`isonomic://chat/...` goes to `com.isonomic.chat`). The shell selects that tab and builds the app if needed. Then the app's `open_link` gets the URL, held until the app is built. A link no mounted app names is logged and dropped.
+- **Search.** `Shell::search` asks every loaded app's `search` and returns the hits in rail order, each naming its app. Unloaded apps aren't asked, because they have nothing built to answer with.
+- Tested with the SDK's hello-app against the testkit: a link before the app is built selects it and arrives once it's built, an unknown app's link isn't handled, and search returns the app's hit (`crates/shell/tests/apps.rs`). The plist test checks the scheme.
+- **Not built:** a search box. Screens wait on Isonomic UI's QA, so search is reachable from code only, for now.
+- **Not checked on a Mac:** opening an `isonomic://` link from another app. The one-command check is in the Worker reports.
+
 ## 2026-11-15 (late) · Agent sessions: SDK 21ed50d
 
 - `SDK_REF` moves to 21ed50d: the agents interface, the testkit's in-memory agents host and the `agents.` conformance checks. The SDK pulls harness-core from isonomic-harness over ssh at rev `7a73ca6`. This repo doesn't name harness itself, so cargo builds the SDK's one copy. `ci.yml` passes `harness: true` to the shared workflow. CI checks harness out with the `HARNESS_DEPLOY_KEY` secret.
