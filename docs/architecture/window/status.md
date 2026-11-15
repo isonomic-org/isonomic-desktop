@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-15 (late) · Chat 2981abb: models in the manifest
+
+- `CHAT_REF` moves to 2981abb. It's the same SDK (c0d2bf7) and the same harness rev, so only the Chat pin moves.
+- Chat's manifest now asks for `agents`, `sql` (schema `chat`) and `models` (`any: true`, local only). The window grants from the manifest. The headless Chat test mounts it through that grant against the testkit, and a refused grant shows on the tab.
+- **Not wired yet:** Chat raises `ModelUnavailable` when a picked model isn't installed, but an app can't ask the window for anything. I requested a window request in `isonomic-app` (isonomic-sdk #31). The window will answer it with first run's download step.
+
 ## 2026-11-15 (late) · SDK c0d2bf7 and Chat 6e2b6dc; Isonomic UI only through the SDK
 
 - `CHAT_REF` moves with it to 6e2b6dc on Chat's `main`, which pins the same SDK and the same harness rev, so cargo builds one harness-core. Chat now asks for `agents` and `sql` and declares the schema `chat`. The window grants from the manifest, and the headless Chat test mounts it through that grant against the testkit. A refused grant shows on the tab (`apps.rs`).
