@@ -497,6 +497,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "automod"
+version = "1.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a273e731a7fb8c2268fd2932c9e9a3469f4fd171d85d070d2687190229653bd3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "av-scenechange"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1050,6 +1061,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "conversation-host"
+version = "0.0.1"
+dependencies = [
+ "conversation-model",
+ "futures",
+]
+
+[[package]]
+name = "conversation-model"
+version = "0.0.1"
+dependencies = [
+ "harness-core",
+]
+
+[[package]]
+name = "conversation-sdk"
+version = "0.0.1"
+dependencies = [
+ "conversation-host",
+ "conversation-model",
+ "futures",
+ "isonomic-client",
+ "isonomic-proto",
+ "serde_json",
+]
+
+[[package]]
+name = "conversation-ui"
+version = "0.0.1"
+dependencies = [
+ "conversation-host",
+ "conversation-model",
+ "futures",
+ "ui",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1377,6 +1425,13 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "desktop-ui"
+version = "0.0.1"
+dependencies = [
+ "isonomic-ui",
 ]
 
 [[package]]
@@ -2800,8 +2855,6 @@ dependencies = [
 [[package]]
 name = "gpui-pre-macros"
 version = "0.3.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c7f67904eced61ed42ae3320a9b4b388aed893f8547fffe9161ec425ad162eb"
 dependencies = [
  "heck 0.5.0",
  "proc-macro-crate",
@@ -3755,6 +3808,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "isonomic-chat"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "conversation-host",
+ "conversation-sdk",
+ "conversation-ui",
+ "isonomic-app",
+ "isonomic-proto",
+ "tokio",
+ "ui",
+]
+
+[[package]]
 name = "isonomic-client"
 version = "0.0.1"
 dependencies = [
@@ -3767,15 +3834,18 @@ dependencies = [
 name = "isonomic-desktop"
 version = "0.0.1"
 dependencies = [
+ "desktop-ui",
  "engine-link",
  "futures",
  "hello-app",
  "isonomic-app",
+ "isonomic-chat",
  "isonomic-client",
  "isonomic-proto",
+ "isonomic-testkit",
  "serde_json",
  "shell",
- "ui",
+ "tokio",
 ]
 
 [[package]]
@@ -3912,6 +3982,14 @@ dependencies = [
  "unicode-width",
  "uuid",
  "windows 0.58.0",
+]
+
+[[package]]
+name = "isonomic-ui-extra"
+version = "0.1.0"
+dependencies = [
+ "automod",
+ "isonomic-ui",
 ]
 
 [[package]]
@@ -6674,6 +6752,7 @@ dependencies = [
 name = "shell"
 version = "0.0.1"
 dependencies = [
+ "desktop-ui",
  "futures",
  "hello-app",
  "isonomic-app",
@@ -6682,7 +6761,6 @@ dependencies = [
  "isonomic-testkit",
  "tokio",
  "tray-icon",
- "ui",
 ]
 
 [[package]]
@@ -7572,6 +7650,7 @@ name = "ui"
 version = "0.0.1"
 dependencies = [
  "isonomic-ui",
+ "isonomic-ui-extra",
 ]
 
 [[package]]

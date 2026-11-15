@@ -1,5 +1,5 @@
 [package]
-name = "ui"
+name = "desktop-ui"
 description = "The single re-export of the component library. Nothing else in this repo names GPUI or Isonomic UI."
 version.workspace = true
 edition.workspace = true

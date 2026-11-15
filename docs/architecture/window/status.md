@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-11-15 (late) · Isonomic Chat mounted
+
+- The window mounts `isonomic_chat::Chat` (`com.isonomic.chat`), first in the rail after Home. It comes from the sibling checkout `../isonomic-chat`, pinned to the commit in `CHAT_REF`. The pin is 64dcd18 on Chat's `main` (its #11), which pins SDK 21ed50d like the window and asks for `agents` in its manifest.
+- Headless test: Chat in the real shell against the SDK testkit is on the rail, gets its token and draws its own view (`bin/isonomic-desktop/tests/chat.rs`).
+- **The `ui` package is renamed `desktop-ui`.** Chat's workspace has its own package named `ui`, and cargo can't write two path packages of the same name and version to one lockfile. Code still names the crate `ui`, through the dependency key, so nothing else changes.
+- **The workspace applies Isonomic UI's patch for GPUI's macros** (`vendor/gpui-pre-macros`), as the UI, SDK and Chat workspaces do. Chat's extra components need it. This repo's own code builds and tests the same with it.
+- **CI:** `ci.yml` passes `chat: true`, so the shared workflow checks out isonomic-chat at `CHAT_REF` with the `CHAT_DEPLOY_KEY` secret.
+- **Debug info:** with Chat in the build, CI's runner ran out of disk. Debug builds now keep line tables for this repo's crates and no debug info for dependencies (`[profile.dev]` in `Cargo.toml`).
+
 ## 2026-11-15 (late) · Failure states: the window says why it can't reach the engine
 
 - The engine link now publishes a problem in plain words, on a watch (`EngineLink::problems`). It covers two cases: the engine binary can't be started (missing or not allowed to run), and the engine exits with a failure before it answers, in which case the problem quotes its last log line. A successful connection clears it.
