@@ -14,7 +14,7 @@ edition = "2021"
 publish = false
 
 [workspace.dependencies]
-ui = { path = "crates/ui" }
+ui = { path = "crates/ui", package = "desktop-ui" }
 engine-link = { path = "crates/engine-link" }
 shell = { path = "crates/shell" }
 # The SDK is a sibling checkout (../isonomic-sdk). CI checks it out at the
@@ -26,6 +26,9 @@ isonomic-testkit = { path = "../isonomic-sdk/crates/testkit" }
 isonomic-app = { path = "../isonomic-sdk/crates/app" }
 # The SDK's smallest app, mounted by the shell's tests until Chat lands.
 hello-app = { path = "../isonomic-sdk/examples/hello-app" }
+# Isonomic Chat is a sibling checkout (../isonomic-chat), pinned to the
+# commit in CHAT_REF.
+isonomic-chat = { path = "../isonomic-chat/crates/chat" }
 # Isonomic UI is a sibling checkout too, pinned to the commit in UI_REF.
 isonomic-ui = { path = "../isonomic-ui/crates/ui" }
 futures = "0.3"
@@ -36,3 +39,9 @@ serde_json = "1"
 tempfile = "3"
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "net", "time", "macros"] }
+
+# Isonomic UI's copy of GPUI's macros, which resolve GPUI paths through
+# Isonomic UI. The UI, SDK and Chat workspaces apply the same patch; Chat's
+# extra components need it.
+[patch.crates-io]
+gpui-pre-macros = { path = "../isonomic-ui/vendor/gpui-pre-macros" }

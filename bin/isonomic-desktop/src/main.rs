@@ -81,6 +81,7 @@ impl SettingsStore for CapsuleSettings {
 /// The first-party app crates compiled into the window, in rail order.
 fn first_party() -> Vec<Registration> {
     vec![
+        isonomic_app::register::<isonomic_chat::Chat>(),
         #[cfg(feature = "example-app")]
         isonomic_app::register::<hello_app::Hello>(),
     ]
