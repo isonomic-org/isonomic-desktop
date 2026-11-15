@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-15 (evening) · Pins: SDK 7c488c2, Isonomic UI 4c912f6
+
+- `SDK_REF` moves to the SDK's `main` (7c488c2: `system.retry`, the app crate, conformance, sql, blobs and events). `UI_REF` moves to 4c912f6, the commit every V1 repo now pins.
+- Nothing broke: build, clippy and tests pass on Linux unchanged, and `Cargo.lock` does not change.
+- The SDK's own `UI_REF` is still 5cdf134; here its app crate builds against 4c912f6, the one checkout of Isonomic UI.
+
 ## 2026-11-15 (later) · Start at login (#7)
 
 **Built** (`engine_link::agent`, the menu bar, the window's startup)
