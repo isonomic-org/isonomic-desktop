@@ -80,6 +80,7 @@ fn prepare(options: &Options) -> Result<(Engine, Option<Built>), String> {
         let built = if options.build {
             bundle::run(&bundle::Options {
                 host_only: options.host_only,
+                example_app: false,
             })?
         } else {
             Built::existing(bundle::app_path())?
