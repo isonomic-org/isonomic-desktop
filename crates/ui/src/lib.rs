@@ -1,20 +1,20 @@
 //! The single re-export of the component library.
 //!
-//! Every other crate in this repo depends on `ui` and nothing else for its
-//! interface: no crate names GPUI or GPUI Kit directly, so swapping in
-//! Isonomic UI, or upgrading the pinned version, is a change to this crate
-//! alone.
+//! The library is Isonomic UI, a sibling checkout pinned to the commit in
+//! `UI_REF`. Every other crate in this repo depends on `ui` and nothing else
+//! for its interface: no crate names GPUI or Isonomic UI directly, so moving
+//! the pin is a change to `UI_REF` alone.
 //!
 //! GPUI's macros expand to paths that start with `gpui::`. A crate that uses
 //! them (`#[ui::test]`, derives) adds `extern crate ui as gpui;` at its root;
 //! that is an alias for this crate, not a dependency on GPUI.
 
-pub use gpui_kit::*;
+pub use isonomic_ui::*;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
 /// colors come from the theme, sizes from here or from the spacing scale.
 pub mod tokens {
-    use gpui_kit::{px, size, Pixels, Size};
+    use isonomic_ui::{px, size, Pixels, Size};
 
     /// Size of the main window when it first opens.
     pub fn window_size() -> Size<Pixels> {

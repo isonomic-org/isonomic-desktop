@@ -12,7 +12,7 @@ bin/isonomic-desktop
 packaging/macos
 ```
 
-- **`ui` is one line.** It re-exports Isonomic UI. Until that library's first release, it re-exports GPUI Kit at a pinned version. Nothing else in the repo names either.
+- **`ui` is one line.** It re-exports Isonomic UI, a sibling checkout pinned to the commit in `UI_REF`, the way the SDK is pinned by `SDK_REF`. Nothing else in the repo names Isonomic UI or GPUI.
 - **State.** Each tab is a GPUI entity. Shell state (rail order, open tabs, window frames) is stored in the engine, not in a local file, so it survives reinstall and follows the user.
 - **Engine link.** One connection per process, multiplexed. Views subscribe to events; they never poll.
 - **Threading.** GPUI's foreground thread draws. Every engine call is async on the background executor. No blocking call on the foreground thread, ever.

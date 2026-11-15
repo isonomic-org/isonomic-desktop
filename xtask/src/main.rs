@@ -16,6 +16,7 @@
 mod bundle;
 mod gate;
 mod report;
+mod sidecars;
 mod util;
 
 use std::process::ExitCode;
