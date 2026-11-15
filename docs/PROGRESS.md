@@ -2,6 +2,33 @@
 
 Newest first. Updated at every issue boundary so a new session can resume from this repo alone. Detail lives in the status files under `docs/architecture/`.
 
+## 2026-11-15 (sixth entry) · Milestone 1 built; the gate passes on the Intel Mac
+
+**Where the code is**
+
+| Repo | Merged on `main` since the fifth entry | Open |
+| --- | --- | --- |
+| `isonomic-capsule` | #14 install shapes, #16 cache, #17 profiles, #19 lazy tier and vector pin, #20 RAM gate, #21 second engine exits 0, #22 quoted paths | #23 left-behind services |
+| `isonomic-desktop` | #4 report and universal app, #5 shared CI, #9 Isonomic UI, #10 every bundled service, #12 engine docs, #13 logs view | #14 start at login, this report |
+| `isonomic-org/.github` | #3 macOS after merge (master) | #2 `--locked` (needs-master) |
+
+**Milestone 1** (plan: remaining services, lazy tier, profiles applied, RAM gate wired, logs view, start at login)
+
+- Services: the cache (tier 1) ships; the vector database is pinned but waits for wave 3, object storage for Milestone 4 (Omar, 15 Nov). So no lazy service ships yet; the lazy tier and the RAM gate are in the engine and tested.
+- The gate: `cargo xtask report` passes every item on the Intel Mac (`plan/status.md`); warm start healthy in 0.1 s against the 10 s target. Start at login checked by hand except a real logout/login and the menu switch.
+- Found by running the app with the default Capsule directory: the cache never started (a space in "Application Support"), and a killed engine left its services running. Both fixed (capsule #22, #23).
+
+**Waiting on others**
+
+- Retry for a degraded service (desktop #6): the `system` interface has no call for it; requested as isonomic-sdk #14.
+
+**For Omar**
+
+- Log out and in once, and toggle Start at Login off and on from the menu bar.
+- `sysctl` reports the test Mac as MacBookPro15,1 (a 2018 or 2019 model); these docs have called it the 2020 model.
+
+**Next, in order:** the model-gateway core (needs the SDK's R1 and R2, an `SDK_REF` move, and CI read access to the inference repo), then the agents adapter, then the wave 3 memory work once its spec says Approved.
+
 ## 2026-11-14 (fifth entry) · Milestone 0 gate: all four items pass on the Intel Mac
 
 **Where the code is**

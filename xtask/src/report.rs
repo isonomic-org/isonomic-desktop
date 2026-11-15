@@ -1,4 +1,4 @@
-//! `cargo xtask report`: build, run the Milestone 0 gate against a scratch
+//! `cargo xtask report`: build, run the Milestone 1 gate against a scratch
 //! Capsule, and print one block to paste back.
 //!
 //! On macOS the engine under test is the one inside `dist/Isonomic.app`, so
@@ -19,6 +19,26 @@ pub struct Options {
 
 /// Engine log lines worth repeating in the report.
 const ENGINE_FACTS: [&str; 4] = ["binary ", "hardware profile:", "postgres: ", "cold start:"];
+/// Marks a gate item that doesn't apply to this milestone.
+const NOT_APPLICABLE: &str = "n/a: ";
+
+/// Item 3: nothing in Milestone 1 starts lazily.
+fn lazy_row(item: &mut impl FnMut(String, Option<&Check>)) {
+    let check = Check::pass(format!(
+        "{NOT_APPLICABLE}no lazy service ships in Milestone 1 (the vector database waits for \
+         wave 3); the engine's tests cover the lazy tier"
+    ));
+    item("3 the lazy service starts on use".into(), Some(&check));
+}
+
+/// Start at login can't be scripted from here: these are the steps to do by
+/// hand, printed with every report.
+const LOGIN_STEPS: [&str; 4] = [
+    "open the app once from dist/ (installs the agent; Start at Login is checked in the menu bar)",
+    "log out and back in: no window opens; open the app: one engine, all services healthy",
+    "kill -9 the engine: the window shows it reconnecting, then healthy",
+    "Quit from the menu: nothing runs afterwards and nothing restarts it",
+];
 const TAIL_LINES: usize = 25;
 
 pub fn run(options: &Options) -> Result<(), String> {
@@ -101,7 +121,7 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
 
     row(
         "report",
-        format!("Isonomic Desktop, Milestone 0 · {}", utc_now()),
+        format!("Isonomic Desktop, Milestone 1 · {}", utc_now()),
     );
     row("machine", machine(outcome));
     row(
@@ -188,45 +208,73 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
             None => "no app bundle on this platform".into(),
         },
     };
-    // Item 4 is about the app, which only exists on macOS.
     let on_mac = cfg!(target_os = "macos");
-    let items = [
-        ("1 engine and PostgreSQL healthy", outcome.started.as_ref()),
-        (
-            "2 force-killed PostgreSQL comes back",
-            outcome.recovered.as_ref(),
-        ),
-        (
-            "3 ordered stop, nothing left running",
-            outcome.stopped.as_ref(),
-        ),
-        ("4 cold start and bundle size reported", Some(&measured)),
-    ];
-    for (index, (name, check)) in items.into_iter().enumerate() {
+    let mut item = |name: String, check: Option<&Check>| {
         let (verdict, detail) = match check {
+            Some(check) if check.detail.starts_with(NOT_APPLICABLE) => {
+                ("n/a ", &check.detail[NOT_APPLICABLE.len()..])
+            }
             None => ("skip", "not run"),
-            Some(_) if index == 3 && !on_mac => ("n/a ", measured.detail.as_str()),
             Some(check) if check.passed => ("PASS", check.detail.as_str()),
             Some(check) => ("FAIL", check.detail.as_str()),
         };
         out.push(format!("  {name:<40} {verdict}  {detail}"));
-    }
-    out.push(
-        "  window: the rail, the light through kill and recovery, and Quit are checked by eye"
-            .into(),
+    };
+    item(
+        "1 every core service healthy".into(),
+        outcome.started.as_ref(),
     );
+    if outcome.recovered.is_empty() {
+        item("2 each core service killed, comes back".into(), None);
+    }
+    for (name, check) in &outcome.recovered {
+        item(format!("2 force-killed {name} comes back"), Some(check));
+    }
+    lazy_row(&mut item);
+    item(
+        "4 ordered stop, nothing left running".into(),
+        outcome.stopped.as_ref(),
+    );
+    item(
+        format!("5 warm start under {} s", gate::WARM_TARGET.as_secs()),
+        outcome.warm.as_ref(),
+    );
+    let size = if on_mac {
+        if measured.passed {
+            "PASS"
+        } else {
+            "FAIL"
+        }
+    } else {
+        "n/a "
+    };
+    out.push(format!(
+        "  {:<40} {size}  {}",
+        "6 cold start and bundle size reported", measured.detail
+    ));
+    out.push("  by hand: start at login".into());
+    for (index, step) in LOGIN_STEPS.iter().enumerate() {
+        out.push(format!("    {}. {step}", index + 1));
+    }
     let result = match (outcome.passed(), measured.passed || !on_mac) {
-        (true, true) if on_mac => "PASS",
-        (true, true) => "PASS for items 1-3; item 4 needs the Mac",
+        (true, true) if on_mac => "PASS (start at login: by hand, above)",
+        (true, true) => "PASS for items 1-5; item 6 needs the Mac",
         _ => "FAIL",
     };
     out.push(format!("result      {result}"));
 
     if !outcome.passed() {
+        let warm_log = outcome.engine_log.with_file_name("engine-warm.log");
+        let cache_log = outcome.postgres_log.with_file_name("cache.log");
         for (name, path) in [
             ("engine", &outcome.engine_log),
+            ("engine, warm start", &warm_log),
             ("postgres", &outcome.postgres_log),
+            ("cache", &cache_log),
         ] {
+            if !path.exists() {
+                continue;
+            }
             out.push(format!(
                 "--- last {TAIL_LINES} lines: {name} ({})",
                 path.display()

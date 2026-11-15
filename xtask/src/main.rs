@@ -15,6 +15,7 @@
 
 mod bundle;
 mod gate;
+mod procs;
 mod report;
 mod sidecars;
 mod util;

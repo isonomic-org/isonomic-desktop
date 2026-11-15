@@ -1,7 +1,7 @@
-//! The Milestone 0 gate, driven through the SDK client exactly as the window
-//! drives the engine: start, wait for healthy, force-kill PostgreSQL and
-//! watch it come back, then ask for an ordered shutdown and check that
-//! nothing is left running.
+//! The Milestone 1 gate, driven through the SDK client exactly as the window
+//! drives the engine: start until every core service is healthy, force-kill
+//! each one and watch it come back, stop in order with nothing left, then
+//! start again on the same Capsule and time a warm start.
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -12,14 +12,15 @@ use isonomic_client::{unix_connector, Client, Live, Options};
 use isonomic_proto::system::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
 
+use crate::procs::{self, REAP_GRACE, TICK};
+
 /// First start includes first-time database setup and, on macOS, the
 /// system's one-off check of programs it has not run before.
 const START_TIMEOUT: Duration = Duration::from_secs(180);
 const RECOVERY_TIMEOUT: Duration = Duration::from_secs(90);
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(60);
-/// How long processes may take to disappear after their parent has gone.
-const REAP_GRACE: Duration = Duration::from_secs(5);
-const TICK: Duration = Duration::from_millis(50);
+/// The plan's gate: every core service healthy within this of launch.
+pub const WARM_TARGET: Duration = Duration::from_secs(10);
 const POSTGRES: &str = "postgres";
 
 /// How to run the engine under test.
@@ -37,13 +38,13 @@ pub struct Check {
 }
 
 impl Check {
-    fn pass(detail: impl Into<String>) -> Self {
+    pub fn pass(detail: impl Into<String>) -> Self {
         Self {
             passed: true,
             detail: detail.into(),
         }
     }
-    fn fail(detail: impl Into<String>) -> Self {
+    pub fn fail(detail: impl Into<String>) -> Self {
         Self {
             passed: false,
             detail: detail.into(),
@@ -55,8 +56,11 @@ impl Check {
 #[derive(Debug, Default)]
 pub struct Outcome {
     pub started: Option<Check>,
-    pub recovered: Option<Check>,
+    /// One per core service, in the engine's order.
+    pub recovered: Vec<(String, Check)>,
     pub stopped: Option<Check>,
+    pub warm: Option<Check>,
+    pub services: Vec<String>,
     pub engine_version: Option<String>,
     pub cold_start_ms: Option<u64>,
     pub healthy_after: Option<Duration>,
@@ -68,9 +72,64 @@ pub struct Outcome {
 
 impl Outcome {
     pub fn passed(&self) -> bool {
-        [&self.started, &self.recovered, &self.stopped]
-            .iter()
-            .all(|c| c.as_ref().is_some_and(|c| c.passed))
+        let ok = |c: &Option<Check>| c.as_ref().is_some_and(|c| c.passed);
+        ok(&self.started)
+            && !self.recovered.is_empty()
+            && self.recovered.iter().all(|(_, c)| c.passed)
+            && ok(&self.stopped)
+            && ok(&self.warm)
+    }
+}
+
+/// One running engine and the client watching it.
+struct Session {
+    child: Child,
+    client: Client,
+    live: watch::Receiver<Live>,
+    socket: PathBuf,
+    launched: Instant,
+    log: PathBuf,
+}
+
+impl Session {
+    fn launch(engine: &Engine, capsule: &Path, log: &Path) -> Result<Self, String> {
+        let child = spawn(engine, capsule, log)?;
+        let launched = Instant::now();
+        // SAFETY: getuid has no preconditions.
+        let uid = unsafe { libc::getuid() };
+        let socket = isonomic_proto::locate::engine_socket(capsule, uid);
+        let mut options = Options::new("cargo xtask report");
+        options.reconnect_min = Duration::from_millis(50);
+        options.reconnect_max = Duration::from_millis(250);
+        let client = Client::start(
+            &tokio::runtime::Handle::current(),
+            unix_connector(&socket),
+            options,
+        );
+        let live = client.live();
+        Ok(Self {
+            child,
+            client,
+            live,
+            socket,
+            launched,
+            log: log.to_path_buf(),
+        })
+    }
+
+    /// The run directory: where the socket and the services' pid files are.
+    fn run_dir(&self) -> PathBuf {
+        self.socket
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_default()
+    }
+
+    async fn healthy(&mut self) -> Result<Live, String> {
+        wait_for(&mut self.live, &mut self.child, START_TIMEOUT, |live| {
+            aggregate(live) == Some(ServiceState::Healthy)
+        })
+        .await
     }
 }
 
@@ -81,66 +140,116 @@ pub async fn run(engine: &Engine, scratch: &Path) -> Outcome {
         postgres_log: capsule.join("logs").join(format!("{POSTGRES}.log")),
         ..Outcome::default()
     };
-    let mut child = match spawn(engine, &capsule, &outcome.engine_log) {
-        Ok(child) => child,
+    let mut session = match Session::launch(engine, &capsule, &outcome.engine_log) {
+        Ok(session) => session,
         Err(error) => {
             outcome.started = Some(Check::fail(error));
             return outcome;
         }
     };
-    let launched = Instant::now();
-    // SAFETY: getuid has no preconditions.
-    let uid = unsafe { libc::getuid() };
-    let socket = isonomic_proto::locate::engine_socket(&capsule, uid);
-    let mut options = Options::new("cargo xtask report");
-    options.reconnect_min = Duration::from_millis(50);
-    options.reconnect_max = Duration::from_millis(250);
-    let client = Client::start(
-        &tokio::runtime::Handle::current(),
-        unix_connector(&socket),
-        options,
-    );
-    let mut live = client.live();
 
-    // 1. Healthy.
-    let healthy = wait_for(&mut live, &mut child, START_TIMEOUT, |live| {
-        aggregate(live) == Some(ServiceState::Healthy)
-    })
-    .await;
-    outcome.started = Some(match healthy {
+    // 1. Every core service healthy.
+    outcome.started = Some(match session.healthy().await {
         Ok(snapshot) => {
-            outcome.healthy_after = Some(launched.elapsed());
+            outcome.healthy_after = Some(session.launched.elapsed());
             outcome.engine_version = snapshot.engine.clone();
-            outcome.cold_start_ms = snapshot.system.as_ref().and_then(|s| s.cold_start_ms);
-            // The engine records its cold start just after the services
-            // report healthy, so the first healthy snapshot can lack it.
-            let asked = Instant::now();
-            while outcome.cold_start_ms.is_none() && asked.elapsed() < REAP_GRACE {
-                outcome.cold_start_ms = client.status().await.ok().and_then(|s| s.cold_start_ms);
-                if outcome.cold_start_ms.is_none() {
-                    tokio::time::sleep(TICK).await;
-                }
-            }
-            if let Ok(profile) = client.profile().await {
+            outcome.services = core_services(&snapshot);
+            outcome.cold_start_ms = cold_start(&session.client, &snapshot).await;
+            if let Ok(profile) = session.client.profile().await {
                 outcome.profile = Some(profile.profile);
                 outcome.memory_bytes = Some(profile.total_memory_bytes);
             }
             Check::pass(format!(
-                "healthy {:.1} s after launch",
-                launched.elapsed().as_secs_f64()
+                "{} healthy {:.1} s after the first launch (first-time setup included)",
+                outcome.services.join(" and "),
+                session.launched.elapsed().as_secs_f64()
             ))
         }
         Err(why) => Check::fail(why),
     });
 
-    // 2. Force-kill PostgreSQL; it must come back on its own.
+    // 2. Force-kill each core service; each must come back on its own.
     if outcome.started.as_ref().is_some_and(|c| c.passed) {
-        outcome.recovered = Some(recover(&capsule, &mut live, &mut child).await);
+        for name in outcome.services.clone() {
+            let check = recover(&mut session, &name).await;
+            outcome.recovered.push((name, check));
+        }
     }
 
-    // 3. Ordered shutdown, nothing left. Runs even after a failure, to clean up.
-    outcome.stopped = Some(stop(&client, &capsule, &socket, &mut child, &outcome).await);
+    // 3. Ordered stop, nothing left. Runs even after a failure, to clean up.
+    let stopped = stop(&mut session, &capsule, &outcome).await;
+    let clean = stopped.passed;
+    outcome.stopped = Some(stopped);
+
+    // 4. Warm start on the same Capsule: the plan's ten-second gate.
+    if clean {
+        outcome.warm = Some(warm(engine, &capsule, scratch, &outcome).await);
+    }
     outcome
+}
+
+async fn warm(engine: &Engine, capsule: &Path, scratch: &Path, outcome: &Outcome) -> Check {
+    let log = scratch.join("engine-warm.log");
+    let mut session = match Session::launch(engine, capsule, &log) {
+        Ok(session) => session,
+        Err(error) => return Check::fail(error),
+    };
+    let result = session.healthy().await;
+    let took = session.launched.elapsed();
+    let warm_outcome = Outcome {
+        engine_log: log,
+        postgres_log: outcome.postgres_log.clone(),
+        services: outcome.services.clone(),
+        ..Outcome::default()
+    };
+    let stopped = stop(&mut session, capsule, &warm_outcome).await;
+    match result {
+        Err(why) => Check::fail(why),
+        Ok(_) if !stopped.passed => Check::fail(format!(
+            "healthy {:.1} s after launch, but the second stop failed: {}",
+            took.as_secs_f64(),
+            stopped.detail
+        )),
+        Ok(_) => {
+            let detail = format!(
+                "every core service healthy {:.1} s after launch (target under {} s); stopped clean again",
+                took.as_secs_f64(),
+                WARM_TARGET.as_secs()
+            );
+            if took < WARM_TARGET {
+                Check::pass(detail)
+            } else {
+                Check::fail(detail)
+            }
+        }
+    }
+}
+
+/// The engine records its cold start just after the services report
+/// healthy, so the first healthy snapshot can lack it.
+async fn cold_start(client: &Client, snapshot: &Live) -> Option<u64> {
+    let mut found = snapshot.system.as_ref().and_then(|s| s.cold_start_ms);
+    let asked = Instant::now();
+    while found.is_none() && asked.elapsed() < REAP_GRACE {
+        found = client.status().await.ok().and_then(|s| s.cold_start_ms);
+        if found.is_none() {
+            tokio::time::sleep(TICK).await;
+        }
+    }
+    found
+}
+
+fn core_services(live: &Live) -> Vec<String> {
+    live.system
+        .as_ref()
+        .map(|s| {
+            s.services
+                .iter()
+                .filter(|s| s.tier == 1)
+                .map(|s| s.name.clone())
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn spawn(engine: &Engine, capsule: &Path, log: &Path) -> Result<Child, String> {
@@ -165,27 +274,34 @@ fn spawn(engine: &Engine, capsule: &Path, log: &Path) -> Result<Child, String> {
         .map_err(|e| format!("cannot start {}: {e}", engine.program.display()))
 }
 
-async fn recover(capsule: &Path, live: &mut watch::Receiver<Live>, child: &mut Child) -> Check {
-    let Some(pid) = postmaster_pid(capsule) else {
-        return Check::fail("no postmaster.pid while healthy");
+async fn recover(session: &mut Session, name: &str) -> Check {
+    let run_dir = session.run_dir();
+    let Some(pid) = procs::service_pid(&run_dir, name) else {
+        return Check::fail(format!("no pid file for {name} while healthy"));
     };
-    let before = postgres(&live.borrow()).map_or(0, |s| s.restart_count);
-    let workers = children_of(pid);
-    // SAFETY: plain signal to a process we just read from its pid file.
+    let before = status(&session.live.borrow(), name).map_or(0, |s| s.restart_count);
+    let workers = procs::children_of(pid);
+    // SAFETY: plain signal to a process the engine noted as this service.
     unsafe { libc::kill(pid, libc::SIGKILL) };
     let killed = Instant::now();
-    let back = wait_for(live, child, RECOVERY_TIMEOUT, |live| {
-        postgres(live).is_some_and(|s| s.restart_count > before && s.state == ServiceState::Healthy)
-    })
+    let back = wait_for(
+        &mut session.live,
+        &mut session.child,
+        RECOVERY_TIMEOUT,
+        |live| {
+            status(live, name)
+                .is_some_and(|s| s.restart_count > before && s.state == ServiceState::Healthy)
+        },
+    )
     .await;
     let snapshot = match back {
         Ok(snapshot) => snapshot,
         Err(why) => return Check::fail(format!("killed pid {pid}; {why}")),
     };
     let took = killed.elapsed();
-    let restarts = postgres(&snapshot).map_or(0, |s| s.restart_count);
-    let orphans = still_alive(&workers).await;
-    let new_pid = postmaster_pid(capsule).unwrap_or(0);
+    let restarts = status(&snapshot, name).map_or(0, |s| s.restart_count);
+    let orphans = procs::still_alive(&workers).await;
+    let new_pid = procs::service_pid(&run_dir, name).unwrap_or(0);
     let detail = format!(
         "killed pid {pid} → healthy again in {:.1} s as pid {new_pid} · restarts {restarts} · \
          {} of {} old workers left",
@@ -193,28 +309,19 @@ async fn recover(capsule: &Path, live: &mut watch::Receiver<Live>, child: &mut C
         orphans.len(),
         workers.len()
     );
-    if new_pid == pid || !orphans.is_empty() {
+    if new_pid == pid || new_pid == 0 || !orphans.is_empty() {
         Check::fail(detail)
     } else {
         Check::pass(detail)
     }
 }
 
-async fn stop(
-    client: &Client,
-    capsule: &Path,
-    socket: &Path,
-    child: &mut Child,
-    outcome: &Outcome,
-) -> Check {
-    let mut watched: Vec<i32> = Vec::new();
-    if let Some(pid) = postmaster_pid(capsule) {
-        watched.push(pid);
-        watched.extend(children_of(pid));
-    }
+async fn stop(session: &mut Session, capsule: &Path, outcome: &Outcome) -> Check {
+    let run_dir = session.run_dir();
+    let watched = procs::everything(&run_dir, &outcome.services);
     let asked = Instant::now();
-    let request = client.shutdown().await;
-    let exit = wait_exit(child, SHUTDOWN_TIMEOUT).await;
+    let request = session.client.shutdown().await;
+    let exit = wait_exit(&mut session.child, SHUTDOWN_TIMEOUT).await;
     let took = asked.elapsed();
     let mut problems = Vec::new();
     if let Err(error) = request {
@@ -228,11 +335,11 @@ async fn stop(
                 "engine still running after {}s",
                 SHUTDOWN_TIMEOUT.as_secs()
             ));
-            let _ = child.kill();
-            let _ = child.wait();
+            let _ = session.child.kill();
+            let _ = session.child.wait();
         }
     }
-    let left = still_alive(&watched).await;
+    let left = procs::still_alive(&watched).await;
     for pid in &left {
         // SAFETY: cleaning up processes this run started.
         unsafe { libc::kill(*pid, libc::SIGKILL) };
@@ -240,13 +347,21 @@ async fn stop(
     if !left.is_empty() {
         problems.push(format!("still running: {left:?}"));
     }
-    if postmaster_pid(capsule).is_some() {
+    if procs::postmaster_pid(capsule).is_some() {
         problems.push("postmaster.pid left behind (PostgreSQL did not stop cleanly)".into());
     }
-    if socket.exists() {
+    let records: Vec<&String> = outcome
+        .services
+        .iter()
+        .filter(|name| procs::service_pid(&run_dir, name).is_some())
+        .collect();
+    if !records.is_empty() {
+        problems.push(format!("pid files left behind for {records:?}"));
+    }
+    if session.socket.exists() {
         problems.push("engine socket left behind".into());
     }
-    let engine_log = crate::util::tail(&outcome.engine_log, 400);
+    let engine_log = crate::util::tail(&session.log, 400);
     let requested = engine_log
         .iter()
         .position(|l| l.contains("shutdown requested over the socket"));
@@ -262,7 +377,7 @@ async fn stop(
     }
     if problems.is_empty() {
         Check::pass(format!(
-            "stopped in {:.1} s: PostgreSQL shut down cleanly, then the engine; socket removed; \
+            "stopped in {:.1} s: every service, then the engine; socket and pid files removed; \
              0 of {} processes left",
             took.as_secs_f64(),
             watched.len() + 1
@@ -327,55 +442,23 @@ fn aggregate(live: &Live) -> Option<ServiceState> {
         .flatten()
 }
 
-fn postgres(live: &Live) -> Option<&ServiceStatus> {
+fn status<'a>(live: &'a Live, name: &str) -> Option<&'a ServiceStatus> {
     live.system
         .as_ref()
-        .and_then(|s| s.services.iter().find(|s| s.name == POSTGRES))
+        .and_then(|s| s.services.iter().find(|s| s.name == name))
 }
 
 fn describe(live: &Live) -> String {
     if !live.connected {
         return "not connected".to_string();
     }
-    match postgres(live) {
-        Some(s) => format!("{} {:?}, {} restarts", s.name, s.state, s.restart_count),
-        None => "connected, no PostgreSQL status yet".to_string(),
-    }
-}
-
-/// The running postmaster, from its pid file (gone after a clean stop).
-fn postmaster_pid(capsule: &Path) -> Option<i32> {
-    let file = capsule
-        .join("services")
-        .join(POSTGRES)
-        .join("postmaster.pid");
-    let text = std::fs::read_to_string(file).ok()?;
-    text.lines().next()?.trim().parse().ok()
-}
-
-fn children_of(pid: i32) -> Vec<i32> {
-    crate::util::output("pgrep", &["-P", &pid.to_string()], None)
-        .map(|out| out.lines().filter_map(|l| l.trim().parse().ok()).collect())
-        .unwrap_or_default()
-}
-
-/// Running, as opposed to gone or exited-but-not-yet-reaped (a zombie,
-/// which a container's first process may never reap).
-fn alive(pid: i32) -> bool {
-    match crate::util::output("ps", &["-o", "stat=", "-p", &pid.to_string()], None) {
-        Some(stat) => !stat.is_empty() && !stat.starts_with('Z'),
-        None => false,
-    }
-}
-
-/// Which of `pids` are still running once the grace period is over.
-async fn still_alive(pids: &[i32]) -> Vec<i32> {
-    let deadline = Instant::now() + REAP_GRACE;
-    loop {
-        let left: Vec<i32> = pids.iter().copied().filter(|p| alive(*p)).collect();
-        if left.is_empty() || Instant::now() >= deadline {
-            return left;
-        }
-        tokio::time::sleep(TICK).await;
+    match &live.system {
+        Some(system) => system
+            .services
+            .iter()
+            .map(|s| format!("{} {:?}, {} restarts", s.name, s.state, s.restart_count))
+            .collect::<Vec<_>>()
+            .join("; "),
+        None => "connected, no status yet".to_string(),
     }
 }
