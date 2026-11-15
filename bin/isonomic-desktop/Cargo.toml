@@ -5,7 +5,14 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 
+[features]
+# Mount the SDK's smallest app as a tab, to see the app host by eye until
+# Chat lands. Not in a release build.
+example-app = ["dep:hello-app"]
+
 [dependencies]
+hello-app = { workspace = true, optional = true }
+isonomic-app.workspace = true
 engine-link.workspace = true
 shell.workspace = true
 ui.workspace = true

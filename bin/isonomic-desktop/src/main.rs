@@ -8,6 +8,8 @@ use std::sync::Arc;
 
 use engine_link::agent::LoginAgent;
 use engine_link::{EngineLink, LinkConfig};
+use isonomic_app::{MemorySettings, Registration};
+use shell::apps::AppHost;
 use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
 use ui::{
@@ -15,6 +17,14 @@ use ui::{
 };
 
 ui::actions!(isonomic, [Quit, Hide]);
+
+/// The first-party app crates compiled into the window, in rail order.
+fn first_party() -> Vec<Registration> {
+    vec![
+        #[cfg(feature = "example-app")]
+        isonomic_app::register::<hello_app::Hello>(),
+    ]
+}
 
 /// The menu's switch, backed by the login agent.
 struct AtLogin(Arc<LoginAgent>);
@@ -83,9 +93,17 @@ fn main() {
         };
         let live = client.live();
         let logs = client.clone();
+        // Settings live in memory until the engine stores them.
+        let host = AppHost::new(client.clone(), Arc::new(MemorySettings::default()));
         ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
-            cx.new(|cx| Shell::new(live, Arc::new(logs), cx))
+            cx.new(|cx| {
+                let mut shell = Shell::new(live, Arc::new(logs), cx);
+                for app in first_party() {
+                    shell.mount(app, host.clone(), cx);
+                }
+                shell
+            })
         })
         .expect("failed to open the window");
 

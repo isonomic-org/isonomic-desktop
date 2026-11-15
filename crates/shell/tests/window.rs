@@ -91,7 +91,10 @@ fn the_window_shows_the_rail_and_follows_the_engine_untouched(cx: &mut TestAppCo
     assert!(shown(cx, window, None, "rail-home"));
     assert!(shown(cx, window, None, "engine-connecting"));
     assert!(!shown(cx, window, None, "service-postgres"));
-    assert_eq!(shell.read_with(cx, |shell, _| shell.selected_tab()), "home");
+    assert_eq!(
+        shell.read_with(cx, |shell, _| shell.selected_tab().to_string()),
+        "home"
+    );
 
     // The database is reported healthy.
     publish
@@ -145,6 +148,9 @@ fn clicking_the_rail_keeps_the_selected_tab(cx: &mut TestAppContext) {
         window.click("rail-home", cx);
     })
     .unwrap();
-    assert_eq!(shell.read_with(cx, |shell, _| shell.selected_tab()), "home");
+    assert_eq!(
+        shell.read_with(cx, |shell, _| shell.selected_tab().to_string()),
+        "home"
+    );
     assert!(shown(cx, window, Some("service-postgres"), "state-healthy"));
 }

@@ -3152,6 +3152,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "hello-app"
+version = "0.0.1"
+dependencies = [
+ "isonomic-app",
+ "isonomic-proto",
+ "isonomic-ui",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3642,6 +3651,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "isonomic-app"
+version = "0.0.1"
+dependencies = [
+ "isonomic-client",
+ "isonomic-proto",
+ "isonomic-testkit",
+ "isonomic-ui",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "isonomic-client"
 version = "0.0.1"
 dependencies = [
@@ -3655,6 +3677,8 @@ name = "isonomic-desktop"
 version = "0.0.1"
 dependencies = [
  "engine-link",
+ "hello-app",
+ "isonomic-app",
  "shell",
  "ui",
 ]
@@ -6554,6 +6578,8 @@ name = "shell"
 version = "0.0.1"
 dependencies = [
  "futures",
+ "hello-app",
+ "isonomic-app",
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
