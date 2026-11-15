@@ -51,6 +51,7 @@ mod tests {
 
     fn live(state: ServiceState) -> Live {
         Live {
+            schema: None,
             connected: true,
             engine: None,
             system: Some(SystemStatus {

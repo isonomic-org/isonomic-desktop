@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-15 (late) · Agent sessions: SDK 21ed50d
+
+- `SDK_REF` moves to 21ed50d: the agents interface, the testkit's in-memory agents host and the `agents.` conformance checks. The SDK pulls harness-core from isonomic-harness over ssh at rev `7a73ca6`. This repo doesn't name harness itself, so cargo builds the SDK's one copy. `ci.yml` passes `harness: true` to the shared workflow. CI checks harness out with the `HARNESS_DEPLOY_KEY` secret.
+- `Live` carries the session schema from `welcome`. Home warns when the engine writes a schema version this window can't read. A newer revision of the same version still reads, and apps render unknown events generically. Unit-tested.
+- Apps reach `sessions.*` through their own scoped client; the window doesn't proxy them. The app host needed no change, and Chat's `agents` capability comes from its manifest.
+- **Not wired: approvals and questions.** `approvals.decide` needs a user-action token minted by the window. The SDK defines neither the call that mints one nor how an app receives one, so I requested both as isonomic-sdk #25. V1 Chat is plain streamed text with no tools, so this doesn't block Chat's first screens.
+- Not yet: purging an app's sessions when it is removed (`sessions.purge { app }`). The window has no remove-app flow yet.
+
 ## 2026-11-15 (night) · Unloading app tabs under the profile's cap
 
 - The hardware profile caps how many apps stay loaded, using the supervisor spec's numbers: `low` 2, `standard` 4, `high` no cap (`apps::loaded_cap`). The window asks `system.profile` once the engine is connected. Until it answers, nothing is unloaded.
