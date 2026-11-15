@@ -2,6 +2,61 @@
 
 Newest first. Updated at every issue boundary so a new session can resume from this repo alone. Detail lives in the status files under `docs/architecture/`.
 
+## 2026-11-14 (fifth entry) · Milestone 0 gate: all four items pass on the Intel Mac
+
+**Where the code is**
+
+| Repo | Merged on `main` | Open |
+| --- | --- | --- |
+| `isonomic-sdk` | #1 proto, #2 client and testkit | none |
+| `isonomic-capsule` | #1 engine core, #2 broker, packaging and engine program, #3 probe ramp | none |
+| `isonomic-desktop` | #1 docs, #2 window skeleton, #3 menu bar, close to hide, Quit | #4 report and universal app: CI green, waiting for Omar's go-ahead |
+
+CI is green on Linux and macOS in all three. The SDK is checked out by a read-only deploy key (`SDK_DEPLOY_KEY`). Working copies on the Mac: `~/Code/isonomic/repos`.
+
+**Gate on the 2020 Intel MacBook Pro**
+
+| Item | Result |
+| --- | --- |
+| 1. Window with the rail, database healthy | Pass, by eye in the dev bundle (evening entry in `plan/status.md`); engine side passes in the report |
+| 2. Kill the database: it restarts, the window shows it | Pass, by eye; engine side passes (back in 1.4 to 3.0 s) in the report |
+| 3. Quit stops everything in order | Pass, by eye; engine side passes (stopped in 0.1 to 0.2 s, nothing left) in the report |
+| 4. The report prints cold start and bundle size | Pass: `cargo xtask report`; cold start 75 ms to 1.2 s depending on load; universal `Isonomic.app` 106.0 MB |
+
+The pasted report block and all timed runs are in `plan/status.md`. The universal app, launched from `dist/`, shows the rail and "All services healthy".
+
+**Not proven**
+
+- The status item's colors as drawn and its own Open and Quit clicks: a person has to look once.
+- Apple Silicon: the app carries an arm64 slice, but nothing has run on an Apple Silicon Mac.
+
+**Deviations since the fourth entry**
+
+- Bundling is `cargo xtask bundle` in this repo, not `dist` in the engine repo.
+- The app ships PostgreSQL's `bin`, `lib`, `share` and licences, not its headers.
+- `LSMinimumSystemVersion` 11.0 until open decision 1 is made. No app icon (no approved design).
+- The window repo's CI pins Rust 1.98 (GPUI's macOS backend needs it); the engine and SDK pin 1.97.
+
+**Open decisions for Omar**
+
+1. Minimum macOS, and whether Intel Macs get Cells.
+2. Keep running in the background as the default on Quit (today Quit always stops the engine).
+3. The v0 message shapes in `sdk/spec.md`, which the code follows but nobody has approved.
+
+**Next, in order** (Omar's queue, 14 Nov)
+
+1. `isonomic-org/.github` with a shared `rust-ci.yml` (inputs: apt packages, extra steps, artifact upload path, Rust toolchain, a macOS job switch; builds with `--locked`). Move the engine and this repo onto it, then tell the Views and UI sessions it is live.
+2. `Cargo.lock` committed and current in the engine and this repo (lockfiles are exempt from the 20 KB rule).
+3. The `ui` crate moves from GPUI Kit 0.9.1 to the `isonomic-ui` crate on `main`, pinned the same way as the SDK.
+4. Milestone 1: the remaining services, profiles, the RAM gate, logs, start at login.
+5. The model-gateway core: router, local provider through `isonomic-inference`, the real RAM gate, per-app metering and the global toggle, serving the SDK's models interface.
+
+Then the agents adapter, `isonomic-capsule/crates/agents` ("Agent host wiring", Part A): adapters over the harness host's traits only, with no loop, registry or policy code in the engine.
+
+**Handed over:** `isonomic-sdk` belongs to the SDK session (proto, client, testkit). This session implements the engine and window side of what it defines; it files requests in `isonomic-capsule/docs/requests.md`. The Harness and Chat sessions file theirs in `docs/requests.md` too; Chat's crate is linked at a pinned git revision when it asks.
+
+Every Mac check and timing is on Omar's Intel Mac; Apple Silicon is covered by CI only. Nothing merges without Omar's go-ahead in chat.
+
 ## 2026-11-14 (fourth entry) · All three repos on GitHub; first runs on the Intel Mac
 
 **Where the code is**
