@@ -34,6 +34,9 @@ const APPLE_SLICES: [&str; 2] = ["x86_64-apple-darwin", "aarch64-apple-darwin"];
 pub struct Options {
     /// Build for this Mac's architecture only (faster; not universal).
     pub host_only: bool,
+    /// Mount the SDK's example app in the window, to check app hosting and
+    /// deep links by eye. Never for a release.
+    pub example_app: bool,
 }
 
 /// What `bundle` produced.
@@ -153,8 +156,13 @@ pub fn run(options: &Options) -> Result<Built, String> {
     };
 
     for target in &targets {
-        build(&desktop, WINDOW_BIN, target)?;
-        build(&capsule, ENGINE_BIN, target)?;
+        let window_features: &[&str] = if options.example_app {
+            &["--features", "example-app"]
+        } else {
+            &[]
+        };
+        build(&desktop, WINDOW_BIN, target, window_features)?;
+        build(&capsule, ENGINE_BIN, target, &[])?;
     }
     let mut fetch = util::cargo(&capsule);
     fetch.args(["xtask", "fetch-sidecars"]);
@@ -172,17 +180,19 @@ pub fn run(options: &Options) -> Result<Built, String> {
     Ok(Built::measure(app, targets))
 }
 
-fn build(repo: &Path, package: &str, target: &str) -> Result<(), String> {
+fn build(repo: &Path, package: &str, target: &str, extra: &[&str]) -> Result<(), String> {
     println!("building {package} for {target}");
     util::run(
-        util::cargo(repo).args([
-            "build",
-            "--release",
-            "--package",
-            package,
-            "--target",
-            target,
-        ]),
+        util::cargo(repo)
+            .args([
+                "build",
+                "--release",
+                "--package",
+                package,
+                "--target",
+                target,
+            ])
+            .args(extra),
         &format!("building {package} for {target}"),
     )
 }

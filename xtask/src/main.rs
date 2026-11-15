@@ -1,7 +1,7 @@
 //! Build tasks for the window repo.
 //!
 //! ```text
-//! cargo xtask bundle [--host-only]
+//! cargo xtask bundle [--host-only] [--example-app]
 //!     Build dist/Isonomic.app: the window, the engine and PostgreSQL, as one
 //!     universal (Intel + Apple Silicon) app, ad-hoc signed. macOS only.
 //!
@@ -23,7 +23,7 @@ mod util;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:
-  cargo xtask bundle [--host-only]
+  cargo xtask bundle [--host-only] [--example-app]
   cargo xtask report [--host-only] [--no-build]";
 
 fn main() -> ExitCode {
@@ -32,6 +32,7 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("bundle") => bundle::run(&bundle::Options {
             host_only: flag("--host-only"),
+            example_app: flag("--example-app"),
         })
         .map(|built| built.print()),
         Some("report") => report::run(&report::Options {
