@@ -20,3 +20,4 @@ jobs:
       toolchain: "1.98"
       linux-gui-libs: true
       sdk: true
+      ui: true

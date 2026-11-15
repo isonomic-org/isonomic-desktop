@@ -22,6 +22,8 @@ shell = { path = "crates/shell" }
 isonomic-client = { path = "../isonomic-sdk/crates/client" }
 isonomic-proto = { path = "../isonomic-sdk/crates/proto" }
 isonomic-testkit = { path = "../isonomic-sdk/crates/testkit" }
+# Isonomic UI is a sibling checkout too, pinned to the commit in UI_REF.
+isonomic-ui = { path = "../isonomic-ui/crates/ui" }
 futures = "0.3"
 libc = "0.2"
 # Menu bar status item on macOS. Pinned exactly: it drives native APIs.

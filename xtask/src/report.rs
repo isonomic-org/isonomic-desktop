@@ -94,6 +94,7 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
     let desktop = util::desktop_root();
     let capsule = util::sibling("isonomic-capsule");
     let sdk = util::sibling("isonomic-sdk");
+    let ui = util::sibling("isonomic-ui");
     let engine_log = util::tail(&outcome.engine_log, 400);
     let mut out = Vec::new();
     let mut row = |label: &str, value: String| out.push(format!("{label:<11} {value}"));
@@ -128,8 +129,16 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
         format!(
             "isonomic-sdk {} · SDK_REF window {} · engine {}",
             util::git_rev(&sdk),
-            sdk_ref(&desktop),
-            sdk_ref(&capsule)
+            pin(&desktop, "SDK_REF"),
+            pin(&capsule, "SDK_REF")
+        ),
+    );
+    row(
+        "ui",
+        format!(
+            "isonomic-ui {} · UI_REF {}",
+            util::git_rev(&ui),
+            pin(&desktop, "UI_REF")
         ),
     );
     row("postgresql", postgres_version(&engine_log));
@@ -243,8 +252,9 @@ fn strip_prefix(line: &str) -> &str {
     line.strip_prefix("[isonomic-capsule] ").unwrap_or(line)
 }
 
-fn sdk_ref(repo: &Path) -> String {
-    std::fs::read_to_string(repo.join("SDK_REF"))
+/// The short commit a repo pins a sibling to (`SDK_REF`, `UI_REF`).
+fn pin(repo: &Path, file: &str) -> String {
+    std::fs::read_to_string(repo.join(file))
         .map(|s| s.trim().chars().take(7).collect())
         .unwrap_or_else(|_| "?".into())
 }

@@ -1,14 +1,13 @@
 [package]
 name = "ui"
-description = "The single re-export of the component library. Nothing else in this repo names GPUI or GPUI Kit."
+description = "The single re-export of the component library. Nothing else in this repo names GPUI or Isonomic UI."
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
 
 [features]
 # Headless windows and input simulation for UI tests.
-test-support = ["gpui-kit/test-support"]
+test-support = ["isonomic-ui/test-support"]
 
 [dependencies]
-# Pinned exactly. This line is replaced by Isonomic UI at its first release.
-gpui-kit = "=0.9.1"
+isonomic-ui.workspace = true
