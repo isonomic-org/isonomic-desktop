@@ -4,6 +4,8 @@
 
 extern crate ui as gpui;
 
+mod self_check;
+
 use std::sync::Arc;
 
 use engine_link::agent::LoginAgent;
@@ -117,7 +119,20 @@ fn main() {
     });
     // Before the link and before the event loop: a missing engine is then
     // started through the agent, and nothing here blocks a frame.
-    let agent = config.login_agent().map(Arc::new);
+    // A self-check runs in a scratch Capsule: it must never install or
+    // change the person's own login agent, so it runs without one.
+    let check = self_check::mode();
+    let agent = if check.is_some() {
+        None
+    } else {
+        config.login_agent().map(Arc::new)
+    };
+    // `isonomic://` links given as launch arguments, so a link can be opened
+    // without going through the system's URL handling.
+    let launch_links: Vec<String> = std::env::args()
+        .skip(1)
+        .filter(|arg| arg.starts_with("isonomic://"))
+        .collect();
     if let Some(agent) = &agent {
         match agent.sync() {
             Ok(change) => eprintln!("[isonomic-desktop] start at login: {change:?}"),
@@ -143,6 +158,11 @@ fn main() {
     // Deep links (isonomic://...) arrive outside the app's context; they
     // are queued here and handed to the shell once its window is open.
     let (links, mut opened_links) = futures::channel::mpsc::unbounded::<String>();
+    if check.is_none() {
+        for url in &launch_links {
+            let _ = links.unbounded_send(url.clone());
+        }
+    }
     app.on_open_urls(move |urls| {
         for url in urls {
             let _ = links.unbounded_send(url);
@@ -213,11 +233,13 @@ fn main() {
             })
         })
         .expect("failed to open the window");
+        let link_shell = shell.clone();
         cx.spawn(async move |cx| {
             while let Some(url) = opened_links.next().await {
                 let _ = cx.update_window(window, |_, window, cx| {
                     lifecycle::show(cx);
-                    let handled = shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
+                    let handled =
+                        link_shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
                     if !handled {
                         eprintln!("[isonomic-desktop] no app opens {url}");
                     }
@@ -226,6 +248,10 @@ fn main() {
         })
         .detach();
 
+        if let Some(mode) = check {
+            self_check::start(mode, window, shell, client, launch_links, cx);
+            return;
+        }
         let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
         menubar::install(client, link.client().live(), login, cx);
     });

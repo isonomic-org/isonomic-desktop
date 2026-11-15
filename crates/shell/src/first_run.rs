@@ -258,6 +258,14 @@ impl FirstRun {
         .detach();
     }
 
+    /// Press Continue, as the person would: does nothing until the memory
+    /// check passed and the model is installed. `true` if it went ahead.
+    pub fn continue_if_ready(&mut self, cx: &mut Context<Self>) -> bool {
+        let ready = self.ready() && !self.finishing;
+        self.finish(cx);
+        ready
+    }
+
     fn finish(&mut self, cx: &mut Context<Self>) {
         if self.finishing || !self.ready() {
             return;
