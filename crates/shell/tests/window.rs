@@ -51,6 +51,7 @@ fn open(cx: &mut TestAppContext, live: watch::Receiver<Live>) -> (AnyWindowHandl
 /// What the engine link publishes for one database in `state`.
 fn engine_reports(state: ServiceState, restarts: u32) -> Live {
     Live {
+        schema: None,
         connected: true,
         engine: Some("0.0.1".into()),
         system: Some(SystemStatus {

@@ -7,6 +7,7 @@
 use std::sync::Arc;
 
 use isonomic_client::Live;
+use isonomic_proto::agents::SchemaVersion;
 use isonomic_proto::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
@@ -47,6 +48,21 @@ fn state_label(status: &ServiceStatus) -> &'static str {
         ServiceState::Healthy => "Healthy",
         ServiceState::Degraded => "Degraded",
     }
+}
+
+/// A warning when the engine writes agent sessions in a schema version this
+/// window can't read. Apps would show such sessions generically or not at
+/// all, so the person is told to update.
+pub fn schema_warning(live: &Live) -> Option<String> {
+    let schema = live.schema?;
+    if schema.readable() {
+        return None;
+    }
+    Some(format!(
+        "The engine writes conversations in a newer format (version {}) than this window reads (version {}). Update Isonomic to see them.",
+        schema.version,
+        SchemaVersion::CURRENT.version
+    ))
 }
 
 /// One line for the whole engine, shared with the menu bar.
@@ -206,6 +222,13 @@ impl Render for HomeTab {
                     .text_lg()
                     .child(headline(&self.live)),
             )
+            .children(schema_warning(&self.live).map(|warning| {
+                div()
+                    .id("schema-unreadable")
+                    .test_support()
+                    .text_color(cx.theme().danger)
+                    .child(SharedString::from(warning))
+            }))
             .child(v_flex().id("services").children(rows))
     }
 }
@@ -222,6 +245,26 @@ mod tests {
             restart_count: 0,
             last_healthy_unix: last_healthy,
         }
+    }
+
+    #[test]
+    fn a_newer_session_schema_is_flagged_and_the_same_or_older_is_not() {
+        let at = |version, revision| Live {
+            schema: Some(SchemaVersion { version, revision }),
+            ..Live::default()
+        };
+        let current = SchemaVersion::CURRENT;
+        assert_eq!(schema_warning(&Live::default()), None);
+        assert_eq!(
+            schema_warning(&at(current.version, current.revision + 1)),
+            None
+        );
+        assert_eq!(
+            schema_warning(&at(current.version.saturating_sub(1), 0)),
+            None
+        );
+        let warning = schema_warning(&at(current.version + 1, 0)).unwrap();
+        assert!(warning.contains(&format!("version {}", current.version + 1)));
     }
 
     #[test]

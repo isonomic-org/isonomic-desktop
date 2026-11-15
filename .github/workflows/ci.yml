@@ -21,3 +21,4 @@ jobs:
       linux-gui-libs: true
       sdk: true
       ui: true
+      harness: true

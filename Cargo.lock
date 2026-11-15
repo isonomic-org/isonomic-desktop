@@ -3096,6 +3096,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "harness-core"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "hash32"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3692,6 +3700,7 @@ dependencies = [
 name = "isonomic-proto"
 version = "0.0.1"
 dependencies = [
+ "harness-core",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
