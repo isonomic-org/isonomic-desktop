@@ -22,3 +22,4 @@ jobs:
       sdk: true
       ui: true
       harness: true
+      chat: true
