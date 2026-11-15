@@ -159,3 +159,32 @@ fn clicking_the_rail_keeps_the_selected_tab(cx: &mut TestAppContext) {
     );
     assert!(shown(cx, window, Some("service-postgres"), "state-healthy"));
 }
+
+#[ui::test]
+fn a_problem_reaching_the_engine_shows_until_it_connects(cx: &mut TestAppContext) {
+    let (publish, live) = watch::channel(Live::default());
+    let (window, shell) = open(cx, live);
+    let (report, problems) = watch::channel(None::<String>);
+    shell.update(cx, |shell, cx| {
+        shell
+            .home()
+            .update(cx, |home, cx| home.follow_problems(problems, cx))
+    });
+    assert!(!shown(cx, window, None, "engine-problem"));
+
+    report
+        .send(Some(
+            "The engine stopped as it started (exit code 1).".into(),
+        ))
+        .unwrap();
+    cx.run_until_parked();
+    assert!(shown(cx, window, None, "engine-connecting"));
+    assert!(shown(cx, window, None, "engine-problem"));
+
+    // Connected: the problem is old news, even before the link clears it.
+    publish
+        .send(engine_reports(ServiceState::Healthy, 0))
+        .unwrap();
+    cx.run_until_parked();
+    assert!(!shown(cx, window, None, "engine-problem"));
+}

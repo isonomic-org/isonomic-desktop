@@ -2,6 +2,27 @@
 
 Newest first.
 
+## 2026-11-15 (late) · Failure states: the window says why it can't reach the engine
+
+- The engine link now publishes a problem in plain words, on a watch (`EngineLink::problems`). It covers two cases: the engine binary can't be started (missing or not allowed to run), and the engine exits with a failure before it answers, in which case the problem quotes its last log line. A successful connection clears it.
+- The engine the window starts writes its standard error to `logs/engine.log` in the Capsule (appended), as the login agent's engine already did. Before, a crash at start left nothing behind.
+- Home shows the problem under "Connecting to the engine" until the engine answers.
+- Tested: a missing binary, and a stand-in engine that writes its reason and exits 3 (`crates/engine-link/tests/link.rs`). Home shows the problem and drops it on connect (`crates/shell/tests/window.rs`).
+
+**Each failure state from the orchestrator's list, and where it stands:**
+
+| State | What the window does | Tested |
+| --- | --- | --- |
+| Engine not running at launch | The link starts it; Home reads "Connecting to the engine" | `link.rs`, `real_engine.rs` |
+| Engine missing, or dies on start | Home says why, with its last log line | this entry |
+| Socket refused | The same as not running: the link retries and relaunches at most every 10 s | `link.rs` |
+| Engine exits and restarts | Home goes back to Connecting and redraws when it returns; apps' streams end with `Disconnected` | `window.rs` |
+| A service degraded | Its logs and a Retry button (#20) | `logs.rs` |
+| Model missing or download failed | First run says so and offers Try again; Continue waits | `first_run.rs` |
+| Below the memory floor | First run says how much is needed and can't finish | `first_run.rs` |
+| An app's grant refused | The tab says so and tries again on the next open | `apps.rs` |
+| An app whose build panics | **Not handled.** `App::build` runs on the UI thread, and GPUI has no way to recover from a panic there. Apps are first-party and tested headless | n/a |
+
 ## 2026-11-15 (late) · First run downloads the local model
 
 - After the memory check, first run asks the engine for the model it recommends for this machine (`models.recommended`) and whether it is installed (`models.info`). If not, the person starts the download. Progress shows as a percentage and as GB received out of total, with a Cancel button. Continue needs the memory check and an installed model.

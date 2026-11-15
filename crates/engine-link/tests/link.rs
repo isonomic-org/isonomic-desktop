@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
+use engine_link::problems::Problems;
 use engine_link::{launching_connector, EngineLink, LinkConfig, LinkError};
 use isonomic_client::Options;
 use isonomic_testkit::TestEngine;
@@ -46,6 +47,7 @@ async fn it_starts_an_engine_that_is_not_running_and_only_once() {
         engine.connector(),
         Arc::new(launcher),
         Duration::from_secs(3600),
+        Problems::default(),
     );
     let link = EngineLink::with_connector(connector, fast()).unwrap();
     connected(&link).await;
@@ -70,7 +72,12 @@ async fn a_running_engine_is_never_launched() {
         counter.fetch_add(1, Ordering::SeqCst);
         Ok(())
     };
-    let connector = launching_connector(engine.connector(), Arc::new(launcher), Duration::ZERO);
+    let connector = launching_connector(
+        engine.connector(),
+        Arc::new(launcher),
+        Duration::ZERO,
+        Problems::default(),
+    );
     let link = EngineLink::with_connector(connector, fast()).unwrap();
     connected(&link).await;
     assert_eq!(launches.load(Ordering::SeqCst), 0);
@@ -112,4 +119,55 @@ fn the_socket_and_the_engine_binary_come_from_plain_inputs() {
         LinkConfig::resolve(None, None, None, None, 501),
         Err(LinkError::NoCapsuleDir)
     ));
+}
+
+#[test]
+fn an_engine_that_is_missing_or_dies_on_start_says_why() {
+    use engine_link::{EngineBinary, Launcher as _};
+    let dir = tempfile::tempdir().unwrap();
+    let problems = Problems::default();
+    let missing = EngineBinary {
+        path: dir.path().join("no-such-engine"),
+        log: None,
+        problems: problems.clone(),
+    };
+    assert!(missing.launch().is_err());
+    let said = problems.current().unwrap();
+    assert!(said.contains("isn't installed"), "{said}");
+
+    // An engine that writes its reason and exits 3.
+    let script = dir.path().join("engine");
+    std::fs::write(
+        &script,
+        "#!/bin/sh\necho 'fatal: the database would not start' >&2\nexit 3\n",
+    )
+    .unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt as _;
+        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let log = dir.path().join("logs/engine.log");
+    let dies = EngineBinary {
+        path: script,
+        log: Some(log.clone()),
+        problems: problems.clone(),
+    };
+    let mut watch = problems.watch();
+    watch.mark_unchanged();
+    dies.launch().unwrap();
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    runtime.block_on(async {
+        tokio::time::timeout(Duration::from_secs(10), watch.changed())
+            .await
+            .expect("the exit is reported")
+            .unwrap();
+    });
+    let said = problems.current().unwrap();
+    assert!(said.contains("exit code 3"), "{said}");
+    assert!(said.contains("the database would not start"), "{said}");
+    assert!(said.contains("engine.log"), "{said}");
+
+    problems.clear();
+    assert_eq!(problems.current(), None);
 }
