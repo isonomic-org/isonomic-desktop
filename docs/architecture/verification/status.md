@@ -2,6 +2,30 @@
 
 Newest first.
 
+## 2026-11-15 (late) · The window against the real engine: `cargo xtask e2e`
+
+**Built:** `cargo xtask e2e` builds the engine from `../isonomic-capsule` and fetches its services for this machine. It then runs `crates/engine-link/tests/real_engine.rs` against them, in a fresh scratch Capsule. A plain `cargo test` skips that test.
+
+**What it proves, against the real binary:**
+- Nothing is listening, so the window's engine link starts the engine, then connects.
+- `welcome` names the engine and its session schema.
+- PostgreSQL does its first-time setup and reports healthy.
+- `system.profile` and `models.recommended` answer.
+- An app is granted from its manifest, and is refused what its manifest doesn't allow.
+- Quit stops the engine.
+
+**Run on Linux here as an ordinary user:** passed in 0.8 s after the build. The engine was isonomic-capsule aaa8e14 at SDK de3e0da. This machine has 15.7 GiB, so the engine answered `models.recommended` with `insufficient_memory` (the 16 GiB floor), which is correct.
+
+**Not yet covered, and what it needs from the engine** (isonomic-capsule #45):
+1. A stand-in model server program the engine runs in place of `llama-server` from the bundle directory, scripted to stream a known reply, so a turn, stop and continue can run without a model.
+2. A test model catalogue (`ISONOMIC_MODEL_MANIFEST` or similar) whose source the test serves on `127.0.0.1`, so first run's download completes without the network.
+3. The cache on Linux: it has no Linux build, so the stack reports it failed. The test only needs the database, but a usable window should say so in plain words (failure-states task).
+4. A memory floor the test can lower or a profile override that `models.recommended` honours, so a runner with less than 16 GiB still gets a recommendation.
+
+**CI:** not yet. It needs the shared workflow to check out isonomic-capsule and isonomic-inference next to this repo (inputs and deploy keys for this repo). The services download is 31 MB. The test's own run is under a second, and the engine build is the main cost.
+
+**Rules:** the database refuses root, so `cargo xtask e2e` refuses to run as root.
+
 ## 2026-11-14 (night) · `cargo xtask report` (PR #4)
 
 **Built**
