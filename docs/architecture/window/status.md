@@ -2,9 +2,9 @@
 
 Newest first.
 
-## 2026-11-15 (late) · Agent sessions: SDK 1b9fe35 (branch; CI waits on the harness key)
+## 2026-11-15 (late) · Agent sessions: SDK 21ed50d (branch; CI waits on the harness key)
 
-- `SDK_REF` moves to 1b9fe35, the agents interface. The SDK pulls harness-core from isonomic-harness over ssh at rev `7a73ca6`. This repo doesn't name harness itself, so cargo builds the SDK's one copy. `ci.yml` passes `harness: true` to the shared workflow. CI needs the `HARNESS_DEPLOY_KEY` secret on this repo, which isn't there yet.
+- `SDK_REF` moves to 21ed50d: the agents interface, the testkit's in-memory agents host and the `agents.` conformance checks. The SDK pulls harness-core from isonomic-harness over ssh at rev `7a73ca6`. This repo doesn't name harness itself, so cargo builds the SDK's one copy. `ci.yml` passes `harness: true` to the shared workflow. CI needs the `HARNESS_DEPLOY_KEY` secret on this repo, which isn't there yet.
 - `Live` carries the session schema from `welcome`. Home warns when the engine writes a schema version this window can't read. A newer revision of the same version still reads, and apps render unknown events generically. Unit-tested.
 - Apps reach `sessions.*` through their own scoped client; the window doesn't proxy them. The app host needed no change, and Chat's `agents` capability comes from its manifest.
 - **Not wired: approvals and questions.** `approvals.decide` needs a user-action token minted by the window. The SDK defines neither the call that mints one nor how an app receives one, so I requested both as isonomic-sdk #25. V1 Chat is plain streamed text with no tools, so this doesn't block Chat's first screens.

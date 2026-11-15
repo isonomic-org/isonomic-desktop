@@ -3096,11 +3096,94 @@ dependencies = [
 ]
 
 [[package]]
+name = "harness-compact"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+ "harness-log",
+]
+
+[[package]]
 name = "harness-core"
 version = "0.1.0"
 source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "harness-host"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+ "harness-log",
+ "harness-loop",
+ "harness-policy",
+ "harness-preset",
+ "harness-toolkit",
+ "harness-tools",
+]
+
+[[package]]
+name = "harness-log"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "harness-loop"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-compact",
+ "harness-core",
+ "harness-log",
+ "harness-policy",
+ "harness-preset",
+ "harness-tools",
+ "serde_json",
+]
+
+[[package]]
+name = "harness-policy"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+]
+
+[[package]]
+name = "harness-preset"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+ "harness-policy",
+ "serde",
+ "toml 0.9.12+spec-1.1.0",
+]
+
+[[package]]
+name = "harness-toolkit"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
+ "harness-tools",
+]
+
+[[package]]
+name = "harness-tools"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=7a73ca695254d415332ef39bae2b100e4f791b6c#7a73ca695254d415332ef39bae2b100e4f791b6c"
+dependencies = [
+ "harness-core",
 ]
 
 [[package]]
@@ -3711,6 +3794,7 @@ dependencies = [
 name = "isonomic-testkit"
 version = "0.0.1"
 dependencies = [
+ "harness-host",
  "isonomic-client",
  "isonomic-proto",
  "tokio",
@@ -7263,6 +7347,19 @@ dependencies = [
 
 [[package]]
 name = "toml"
+version = "0.9.12+spec-1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf92845e79fc2e2def6a5d828f0801e29a2f8acc037becc5ab08595c7d5e9863"
+dependencies = [
+ "serde_core",
+ "serde_spanned 1.1.3",
+ "toml_datetime 0.7.5+spec-1.1.0",
+ "toml_parser",
+ "winnow 0.7.15",
+]
+
+[[package]]
+name = "toml"
 version = "1.2.1+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5755c51863cdac711f1956baf8eb9588e060755f7d3c4c979e70ea1e1f32cd7"
@@ -7283,6 +7380,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "toml_datetime"
+version = "0.7.5+spec-1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92e1cfed4a3038bc5a127e35a2d360f145e1f4b971b551a2ba5fd7aedf7e1347"
+dependencies = [
+ "serde_core",
 ]
 
 [[package]]
