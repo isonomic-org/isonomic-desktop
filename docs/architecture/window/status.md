@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 2026-11-15 · Logs view (part of #6)
+
+**Built** (`shell::logs`)
+
+- Clicking a service on Home replaces the list with that service's logs; Back returns. The lines come from `system.logs` (the last 50, what the supervisor keeps), fetched when the view opens and again whenever that service's status changes (a new state or another restart). No polling; the fetch runs on GPUI's executor.
+- A degraded service says so above its last lines. A failed fetch keeps the lines on screen and says why they are old. A disconnect isn't a change: the lines stay until the engine is back and reports.
+- The shell takes a `LogSource` beside the live watch; the engine client is the real one. Stock components only: the Back button is Isonomic UI's `Button`, the lines use the theme's monospace face. No approved design yet.
+
+**Verified**
+
+- Linux: clippy `-D warnings`, 20 tests with `--locked`. Two new headless tests run the real shell against the SDK's in-memory engine over the real client: open a service's logs, new lines only with the next status event, Back; and a degraded service's 50 kept lines.
+
+**Deviations**
+
+- GPUI's test scheduler refuses wakeups from another thread, and the in-memory engine runs on its own Tokio runtime. The tests relay on the test thread: they wait for the client to see the engine's state, publish it to the window, and answer each fetch before handing it over. The window itself is unchanged; only the test's log source blocks.
+
+**Not done: Retry.** The `system` interface has no call to retry a degraded service, and the wire interface belongs to the SDK. Requested as isonomic-sdk #14 (`system.retry`); the engine side is ready (the supervisor's `reset`). #6 stays open for it.
+
 ## 2026-11-15 · On Isonomic UI (PR #9)
 
 **Built**

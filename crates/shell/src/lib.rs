@@ -2,25 +2,29 @@
 //! down the left and a host that shows the selected one.
 //!
 //! Each tab is an entity that is built once and stays alive. The shell knows
-//! nothing about the engine beyond the live status watch it hands to the
-//! Home tab; it never touches a process, a socket or a path.
+//! nothing about the engine beyond the live status watch and the log source
+//! it hands to the Home tab; it never touches a process, a socket or a path.
 
 pub mod home;
 pub mod lifecycle;
 pub mod light;
+pub mod logs;
 pub mod menubar;
+
+use std::sync::Arc;
 
 use isonomic_client::Live;
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
 use ui::component::theme::ActiveTheme as _;
 use ui::{
-    div, tokens, AnyView, AppContext as _, Context, InteractiveElement as _, IntoElement,
+    div, tokens, AnyView, AppContext as _, Context, Entity, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
     TestSupportExt as _, Window,
 };
 
 use home::HomeTab;
+use logs::LogSource;
 
 /// One entry in the rail and the view it opens.
 struct Tab {
@@ -31,16 +35,22 @@ struct Tab {
 }
 
 pub struct Shell {
+    home: Entity<HomeTab>,
     tabs: Vec<Tab>,
     selected: usize,
 }
 
 impl Shell {
     /// Build the shell with its system tabs. `live` is the engine link's
-    /// watch on connection and service status.
-    pub fn new(live: watch::Receiver<Live>, cx: &mut Context<Self>) -> Self {
-        let home = cx.new(|cx| HomeTab::new(live, cx));
+    /// watch on connection and service status; `logs` answers `system.logs`.
+    pub fn new(
+        live: watch::Receiver<Live>,
+        logs: Arc<dyn LogSource>,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        let home = cx.new(|cx| HomeTab::new(live, logs, cx));
         Self {
+            home: home.clone(),
             tabs: vec![Tab {
                 id: "home",
                 title: "Home".into(),
@@ -48,6 +58,11 @@ impl Shell {
             }],
             selected: 0,
         }
+    }
+
+    /// The Home tab.
+    pub fn home(&self) -> &Entity<HomeTab> {
+        &self.home
     }
 
     /// Identifier of the tab on screen.

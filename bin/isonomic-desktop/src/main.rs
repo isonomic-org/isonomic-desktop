@@ -4,6 +4,8 @@
 
 extern crate ui as gpui;
 
+use std::sync::Arc;
+
 use engine_link::{EngineLink, LinkConfig};
 use shell::{lifecycle, menubar, Shell};
 use ui::{
@@ -51,9 +53,10 @@ fn main() {
             ..Default::default()
         };
         let live = client.live();
+        let logs = client.clone();
         ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
-            cx.new(|cx| Shell::new(live, cx))
+            cx.new(|cx| Shell::new(live, Arc::new(logs), cx))
         })
         .expect("failed to open the window");
 
