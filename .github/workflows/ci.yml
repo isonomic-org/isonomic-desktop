@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   rust:
-    uses: isonomic-org/.github/.github/workflows/rust-ci.yml@ci/macos-after-merge
+    uses: isonomic-org/.github/.github/workflows/rust-ci.yml@main
     secrets: inherit
     with:
       toolchain: "1.98"
