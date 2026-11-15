@@ -8,12 +8,19 @@
 //! The connection runs on a small Tokio runtime owned by the link. The
 //! client's methods and its live watch can be awaited from the interface
 //! framework's own executor.
+//!
+//! From an app bundle on macOS, the engine is started through the login
+//! agent (`agent`), so the engine the window starts is one the agent
+//! restarts after a crash.
+
+pub mod agent;
 
 use std::io;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use agent::{in_app_bundle, LoginAgent, SystemLaunchctl};
 use isonomic_client::{unix_connector, Client, Connector, Options};
 use isonomic_proto::locate;
 
@@ -64,6 +71,22 @@ impl Launcher for EngineBinary {
     }
 }
 
+/// Starts the engine through the login agent when it's installed, and
+/// spawns the binary otherwise (agent off, or not loaded).
+pub struct AgentFirst {
+    pub agent: Arc<LoginAgent>,
+    pub binary: EngineBinary,
+}
+
+impl Launcher for AgentFirst {
+    fn launch(&self) -> io::Result<()> {
+        match self.agent.kickstart() {
+            Ok(true) => Ok(()),
+            _ => self.binary.launch(),
+        }
+    }
+}
+
 /// Wrap a connector so that a failed attempt asks the launcher to start the
 /// engine, at most once per `relaunch_after`. The attempt itself still
 /// fails; the client's own reconnect loop picks the engine up once it
@@ -109,9 +132,14 @@ pub enum LinkError {
 /// Where the socket is and which binary to start.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LinkConfig {
+    /// The Capsule directory.
+    pub root: PathBuf,
     pub socket: PathBuf,
     /// `None` means never start the engine, only connect to it.
     pub engine: Option<PathBuf>,
+    /// `~/Library/LaunchAgents`, when there is a home directory.
+    pub launch_agents: Option<PathBuf>,
+    pub user_id: u32,
     pub client_name: String,
 }
 
@@ -142,9 +170,27 @@ impl LinkConfig {
             window_binary.and_then(|exe| exe.parent().map(|dir| dir.join(ENGINE_BIN_NAME)));
         Ok(Self {
             socket: locate::engine_socket(&root, user_id),
+            root,
             engine: engine_override.or(beside_window),
+            launch_agents: home.map(|home| home.join("Library/LaunchAgents")),
+            user_id,
             client_name: "isonomic-desktop".to_string(),
         })
+    }
+
+    /// The login agent, on macOS when the engine is inside an app bundle.
+    pub fn login_agent(&self) -> Option<LoginAgent> {
+        if !cfg!(target_os = "macos") {
+            return None;
+        }
+        let engine = self.engine.clone().filter(|path| in_app_bundle(path))?;
+        Some(LoginAgent::new(
+            self.launch_agents.clone()?,
+            self.root.clone(),
+            engine,
+            self.user_id,
+            Arc::new(SystemLaunchctl),
+        ))
     }
 
     /// The configuration for this process.
@@ -175,12 +221,17 @@ impl Drop for EngineLink {
 }
 
 impl EngineLink {
-    /// Start connecting in the background and return at once.
-    pub fn start(config: LinkConfig) -> Result<Self, LinkError> {
+    /// Start connecting in the background and return at once. With a login
+    /// agent, a missing engine is started through it.
+    pub fn start(config: LinkConfig, agent: Option<Arc<LoginAgent>>) -> Result<Self, LinkError> {
         let mut connector = unix_connector(config.socket);
         if let Some(path) = config.engine {
-            connector =
-                launching_connector(connector, Arc::new(EngineBinary { path }), RELAUNCH_AFTER);
+            let binary = EngineBinary { path };
+            let launcher: Arc<dyn Launcher> = match agent {
+                Some(agent) => Arc::new(AgentFirst { agent, binary }),
+                None => Arc::new(binary),
+            };
+            connector = launching_connector(connector, launcher, RELAUNCH_AFTER);
         }
         Self::with_connector(connector, Options::new(config.client_name))
     }

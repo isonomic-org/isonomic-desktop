@@ -2,6 +2,13 @@
 
 Newest first. Every deviation and deferral is recorded here.
 
+## 2026-11-15 (later) · A second engine, quoted paths, left-behind services (isonomic-capsule PRs #21 to #23)
+
+- A second engine for the same Capsule exits 0 instead of failing (#21), so the login agent doesn't restart a duplicate in a loop.
+- Services left running by a killed engine are stopped before the next engine starts its own (#23). `ServiceConfig::pid_file` (opt-in; ported behaviour unchanged): every spawn notes the pid, a deliberate stop removes it, and start stops whatever it names, if alive and running a program of the same name, with the service's stop signal and grace. PostgreSQL and the cache have pid files in the run directory. This closes the "still-running orphan" deferral below.
+- Measured on the Intel Mac through the login agent: `kill -9` on the engine to both services healthy, 5.1 s.
+
+
 ## 2026-11-15 · Profiles applied, the lazy tier and the RAM gate (isonomic-capsule PRs #17, #19, #20)
 
 **Built**

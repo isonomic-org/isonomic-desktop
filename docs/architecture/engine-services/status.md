@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 2026-11-15 (later) · Quoted paths (isonomic-capsule PR #22)
+
+- **Bug:** with the default Capsule directory (under "Application Support") the cache refused its config: the space split its socket path into two arguments. Every earlier check had set a Capsule directory without a space. The cache's socket and directory are now quoted, and so are the vector database's storage paths. Paths containing a double quote or a backslash still aren't escaped.
+
+
 ## 2026-11-15 · The cache; the vector database pinned; object storage deferred (isonomic-capsule PRs #14, #16, #17, #19)
 
 **Built**
