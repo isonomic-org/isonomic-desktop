@@ -2,6 +2,22 @@
 
 Newest first.
 
+## 2026-11-15 (night) · First run: the Capsule and the memory check
+
+**Built** (`engine_link::setup`, `shell::first_run`, the window's startup)
+
+- Before the link starts, the window creates the Capsule directory if it is missing (user-only, `0700`), so the engine starts in it, and notes whether it was new. `settings/setup-done` in the Capsule records that first run has finished. This uses the same kind of marker as start at login.
+- Until then the shell shows first run in place of the tabs. Its steps: the Capsule (created now, or found), then the memory check. The check uses `system.profile`, and continuing needs at least 16 GB of memory in the machine, the V1 floor for local models. Below the floor, first run cannot finish. A failed check can be tried again. Continue writes the marker on a background task, then the tabs appear.
+- Headless tests in the real shell: memory at the floor finishes and shows the rail; 8 GB cannot finish; a failed check recovers. The real client reads the testkit's profile (`crates/shell/tests/first_run.rs`).
+
+**Not built: the model download.** The SDK has no call to download a local model with progress, no "not installed" state and no recommended first model. Requested as isonomic-sdk #21. Until it lands, first run says the download isn't available in this build and lets the user continue once the memory check passes.
+
+**Deviations**
+
+- The floor is checked against total memory, not available memory: available memory changes from minute to minute, and the engine's memory gate refuses a model that won't fit when it is loaded.
+- The tests script the profile, because the testkit's `system.profile` is fixed at 16 GiB (also asked for in isonomic-sdk #21).
+- "Done" is a marker file in the Capsule, not engine state, because the engine has no settings store yet.
+
 ## 2026-11-15 (night) · Retry for a degraded service (#6)
 
 - A degraded service's logs view has a Retry button that calls `system.retry` (SDK 7c488c2). While the engine answers, the button reads Retrying and can't be pressed again. A refusal, such as `not_degraded`, shows beside it. The outcome comes back through the service's next status events, like any other change, and so do its new lines. Nothing polls.

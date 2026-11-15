@@ -7,9 +7,14 @@ extern crate ui as gpui;
 use std::sync::Arc;
 
 use engine_link::agent::LoginAgent;
+use engine_link::setup::Capsule;
 use engine_link::{EngineLink, LinkConfig};
+use futures::future::BoxFuture;
 use isonomic_app::{MemorySettings, Registration};
+use isonomic_client::Client;
+use isonomic_proto::HardwareProfile;
 use shell::apps::AppHost;
+use shell::first_run::{self, Setup};
 use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
 use ui::{
@@ -17,6 +22,23 @@ use ui::{
 };
 
 ui::actions!(isonomic, [Quit, Hide]);
+
+/// First run through the engine client and the Capsule's marker.
+struct FirstRunSetup {
+    client: Client,
+    capsule: Capsule,
+}
+
+impl Setup for FirstRunSetup {
+    fn profile(&self) -> BoxFuture<'static, Result<HardwareProfile, String>> {
+        first_run::profile_from(&self.client)
+    }
+
+    fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
+        let capsule = self.capsule.clone();
+        Box::pin(async move { capsule.mark_set_up().map_err(|e| e.to_string()) })
+    }
+}
 
 /// The first-party app crates compiled into the window, in rail order.
 fn first_party() -> Vec<Registration> {
@@ -45,6 +67,13 @@ impl LoginToggle for AtLogin {
 fn main() {
     let config = LinkConfig::from_environment().unwrap_or_else(|error| {
         eprintln!("[isonomic-desktop] fatal: {error}");
+        std::process::exit(1);
+    });
+    // Before the link and the event loop: a missing Capsule is created, so
+    // the engine starts in it and first run knows it is new.
+    let capsule = config.capsule();
+    let state = capsule.prepare().unwrap_or_else(|error| {
+        eprintln!("[isonomic-desktop] fatal: cannot create the Capsule: {error}");
         std::process::exit(1);
     });
     // Before the link and before the event loop: a missing engine is then
@@ -95,12 +124,20 @@ fn main() {
         let logs = client.clone();
         // Settings live in memory until the engine stores them.
         let host = AppHost::new(client.clone(), Arc::new(MemorySettings::default()));
+        let host_client = client.clone();
         ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
                 let mut shell = Shell::new(live, Arc::new(logs), cx);
                 for app in first_party() {
                     shell.mount(app, host.clone(), cx);
+                }
+                if !state.set_up {
+                    let setup = FirstRunSetup {
+                        client: host_client,
+                        capsule,
+                    };
+                    shell.start_first_run(Arc::new(setup), state.created, cx);
                 }
                 shell
             })
