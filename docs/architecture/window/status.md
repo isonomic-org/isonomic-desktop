@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 2026-11-15 (night) · Retry for a degraded service (#6)
+
+- A degraded service's logs view has a Retry button that calls `system.retry` (SDK 7c488c2). While the engine answers, the button reads Retrying and can't be pressed again. A refusal, such as `not_degraded`, shows beside it. The outcome comes back through the service's next status events, like any other change, and so do its new lines. Nothing polls.
+- Headless tests against the testkit: a retry that ends healthy removes the button and brings the new lines, and a refused retry says why (`crates/shell/tests/logs.rs`).
+- This closes the "Not done: Retry" item in the logs entry below.
 ## 2026-11-15 (night) · The app host: first-party app crates as tabs
 
 **Built** (`shell::apps`, `Shell::mount`, the window's startup)
