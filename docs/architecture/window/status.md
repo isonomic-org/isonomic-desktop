@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-15 (late) · First run downloads the local model
+
+- After the memory check, first run asks the engine for the model it recommends for this machine (`models.recommended`) and whether it is installed (`models.info`). If not, the person starts the download. Progress shows as a percentage and as GB received out of total, with a Cancel button. Continue needs the memory check and an installed model.
+- The engine owns the download (`models.download`): closing the window leaves it running, and the next first run attaches to it. Cancel calls `models.download_cancel`, and the stream's last event (`cancelled`) puts the step back to Download. A failure shows the engine's reason with Try again, and so does a stream that ends without an outcome.
+- Tests: the view with a scripted setup, driven event by event (progress, cancel, failure, retry, installed, then Continue), plus the stream that ends early. The adapter over the real client is tested against the testkit's downloads (`crates/shell/tests/first_run.rs`, `shell::downloads`).
+- Sizes are optional: a model or a download whose size the engine doesn't know shows the bytes received so far, never a percentage. Progress without a total falls back to the recommendation's size.
+- `SDK_REF` is de3e0da, isonomic-sdk #26's merge on the SDK's `main` (optional sizes, `not_downloading`).
+
 ## 2026-11-15 (late) · Deep links and search reach apps
 
 - **Deep links.** The bundle registers the `isonomic` URL scheme (`CFBundleURLTypes`). GPUI hands opened URLs to the window outside the app's context. They are queued and passed to the shell once its window is open, and the window is shown. `isonomic://<name>/...` goes to the mounted app whose id ends in `.<name>` (`isonomic://chat/...` goes to `com.isonomic.chat`). The shell selects that tab and builds the app if needed. Then the app's `open_link` gets the URL, held until the app is built. A link no mounted app names is logged and dropped.
