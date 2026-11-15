@@ -7,6 +7,7 @@
 //! First-party apps are mounted as further tabs through [`apps`].
 
 pub mod apps;
+pub mod downloads;
 pub mod first_run;
 pub mod home;
 pub mod lifecycle;

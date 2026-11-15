@@ -11,11 +11,14 @@ use engine_link::settings::FileSettings;
 use engine_link::setup::Capsule;
 use engine_link::{EngineLink, LinkConfig};
 use futures::future::BoxFuture;
+use futures::stream::BoxStream;
 use futures::StreamExt as _;
 use isonomic_app::{Registration, SettingsStore};
 use isonomic_client::Client;
+use isonomic_proto::models::{DownloadProgress, Recommendation};
 use isonomic_proto::HardwareProfile;
 use shell::apps::AppHost;
+use shell::downloads;
 use shell::first_run::{self, Setup};
 use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
@@ -34,6 +37,22 @@ struct FirstRunSetup {
 impl Setup for FirstRunSetup {
     fn profile(&self) -> BoxFuture<'static, Result<HardwareProfile, String>> {
         first_run::profile_from(&self.client)
+    }
+
+    fn recommended(&self) -> BoxFuture<'static, Result<Recommendation, String>> {
+        downloads::recommended(&self.client)
+    }
+
+    fn installed(&self, model: &str) -> BoxFuture<'static, Result<bool, String>> {
+        downloads::installed(&self.client, model)
+    }
+
+    fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>> {
+        downloads::download(&self.client, model)
+    }
+
+    fn cancel_download(&self, model: &str) -> BoxFuture<'static, Result<(), String>> {
+        downloads::cancel(&self.client, model)
     }
 
     fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
