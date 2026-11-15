@@ -54,7 +54,7 @@ fn progress(received: u64, outcome: Option<DownloadOutcome>) -> Result<DownloadP
     Ok(DownloadProgress {
         model: MODEL.into(),
         received_bytes: received,
-        total_bytes: SIZE,
+        total_bytes: Some(SIZE),
         outcome,
         error: None,
     })
@@ -97,7 +97,7 @@ impl Setup for Scripted {
             Ok(Recommendation {
                 model: MODEL.into(),
                 profile: "standard".into(),
-                size_bytes: SIZE,
+                size_bytes: Some(SIZE),
             })
         })
     }
@@ -254,7 +254,7 @@ fn the_model_downloads_with_progress_then_first_run_can_finish(cx: &mut TestAppC
     cx.run_until_parked();
     assert!(matches!(
         step(cx, &shell),
-        ModelStep::Downloading { received, total, .. } if received == SIZE / 4 && total == SIZE
+        ModelStep::Downloading { received, total, .. } if received == SIZE / 4 && total == Some(SIZE)
     ));
     assert!(shown(cx, window, "model-downloading"));
     click(cx, window, "model-cancel");
@@ -333,4 +333,30 @@ fn the_client_adapter_downloads_the_recommended_model() {
             .await
             .unwrap());
     });
+}
+
+#[ui::test]
+fn an_unknown_size_shows_bytes_so_far_and_never_divides(cx: &mut TestAppContext) {
+    let (first, first_events) = mpsc::unbounded();
+    let setup = Scripted::with(vec![Ok(16 << 30)], false, vec![first_events]);
+    let (window, shell) = open(cx, setup);
+    cx.run_until_parked();
+    // The recommendation knows the size; the engine's progress doesn't,
+    // and neither does a model whose recommendation has none.
+    click(cx, window, "model-download");
+    first
+        .unbounded_send(Ok(DownloadProgress {
+            total_bytes: None,
+            ..progress(3 << 20, None).unwrap()
+        }))
+        .unwrap();
+    cx.run_until_parked();
+    assert!(matches!(
+        step(cx, &shell),
+        ModelStep::Downloading {
+            total: Some(SIZE),
+            ..
+        }
+    ));
+    assert!(shown(cx, window, "model-downloading"));
 }

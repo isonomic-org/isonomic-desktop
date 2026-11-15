@@ -3249,7 +3249,6 @@ version = "0.0.1"
 dependencies = [
  "isonomic-app",
  "isonomic-proto",
- "isonomic-ui",
 ]
 
 [[package]]

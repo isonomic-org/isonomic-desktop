@@ -77,7 +77,8 @@ pub enum ModelStep {
     Downloading {
         model: Recommendation,
         received: u64,
-        total: u64,
+        /// `None`: the engine doesn't know the size yet.
+        total: Option<u64>,
     },
     Installed(Recommendation),
     Failed {
@@ -168,6 +169,7 @@ impl FirstRun {
         };
         cx.notify();
         let mut progress = self.setup.download(&model.model);
+        let model_total = model.size_bytes;
         cx.spawn(async move |view, cx| {
             while let Some(event) = progress.next().await {
                 let model = model.clone();
@@ -185,7 +187,7 @@ impl FirstRun {
                                 ModelStep::Downloading {
                                     model,
                                     received: p.received_bytes,
-                                    total: p.total_bytes,
+                                    total: p.total_bytes.or(model_total),
                                 },
                                 true,
                             ),
@@ -288,23 +290,28 @@ impl FirstRun {
             ModelStep::Choosing => ("model-choosing", "Choosing a local model".into()),
             ModelStep::Ready(m) => (
                 "model-ready",
-                format!("{} ({}) will run on this Mac", m.model, size(m.size_bytes)),
+                match m.size_bytes {
+                    Some(bytes) => format!("{} ({}) will run on this Mac", m.model, size(bytes)),
+                    None => format!("{} will run on this Mac", m.model),
+                },
             ),
             ModelStep::Downloading {
                 model,
                 received,
                 total,
             } => {
-                let percent = (*received * 100).checked_div(*total).unwrap_or(0);
-                (
-                    "model-downloading",
-                    format!(
-                        "Downloading {}: {percent}% ({} of {})",
+                // Never divide by a size the engine doesn't know.
+                let text = match total.filter(|total| *total > 0) {
+                    Some(total) => format!(
+                        "Downloading {}: {}% ({} of {})",
                         model.model,
+                        received.saturating_mul(100) / total,
                         size(*received),
-                        size(*total)
+                        size(total)
                     ),
-                )
+                    None => format!("Downloading {}: {} so far", model.model, size(*received)),
+                };
+                ("model-downloading", text)
             }
             ModelStep::Installed(m) => ("model-installed", format!("{} is installed", m.model)),
             ModelStep::Failed { error, .. } => {
