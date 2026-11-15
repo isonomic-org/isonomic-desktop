@@ -64,16 +64,14 @@ impl Built {
     }
 
     fn measure(app: PathBuf, targets: Vec<String>) -> Self {
-        let mut parts = vec![
-            (
-                format!("MacOS/{WINDOW_BIN}"),
-                util::dir_size(&app.join("Contents/MacOS").join(WINDOW_BIN)),
-            ),
-            (
-                format!("MacOS/{ENGINE_BIN}"),
-                util::dir_size(&app.join("Contents/MacOS").join(ENGINE_BIN)),
-            ),
-        ];
+        let mut parts = Vec::new();
+        for name in [WINDOW_BIN, ENGINE_BIN] {
+            let file = app.join("Contents/MacOS").join(name);
+            // What the file really holds, not what was asked for.
+            let arches = util::output("lipo", &["-archs", &file.to_string_lossy()], None)
+                .unwrap_or_else(|| "?".into());
+            parts.push((format!("MacOS/{name} ({arches})"), util::dir_size(&file)));
+        }
         for target in &targets {
             let tree = format!("Resources/sidecars/postgres-{target}");
             parts.push((
@@ -273,27 +271,30 @@ pub fn info_plist(version: &str) -> String {
     )
 }
 
-/// Ad-hoc signing: every Mach-O file inside first, then the bundle. Apple
-/// Silicon refuses to run unsigned code, and an ad-hoc signature is enough
-/// on the machine that built it.
+/// Ad-hoc signing: every nested Mach-O file first, then the bundle, which
+/// signs the main program last (codesign refuses a main program whose
+/// nested code is still unsigned). Apple Silicon refuses to run unsigned
+/// code, and an ad-hoc signature is enough on the machine that built it.
 fn sign(app: &Path) -> Result<(), String> {
+    let main = app.join("Contents/MacOS").join(WINDOW_BIN);
     let mut code = Vec::new();
     collect_mach_o(&app.join("Contents"), &mut code);
+    code.retain(|file| *file != main);
     for chunk in code.chunks(200) {
-        util::run(
+        util::run_quiet(
             Command::new("codesign")
                 .args(["--force", "--sign", "-", "--timestamp=none"])
                 .args(chunk),
             "signing the bundled programs",
         )?;
     }
-    util::run(
+    util::run_quiet(
         Command::new("codesign")
             .args(["--force", "--sign", "-", "--timestamp=none"])
             .arg(app),
         "signing the app",
     )?;
-    util::run(
+    util::run_quiet(
         Command::new("codesign")
             .args(["--verify", "--strict"])
             .arg(app),

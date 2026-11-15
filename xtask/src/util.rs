@@ -61,6 +61,24 @@ pub fn run(command: &mut Command, what: &str) -> Result<(), String> {
     }
 }
 
+/// Like [`run`], but keeps the command's output unless it fails.
+pub fn run_quiet(command: &mut Command, what: &str) -> Result<(), String> {
+    let out = command
+        .output()
+        .map_err(|error| format!("{what}: cannot start: {error}"))?;
+    if out.status.success() {
+        return Ok(());
+    }
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    let tail: Vec<&str> = stderr.lines().rev().take(10).collect();
+    let tail: Vec<&str> = tail.into_iter().rev().collect();
+    Err(format!(
+        "{what} failed ({}):\n{}",
+        out.status,
+        tail.join("\n")
+    ))
+}
+
 /// Trimmed standard output of a command, if it ran and succeeded.
 pub fn output(program: &str, args: &[&str], dir: Option<&Path>) -> Option<String> {
     let mut command = Command::new(program);
