@@ -17,3 +17,9 @@ Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go 
 - **Signing dry run:** `--sign-dry-run` looks for a Developer ID Application certificate (`security find-identity`; `ISONOMIC_SIGN_IDENTITY` picks one) and prints the codesign commands a release would run: hardened runtime, secure timestamp, nested code first. Without a certificate it prints "signing: skipped". It never signs; the app stays ad-hoc signed.
 - **The model server's layout:** the engine looks for `llama-server` in `Resources/sidecars/llama-server-<triple>/` and also accepts a fused `Resources/sidecars/llama-server/` (isonomic-capsule `packaging::Bundle::binary`). The bundle ships whatever the engine's `sidecars.json` declares, so the model server lands there once the engine un-defers it. Nothing changes here.
 - **Not checked on a Mac:** the icon and the dry run run only on macOS; their logic is unit-tested on Linux.
+
+## 2026-11-15 · The app icon
+
+- The artwork is `assets/icon/app-icon-1024.png` (desktop #36, from Omar's design file). It fills its canvas edge to edge, so the bundle places it on the macOS icon grid: scaled to 824 pixels with Lanczos3 and centred on a transparent 1024 canvas. It then writes all ten iconset sizes itself, so only `iconutil` runs on the Mac to make `Resources/AppIcon.icns`.
+- The empty slot at `packaging/macos/AppIcon-1024.png` is gone.
+- Tested on Linux with the supplied artwork: the grid margin is transparent, the middle is the artwork, and every iconset size has the right dimensions.
