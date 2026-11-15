@@ -1,7 +1,5 @@
 # Vault, gateways and later modules: status
 
-Newest first.
+The engine's status is kept in its own repo: `isonomic-capsule/docs/status.md`, newest first, naming the area. This area's history up to this repo's commit `eb30c136` moved to `isonomic-capsule/docs/status/engine-later.md`.
 
-## 2026-11-14 · Not started, by design
-
-Out of scope for Milestone 0. Crate names are reserved as the spec lists them; none is built.
+The spec stays here, in `spec.md`.
