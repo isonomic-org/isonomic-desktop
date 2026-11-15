@@ -5,6 +5,10 @@
 //! status changes (a new state or another restart), so it follows the same
 //! events the Home tab does. It never polls, and the fetch runs on the
 //! interface framework's executor without blocking the foreground thread.
+//!
+//! A degraded service gets a Retry button (`system.retry`). The engine
+//! answers at once; the service's next status events bring the outcome and
+//! its new lines.
 
 use std::sync::Arc;
 
@@ -12,8 +16,10 @@ use futures::future::BoxFuture;
 use isonomic_client::{Client, Live};
 use isonomic_proto::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
-use ui::base::v_flex;
+use ui::base::{h_flex, v_flex};
+use ui::component::button::Button;
 use ui::component::theme::ActiveTheme as _;
+use ui::component::Disableable as _;
 use ui::{
     div, Context, InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
     StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
@@ -23,10 +29,13 @@ use ui::{
 /// service.
 pub const LINES: u32 = 50;
 
-/// Where the lines come from. The real one is the engine client; tests can
-/// script their own.
+/// Where the lines come from, and who restarts a degraded service. The
+/// real one is the engine client; tests can script their own.
 pub trait LogSource: Send + Sync + 'static {
     fn last_lines(&self, service: &str) -> BoxFuture<'static, Result<Vec<String>, String>>;
+
+    /// Ask the engine to start a degraded service again.
+    fn retry(&self, service: &str) -> BoxFuture<'static, Result<(), String>>;
 }
 
 impl LogSource for Client {
@@ -40,6 +49,27 @@ impl LogSource for Client {
                 .map_err(|error| error.to_string())
         })
     }
+
+    fn retry(&self, service: &str) -> BoxFuture<'static, Result<(), String>> {
+        let client = self.clone();
+        let service = service.to_string();
+        Box::pin(async move {
+            client
+                .retry(&service)
+                .await
+                .map_err(|error| error.to_string())
+        })
+    }
+}
+
+/// Where a retry is.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Retry {
+    Idle,
+    /// Sent; waiting for the engine to accept it.
+    Sending,
+    /// The engine refused it or could not be reached.
+    Failed(String),
 }
 
 /// The part of a service's status that should bring new lines with it.
@@ -58,6 +88,8 @@ fn find(live: &Live, service: &str) -> Option<ServiceStatus> {
 
 pub struct LogsView {
     service: String,
+    source: Arc<dyn LogSource>,
+    retry: Retry,
     status: Option<ServiceStatus>,
     lines: Vec<String>,
     error: Option<String>,
@@ -73,6 +105,7 @@ impl LogsView {
     ) -> Self {
         let status = find(&live.borrow(), &service);
         let name = service.clone();
+        let kept = Arc::clone(&source);
         let mut seen = status.as_ref().map(moment);
         cx.spawn(async move |view, cx| {
             let mut live = live;
@@ -120,6 +153,8 @@ impl LogsView {
         .detach();
         Self {
             service,
+            source: kept,
+            retry: Retry::Idle,
             status,
             lines: Vec::new(),
             error: None,
@@ -129,6 +164,30 @@ impl LogsView {
 
     pub fn service(&self) -> &str {
         &self.service
+    }
+
+    pub fn retry_state(&self) -> &Retry {
+        &self.retry
+    }
+
+    fn retry(&mut self, cx: &mut Context<Self>) {
+        if self.retry == Retry::Sending {
+            return;
+        }
+        self.retry = Retry::Sending;
+        cx.notify();
+        let sent = self.source.retry(&self.service);
+        cx.spawn(async move |view, cx| {
+            let outcome = sent.await;
+            let _ = view.update(cx, |view, cx| {
+                view.retry = match outcome {
+                    Ok(()) => Retry::Idle,
+                    Err(error) => Retry::Failed(error),
+                };
+                cx.notify();
+            });
+        })
+        .detach();
     }
 
     /// The lines on screen, oldest first.
@@ -200,6 +259,25 @@ impl Render for LogsView {
                     })
                     .child(SharedString::from(note)),
             );
+        }
+        if degraded {
+            let sending = self.retry == Retry::Sending;
+            let mut row = h_flex().gap_2().child(
+                Button::new("logs-retry")
+                    .label(if sending { "Retrying" } else { "Retry" })
+                    .disabled(sending)
+                    .on_click(cx.listener(|view, _, _, cx| view.retry(cx))),
+            );
+            if let Retry::Failed(error) = &self.retry {
+                row = row.child(
+                    div()
+                        .id("logs-retry-failed")
+                        .test_support()
+                        .text_color(theme.danger)
+                        .child(SharedString::from(format!("Couldn't retry: {error}"))),
+                );
+            }
+            view = view.child(row);
         }
         view.child(
             v_flex()

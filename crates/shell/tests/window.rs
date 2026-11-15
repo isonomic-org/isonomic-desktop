@@ -25,6 +25,10 @@ impl LogSource for NoLogs {
     fn last_lines(&self, _: &str) -> BoxFuture<'static, Result<Vec<String>, String>> {
         Box::pin(async { Ok(Vec::new()) })
     }
+
+    fn retry(&self, _: &str) -> BoxFuture<'static, Result<(), String>> {
+        Box::pin(async { Ok(()) })
+    }
 }
 
 fn open(cx: &mut TestAppContext, live: watch::Receiver<Live>) -> (AnyWindowHandle, Entity<Shell>) {

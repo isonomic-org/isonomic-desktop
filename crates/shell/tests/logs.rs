@@ -42,6 +42,14 @@ impl LogSource for Relayed {
             .map_err(|error| error.to_string());
         Box::pin(async move { lines })
     }
+
+    fn retry(&self, service: &str) -> BoxFuture<'static, Result<(), String>> {
+        let sent = self
+            .runtime
+            .block_on(self.client.retry(service))
+            .map_err(|error| error.to_string());
+        Box::pin(async move { sent })
+    }
 }
 
 struct Harness {
@@ -192,4 +200,49 @@ fn a_degraded_service_says_so_above_its_last_lines(cx: &mut TestAppContext) {
     assert_eq!(h.lines(cx), Some(kept));
     assert!(h.shown(cx, "logs-degraded"));
     assert!(h.shown(cx, "log-line-0"));
+}
+
+#[ui::test]
+fn retry_starts_a_degraded_service_again(cx: &mut TestAppContext) {
+    let h = open(cx);
+    h.engine.set_logs("postgres", &["too many restarts"]);
+    h.engine.set_state("postgres", ServiceState::Degraded);
+    h.engine.on_retry("postgres", ServiceState::Healthy);
+    h.settle(cx);
+    h.click(cx, "service-postgres");
+    cx.run_until_parked();
+    assert!(h.shown(cx, "logs-retry"));
+
+    h.engine
+        .set_logs("postgres", &["ready to accept connections"]);
+    h.click(cx, "logs-retry");
+    cx.run_until_parked();
+    assert_eq!(h.engine.retries(), ["postgres"]);
+    h.settle(cx);
+    assert!(!h.shown(cx, "logs-retry"), "healthy again: no Retry");
+    assert!(!h.shown(cx, "logs-degraded"));
+    assert_eq!(
+        h.lines(cx),
+        Some(vec!["ready to accept connections".to_string()])
+    );
+}
+
+#[ui::test]
+fn a_refused_retry_says_why(cx: &mut TestAppContext) {
+    let h = open(cx);
+    h.engine.set_state("postgres", ServiceState::Healthy);
+    h.settle(cx);
+    // The view still believes the service is degraded; the engine knows
+    // better and refuses.
+    h.relay.send_modify(|live| {
+        if let Some(system) = live.system.as_mut() {
+            system.services[0].state = ServiceState::Degraded;
+        }
+    });
+    cx.run_until_parked();
+    h.click(cx, "service-postgres");
+    cx.run_until_parked();
+    h.click(cx, "logs-retry");
+    cx.run_until_parked();
+    assert!(h.shown(cx, "logs-retry-failed"));
 }
