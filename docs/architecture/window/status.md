@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-16 · The window has a title
+
+- The main window opens titled "Isonomic" (`lifecycle::window_options`, used by the app). Before, it set no title, so macOS's title bar, Window menu and app switcher showed none.
+- Tested: the options the app opens with carry the title and a size. GPUI's headless window keeps no title, so the title bar itself needs a look on the Mac.
+- **Still to check after the component pin moves** (isonomic-ui 2e3116b through the SDK): whether focusing a control that is scrolled out of view brings it into view. Today the rail's entries and Home's rows can be clicked but not focused, so keyboard reach comes first. Both get headless tests with that pin.
+
 ## 2026-11-16 · Apps' window requests reach the window (SDK #30)
 
 - The window implements the SDK's `WindowRequests`. Every app's `AppContext` is given the window's handler (`AppHost::with_requests`). An app calls `request` from its own code, outside the shell, so the handler only queues the request (`install::ShellRequests`). The shell serves the queue (`Shell::serve_requests`).

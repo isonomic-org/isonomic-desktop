@@ -191,14 +191,7 @@ fn main() {
             MenuItem::action("Quit Isonomic", Quit),
         ])]);
 
-        let options = WindowOptions {
-            window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
-                None,
-                tokens::window_size(),
-                cx,
-            ))),
-            ..Default::default()
-        };
+        let options = lifecycle::window_options(cx);
         let live = client.live();
         let logs = client.clone();
         // Settings live in the Capsule until the engine stores them.
