@@ -79,6 +79,42 @@ pub fn ship(capsule: &Path, targets: &[String], dest: &Path) -> Result<(), Strin
     Ok(())
 }
 
+/// The licence notices the engine writes for what it bundles, shipped as
+/// `Contents/Resources/NOTICES.txt` and shown by Acknowledgements.
+pub const NOTICES: &str = "NOTICES.txt";
+
+/// Copy the engine's `sidecars/NOTICES.txt` into `resources`.
+pub fn ship_notices(capsule: &Path, resources: &Path) -> Result<(), String> {
+    let source = capsule.join("sidecars").join(NOTICES);
+    if !source.is_file() {
+        return Err(format!(
+            "{} is missing: run `cargo xtask fetch-sidecars` in the engine repo",
+            source.display()
+        ));
+    }
+    std::fs::copy(&source, resources.join(NOTICES))
+        .map(|_| ())
+        .map_err(|e| format!("copying {}: {e}", source.display()))
+}
+
+/// Refuse an app whose notices are missing or empty: we distribute our
+/// own builds of what it bundles, so their licences must travel with it.
+pub fn check_notices(app: &Path) -> Result<(), String> {
+    let path = app.join("Contents/Resources").join(NOTICES);
+    match std::fs::metadata(&path) {
+        Ok(meta) if meta.len() > 0 => {
+            println!(
+                "notices: Contents/Resources/{NOTICES}, {} bytes",
+                meta.len()
+            );
+            Ok(())
+        }
+        _ => Err(format!(
+            "the app has no licence notices at Contents/Resources/{NOTICES}"
+        )),
+    }
+}
+
 fn skipped(name: &str) -> bool {
     TREE_SKIP.contains(&name) || name.starts_with("README") || name.ends_with(".log")
 }
@@ -121,6 +157,27 @@ fn program_in(dir: &Path) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_notices_are_shipped_and_an_app_without_them_is_refused() {
+        let root = std::env::temp_dir().join(format!("notices-test-{}", std::process::id()));
+        let (capsule, app) = (root.join("capsule"), root.join("Isonomic.app"));
+        let resources = app.join("Contents/Resources");
+        std::fs::create_dir_all(capsule.join("sidecars")).unwrap();
+        std::fs::create_dir_all(&resources).unwrap();
+        assert!(ship_notices(&capsule, &resources).is_err());
+        assert!(check_notices(&app).is_err());
+        std::fs::write(
+            capsule.join("sidecars").join(NOTICES),
+            "database: licence text",
+        )
+        .unwrap();
+        ship_notices(&capsule, &resources).unwrap();
+        check_notices(&app).unwrap();
+        std::fs::write(resources.join(NOTICES), "").unwrap();
+        assert!(check_notices(&app).is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn only_bundled_services_with_their_shape() {

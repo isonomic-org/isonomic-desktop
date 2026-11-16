@@ -4,6 +4,13 @@ The engine side of packaging (install shapes, bundled services) is recorded in `
 
 Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go below.
 
+## 2026-11-16 · The app ships the licence notices
+
+- **Shipped:** `cargo xtask bundle` copies the engine's `sidecars/NOTICES.txt` to `Contents/Resources/NOTICES.txt`. The engine now builds the database and the cache from pinned source, so we distribute our own builds and their licences travel with the app.
+- **Refused:** the bundle, and therefore `cargo xtask release`, fails when the engine's file is missing, or when the app has no `NOTICES.txt` or an empty one.
+- **Shown:** the window's Isonomic menu has Acknowledgements (see the window status).
+- **Tested:** shipping the file, and refusing an app without it or with an empty one.
+
 ## 2026-11-16 · The minimum-macOS refusal names each part
 
 - **Why:** build 106's release was refused, correctly, because the bundled database declares macOS 26.0 on both architectures and the cache 15.0. The cause took reading a list of files to see.
