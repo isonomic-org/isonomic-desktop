@@ -4,6 +4,11 @@ The engine side of packaging (install shapes, bundled services) is recorded in `
 
 Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go below.
 
+## 2026-11-16 · The engine's reports carry the build
+
+- **What's set:** when the bundle compiles the engine, it sets `ISONOMIC_BUILD` (the bundle's build number, the same as `CFBundleVersion` and the window's) and `ISONOMIC_ENGINE_COMMIT` (the engine checkout's full commit). The engine reads both at compile time for its problem reports.
+- **Refused:** a bundle whose engine checkout isn't a git checkout.
+
 ## 2026-11-16 · The app ships the licence notices
 
 - **Shipped:** `cargo xtask bundle` copies the engine's `sidecars/NOTICES.txt` to `Contents/Resources/NOTICES.txt`. The engine now builds the database and the cache from pinned source, so we distribute our own builds and their licences travel with the app.

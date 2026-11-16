@@ -8,6 +8,7 @@ publish.workspace = true
 [dependencies]
 isonomic-app.workspace = true
 reports.workspace = true
+serde_json.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true
 tokio.workspace = true
@@ -23,5 +24,4 @@ ui = { workspace = true, features = ["test-support"] }
 isonomic-testkit.workspace = true
 hello-app.workspace = true
 isonomic-app = { workspace = true, features = ["test-support"] }
-serde_json.workspace = true
 tempfile.workspace = true

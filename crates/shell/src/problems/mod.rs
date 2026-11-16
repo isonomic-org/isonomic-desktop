@@ -200,17 +200,37 @@ impl ProblemReports {
         let Some(report) = &self.current else {
             return String::new();
         };
-        let document = &report.document;
-        let id = document["component"]["id"].as_str().unwrap_or("window");
-        if id != "window" {
-            let name = self.names.get(id).cloned();
+        title_for(&report.document, &self.names)
+    }
+}
+
+/// A notice's title for `document`, written by the window or the engine.
+fn title_for(document: &serde_json::Value, names: &HashMap<String, String>) -> String {
+    let id = document["component"]["id"].as_str().unwrap_or("window");
+    match (document["kind"].as_str(), id) {
+        (Some("service_failed"), _) => {
+            let name = document["service"]["name"].as_str().unwrap_or("");
+            format!("{} stopped working", service_name(name))
+        }
+        (Some("model_server_failed"), _) => "The local model stopped working".into(),
+        (Some("hang"), "window") => "Isonomic stopped responding".into(),
+        (_, "window") => "Isonomic quit unexpectedly".into(),
+        (_, "engine") => "The Isonomic engine quit unexpectedly".into(),
+        (_, id) => {
+            let name = names.get(id).cloned();
             let name = name.unwrap_or_else(|| crate::apps::link_segment(id).to_string());
-            return format!("{name} stopped working");
+            format!("{name} stopped working")
         }
-        match document["kind"].as_str() {
-            Some("hang") => "Isonomic stopped responding".into(),
-            _ => "Isonomic quit unexpectedly".into(),
-        }
+    }
+}
+
+/// What a person calls a bundled service.
+fn service_name(name: &str) -> String {
+    match name {
+        "postgres" => "The database".into(),
+        "valkey" => "The cache".into(),
+        "" => "A background service".into(),
+        other => format!("The {other} service"),
     }
 }
 
@@ -234,6 +254,42 @@ impl Shell {
             .update(cx, |home, cx| home.show_report_setting(reports.clone(), cx));
         self.reports = Some(reports);
         self.reports_due(cx);
+    }
+
+    /// Look at the reports again after the engine's status changes: at
+    /// once when a service is degraded, and again a moment later
+    /// ([`ui::tokens::report_rescan_delay`]) after any change, because the
+    /// engine writes its report after its own watch sees the failure.
+    pub fn review_on_status(
+        &mut self,
+        mut live: tokio::sync::watch::Receiver<isonomic_client::Live>,
+        cx: &mut Context<Self>,
+    ) {
+        cx.spawn(async move |shell, cx| {
+            while live.changed().await.is_ok() {
+                let degraded = live.borrow_and_update().system.as_ref().is_some_and(|s| {
+                    s.services
+                        .iter()
+                        .any(|svc| svc.state == isonomic_proto::ServiceState::Degraded)
+                });
+                let later = shell.clone();
+                let looked = shell.update(cx, |shell, cx| {
+                    if degraded {
+                        shell.reports_due(cx);
+                    }
+                    cx.spawn(async move |_, cx| {
+                        let delay = ui::tokens::report_rescan_delay();
+                        cx.background_executor().timer(delay).await;
+                        let _ = later.update(cx, |shell, cx| shell.reports_due(cx));
+                    })
+                    .detach();
+                });
+                if looked.is_err() {
+                    break;
+                }
+            }
+        })
+        .detach();
     }
 
     /// The problem reports, once watched.
@@ -262,5 +318,29 @@ impl Shell {
             }
         })
         .detach();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn the_engines_reports_have_plain_titles() {
+        let names = HashMap::from([("com.isonomic.chat".to_string(), "Chat".to_string())]);
+        let title = |doc: serde_json::Value| title_for(&doc, &names);
+        let service = json!({ "kind": "service_failed", "component": { "id": "engine/postgres" },
+                              "service": { "name": "postgres" } });
+        assert_eq!(title(service), "The database stopped working");
+        let model =
+            json!({ "kind": "model_server_failed", "component": { "id": "engine/llama-server" } });
+        assert_eq!(title(model), "The local model stopped working");
+        let engine = json!({ "kind": "panic", "component": { "id": "engine" } });
+        assert_eq!(title(engine), "The Isonomic engine quit unexpectedly");
+        let app = json!({ "kind": "app_failed", "component": { "id": "com.isonomic.chat" } });
+        assert_eq!(title(app), "Chat stopped working");
+        let hang = json!({ "kind": "hang", "component": { "id": "window" } });
+        assert_eq!(title(hang), "Isonomic stopped responding");
     }
 }

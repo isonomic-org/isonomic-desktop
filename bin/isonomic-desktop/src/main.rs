@@ -298,6 +298,7 @@ fn main() {
                 }
                 if let Some(kept) = kept.clone() {
                     shell.watch_reports(kept, cx);
+                    shell.review_on_status(profile_client.live(), cx);
                     let id_client = profile_client.clone();
                     shell.report_identity(
                         Box::pin(async move {
