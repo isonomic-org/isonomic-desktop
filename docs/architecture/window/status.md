@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-16 · The wordmark in the serif; the recovering engine's message
+
+- **Pins:** `SDK_REF` 1f28327 (Isonomic UI 0a8f39d, which bundles the serif) and `CHAT_REF` 8262fc8 move together.
+- **First run's wordmark** is drawn in the theme's `serif_font_family`, at 20 / 28 and medium weight, the bundled serif's heaviest, as Chat's sidebar draws its own. It was in the interface sans, a deviation recorded at the time because there was no serif.
+- **The set-aside notice follows the engine's new message** (isonomic-capsule #73). The window recognises it by its opening, "The list of apps and chats could not be read", and still by the older opening from an engine before it. It shows the message as it stands, with its counts of chats recovered and approvals kept.
+  - Home's title for it is now "Isonomic recovered what it could". "Apps must be approved again" is no longer always true, and the engine's message says which.
+- **Tested:** the recovering engine's message with its counts is shown as it stands.
+
 ## 2026-11-16 · The engine's set-aside notice, and its standard error moves
 
 - **When the engine sets the registry aside:** a damaged list of approved apps is set aside at start (isonomic-capsule #72). Home then shows the engine's message as a plain warning, not an error, titled "Apps must be approved again". The text is the engine's own: "… Apps must be approved again. Their data and files are kept; chats from before are in the set-aside copy and are not shown."

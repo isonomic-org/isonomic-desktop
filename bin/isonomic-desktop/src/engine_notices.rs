@@ -1,15 +1,21 @@
 //! What the engine says once at start that the person should see: today,
-//! that a damaged list of approved apps was set aside (isonomic-capsule
-//! `registry::check`). The engine says it only in its own log, so the
+//! that a damaged list of apps and chats was set aside and what could
+//! still be read was recovered (isonomic-capsule `registry::check`, with
+//! its counts of chats and approvals). The engine says it only in its own log, so the
 //! window reads the latest run's lines there and shows the message on
 //! Home as a plain notice, once per incident.
 
 use std::path::Path;
 
-/// Home's title for it.
-pub const SET_ASIDE_TITLE: &str = "Apps must be approved again";
-/// How the engine's message starts (`SetAside::message`).
-const SET_ASIDE: &str = "The list of approved apps could not be read";
+/// Home's title for it. The engine's message, as it stands, says what came
+/// back and whether apps must be approved again.
+pub const SET_ASIDE_TITLE: &str = "Isonomic recovered what it could";
+/// How the engine's message starts (`SetAside::message`); the second is an
+/// engine from before it recovered anything.
+const SET_ASIDE: [&str; 2] = [
+    "The list of apps and chats could not be read",
+    "The list of approved apps could not be read",
+];
 /// The engine's first line in every run (`capsule directory: …`).
 const RUN_START: &str = "capsule directory:";
 /// Incidents already shown, one message per line, in the Capsule.
@@ -22,9 +28,12 @@ pub fn set_aside(log: &str) -> Option<String> {
         .iter()
         .rposition(|l| l.contains(RUN_START))
         .unwrap_or(0);
-    lines[run..]
-        .iter()
-        .find_map(|l| l.find(SET_ASIDE).map(|at| l[at..].trim().to_string()))
+    lines[run..].iter().find_map(|l| {
+        SET_ASIDE
+            .iter()
+            .find_map(|start| l.find(start))
+            .map(|at| l[at..].trim().to_string())
+    })
 }
 
 /// The message to show for the Capsule at `root`, once: `None` when there
@@ -59,6 +68,19 @@ mod tests {
 so it was set aside in /c/unreadable/registry-20261116T080000.db and a new one was started. \
 Apps must be approved again. Their data and files are kept; chats from before are in the \
 set-aside copy and are not shown.";
+
+    /// The engine's message since it recovers what it can (isonomic-capsule #73).
+    const RECOVERED: &str = "The list of apps and chats could not be read (database disk image is \
+malformed). It was set aside in /c/unreadable/registry-20261116T100000.db, and what could still \
+be read was copied into a new one: 297 chats recovered, 3 could not be read. Approved apps keep \
+their approvals. Their data and files are kept, and what was not recovered stays in the \
+set-aside copy.";
+
+    #[test]
+    fn the_recovering_engine_s_message_is_shown_as_it_stands() {
+        let log = format!("capsule directory: /c\n[isonomic-capsule] {RECOVERED}\nready\n");
+        assert_eq!(set_aside(&log).as_deref(), Some(RECOVERED));
+    }
 
     #[test]
     fn only_the_latest_run_s_message_counts() {
