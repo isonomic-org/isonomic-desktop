@@ -11,7 +11,7 @@ One `POST` per report, to one URL that the build is configured with.
 | Method | `POST` |
 | URL | The configured URL, used exactly as given. Must be `https://` (plain `http://` is sent only to this Mac's loopback, for tests) |
 | `Content-Type` | `application/json` |
-| `Idempotency-Key` | The report's id: 64 lowercase hex characters. The same as the document's `id` |
+| `Idempotency-Key` | The report's id: 32 lowercase hex characters. The same as the document's `id` |
 | `Authorization` | `Bearer <key>`, only when the build is configured with a key |
 | Body | One JSON document, format 1, UTF-8, at most 65,536 bytes |
 
@@ -41,7 +41,12 @@ The other top-level fields come from format 1, the SDK's `isonomic-reports`, des
 
 The window sends a report again when an attempt failed, and the same report may come from a later launch. It always carries the same `id`.
 
-A receiver must treat a second request with an `id` it has already stored as success: answer 200, and store nothing new. An `id` is the SHA-256 of the Capsule's id and the report's file name. It is stable for one report, and two reports from one Mac share nothing a receiver could link.
+A receiver must treat a second request with an `id` it has already stored as success: answer 200, and store nothing new.
+
+- **A report made since format 1 carried an `id`:** its own, random, made when the report was written.
+- **One kept from before that:** the first 128 bits of the SHA-256 of the Capsule's id and the report's file name.
+
+Either way an id is stable for one report, and two reports from one Mac share nothing a receiver could link.
 
 ## Answers
 
