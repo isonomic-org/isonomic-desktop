@@ -376,12 +376,19 @@ async fn prompt_check(
             .is_some_and(|t| !t.state.is_open())
     })
     .await?;
-    let (state, reply) = cx.update(|cx| {
+    let (state, reply, refusal) = cx.update(|cx| {
         let v = view.read(cx);
         let thread = v.thread();
         let turn = thread.turns().last().expect("a turn");
-        (format!("{:?}", turn.state), turn.reply())
+        (
+            format!("{:?}", turn.state),
+            turn.reply(),
+            turn.refusal.clone(),
+        )
     });
+    if let Some(refusal) = refusal {
+        return Err(format!("the engine refused to continue: {refusal}"));
+    }
     eprintln!("[self-check] continued reply: {reply}");
     eprintln!(
         "[self-check] continue: first text {:.2}s, end {:.2}s, {state}",

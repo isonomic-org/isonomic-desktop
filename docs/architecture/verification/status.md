@@ -6,6 +6,7 @@ Newest first.
 
 - Ran on the MacBookPro15,1 with the 2B model in a scratch Capsule. The window was up and the engine connected at 0.06 s, first run passed and Chat mounted at 0.07 s. Turn 1 had its first text at 6.88 s and ended Done at 109.33 s with about 3,000 characters. Turn 2 had its first text at 30.51 s and was stopped at 30.52 s with 1 character. The continue then read 0.00 s, Stopped, and the check failed (exit 1). No processes were left behind.
 - **The FAIL was the check's own mistake.** Continue is a request: Chat's `resume` sends `sessions.continue`, and the turn changes only when the engine's events arrive. The check read the turn straight after pressing Continue, saw the stopped turn (not open, one character), and took it for the end of the continued turn. It now waits for the turn to move on from the stop (its revision changes) before waiting for new text and the end. The decision is unit-tested with the Mac run's numbers.
+- With Chat a3c87ff, a refused `sessions.continue` is kept on the turn (`Turn::refusal`), and the check prints its words: `FAIL: the engine refused to continue: …`.
 - **Still to see on the Mac:** whether the continue then produces text. Whether the engine continues a reply stopped at its first token is the engine's to check (isonomic-capsule). The second turn's slow first text and the long first reply are on the engine side too.
 
 ## 2026-11-15 (late) · The window checks itself: `ISONOMIC_SELF_CHECK`
