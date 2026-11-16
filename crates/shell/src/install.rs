@@ -311,7 +311,8 @@ pub fn requests() -> (
 impl isonomic_app::WindowRequests for ShellRequests {
     fn request(&self, app: &str, request: isonomic_app::WindowRequest) -> bool {
         match request {
-            isonomic_app::WindowRequest::InstallModel { .. } => self
+            isonomic_app::WindowRequest::InstallModel { .. }
+            | isonomic_app::WindowRequest::Report(_) => self
                 .queue
                 .unbounded_send((app.to_string(), request))
                 .is_ok(),

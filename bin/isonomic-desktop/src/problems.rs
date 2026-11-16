@@ -71,7 +71,7 @@ pub fn start(root: &Path, apps: Vec<AppCrate>, check: bool) -> Problems {
         store,
         build: build(),
         system: Mutex::new(System {
-            macos: macos_version(),
+            os_version: macos_version(),
             capsule_format: capsule_format(root),
             ..System::default()
         }),

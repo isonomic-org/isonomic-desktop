@@ -2,6 +2,21 @@
 
 Newest first.
 
+## 2026-11-16 · Problem reports on the SDK's shared crate (SDK fedba7d)
+
+- **`isonomic-reports`:** the window's problem reports now use the crate the engine uses too: format 1, the scrubber, and the backtrace helpers.
+  - **Deleted here:** this repo's `scrub.rs`, `frames` and `short_path`, and the format types. The `reports` crate re-exports the shared ones, so call sites didn't change.
+  - **Kept here:** the store, the setting, the panic hook and containment, the hang watchdog, the crash-loop guard and the window log.
+  - **Renamed:** `System.macos` is now `os_version`. Format 1's key stays `system.macos`.
+- **The scrubber, from fedba7d:**
+  - quoted text of any length becomes `[text removed]`;
+  - a person's ID in either form becomes `[id removed]`;
+  - key-like runs become `[key removed]`.
+- **The Isonomic ID:** when the notice's box is ticked, the window adds the ID as a top-level `isonomic_id`, outside the scrubbed fields. It is never in a kept file.
+- **`WindowRequest::Report`:** an app's `AppContext::report(Problem { summary, detail })` is queued like `InstallModel`. The shell writes it as an `app_error`, with the app's id and its manifest's version, through the same writer as the panic hook, off the foreground thread. Then it shows the notice. A self-check has no reports, so it drops them.
+- **Pins:** `SDK_REF` is fedba7d (Isonomic UI b4c9670 and the harness unchanged since abe8fe4). `CHAT_REF` stays fa3886f, which builds against this SDK checkout.
+- **Tested:** an app's report going through the window's queue, written as `app_error` with a home path turned to `~` and a token removed, and asked about. The existing report, notice and hook tests pass on the shared crate.
+
 ## 2026-11-16 · The engine's problem reports, and the key rule
 
 - **The engine's reports reach the same notice.** The engine writes format 1 into the same `reports/pending/` (isonomic-capsule #61). Its titles:

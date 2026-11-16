@@ -244,3 +244,66 @@ fn a_report_written_after_the_status_is_still_asked_about(cx: &mut TestAppContex
     assert!(dialog_open(cx, window));
     assert_eq!(title(cx, &reports), "The local model stopped working");
 }
+
+#[ui::test]
+fn a_problem_an_app_reports_is_written_and_asked_about(cx: &mut TestAppContext) {
+    use isonomic_app::{Problem, WindowRequest, WindowRequests as _};
+    let capsule = tempfile::tempdir().unwrap();
+    let (window, reports, shell) = open(cx, capsule.path());
+    let writer = Arc::new(reports::panic::Context {
+        store: Store::in_capsule(capsule.path()),
+        build: reports::Build::default(),
+        system: std::sync::Mutex::new(reports::System::default()),
+        home: Some("/Users/omar".into()),
+        apps: Vec::new(),
+        tab: std::sync::Mutex::new(None),
+        started: std::time::Instant::now(),
+    });
+    reports.update(cx, |r, _| r.write_with(writer));
+    // The app's request goes through the window's queue, as from an app.
+    let (requests, queued) = shell::install::requests();
+    struct NoModels;
+    impl shell::install::ModelSource for NoModels {
+        fn installed(&self, _: &str) -> BoxFuture<'static, Result<bool, String>> {
+            Box::pin(async { Ok(true) })
+        }
+        fn download(
+            &self,
+            _: &str,
+        ) -> futures::stream::BoxStream<
+            'static,
+            Result<isonomic_proto::models::DownloadProgress, String>,
+        > {
+            Box::pin(futures::stream::empty())
+        }
+        fn cancel_download(&self, _: &str) -> BoxFuture<'static, Result<(), String>> {
+            Box::pin(async { Ok(()) })
+        }
+    }
+    let problem = Problem {
+        summary: "Couldn't save the chat list".into(),
+        detail: Some(
+            "at /Users/omar/Library/x, token iso_tok_7f3a9c21b04e5d6f8a1b2c3d4e5f6a7b".into(),
+        ),
+    };
+    assert!(requests.request("com.isonomic.test-notes", WindowRequest::Report(problem)));
+    shell.update(cx, |shell, cx| {
+        shell.serve_requests(queued, Arc::new(NoModels), cx)
+    });
+    draw(cx, window);
+    draw(cx, window);
+    assert!(dialog_open(cx, window));
+    assert_eq!(title(cx, &reports), "test-notes stopped working");
+    let kept = Kept::in_capsule(capsule.path()).pending().remove(0);
+    assert_eq!(kept.document["kind"], "app_error");
+    assert_eq!(kept.document["component"]["id"], "com.isonomic.test-notes");
+    let message = kept.document["message"].as_str().unwrap();
+    assert!(
+        message.starts_with("Couldn't save the chat list: at ~/Library/x"),
+        "{message}"
+    );
+    assert!(
+        message.contains("[key removed]") && !message.contains("iso_tok"),
+        "{message}"
+    );
+}

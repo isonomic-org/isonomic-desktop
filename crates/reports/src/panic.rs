@@ -9,11 +9,9 @@ use std::panic::PanicHookInfo;
 use std::sync::{Arc, Mutex};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
+use crate::backtrace::{frames, short_path};
 use crate::store::Store;
 use crate::{log, Build, Component, Kind, Report, System, LOG_LINES};
-
-/// Backtraces are cut to this many frames.
-pub const FRAMES: usize = 40;
 
 /// An app crate compiled into the window, to blame a panic on.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -112,45 +110,6 @@ fn from_panic(info: &PanicHookInfo<'_>, apps: &[AppCrate]) -> Report {
     let mut report = Report::new(kind, blame(&backtrace, apps), format!("{message}{at}"));
     report.backtrace = backtrace;
     report
-}
-
-/// The backtrace as function names and crate-relative locations.
-pub fn frames(text: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    for raw in text.lines() {
-        let line = raw.trim();
-        if let Some(at) = line.strip_prefix("at ") {
-            if let Some(last) = out.last_mut() {
-                let last: &mut String = last;
-                last.push_str(&format!(" ({})", short_path(at)));
-            }
-        } else if let Some((number, function)) = line.split_once(": ") {
-            if number.chars().all(|c| c.is_ascii_digit()) {
-                out.push(function.to_string());
-            }
-        }
-        if out.len() >= FRAMES {
-            break;
-        }
-    }
-    out
-}
-
-/// A source path cut to its crate: `…/crates/shell/src/home.rs:12:5`
-/// becomes `shell/src/home.rs:12`. Never a path on disk.
-pub fn short_path(path: &str) -> String {
-    let trimmed = match path.rsplit_once(':') {
-        Some((head, col)) if col.chars().all(|c| c.is_ascii_digit()) && head.contains(':') => head,
-        _ => path,
-    };
-    match trimmed.rfind("/src/") {
-        Some(at) => {
-            let before = &trimmed[..at];
-            let krate = before.rsplit('/').next().unwrap_or(before);
-            format!("{krate}{}", &trimmed[at..])
-        }
-        None => trimmed.rsplit('/').next().unwrap_or(trimmed).to_string(),
-    }
 }
 
 /// The app whose crate shows first in the frames, else the window.
