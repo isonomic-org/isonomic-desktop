@@ -256,9 +256,21 @@ fn check_minimum(app: &Path) -> Result<(), String> {
         return Ok(());
     }
     let mut message = format!("parts of the app need a newer macOS than {MINIMUM_MACOS}:");
-    for (path, (major, minor)) in above.iter().take(10) {
+    for part in crate::macho::summarize(app, &above) {
+        let (major, minor) = part.minimum;
+        let files = if part.files == 1 { "file" } else { "files" };
+        message.push_str(&format!(
+            "\n  {} ({}): macOS {major}.{minor}, {} {files}",
+            part.name, part.arch, part.files
+        ));
+    }
+    message.push_str("\nfiles:");
+    for (path, arch, (major, minor)) in above.iter().take(10) {
         let shown = path.strip_prefix(app).unwrap_or(path);
-        message.push_str(&format!("\n  {}.{} {}", major, minor, shown.display()));
+        message.push_str(&format!("\n  {major}.{minor} {arch} {}", shown.display()));
+    }
+    if above.len() > 10 {
+        message.push_str(&format!("\n  and {} more", above.len() - 10));
     }
     Err(message)
 }

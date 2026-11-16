@@ -9,6 +9,8 @@ const LC_BUILD_VERSION: u32 = 0x32;
 const MH_MAGIC: u32 = 0xfeed_face;
 const MH_MAGIC_64: u32 = 0xfeed_facf;
 const FAT_MAGIC: u32 = 0xcafe_babe;
+const CPU_X86_64: u32 = 0x0100_0007;
+const CPU_ARM64: u32 = 0x0100_000c;
 
 /// A macOS version as `(major, minor)`.
 pub type Version = (u32, u32);
@@ -57,23 +59,44 @@ fn thin(bytes: &[u8], at: usize) -> Option<Version> {
     None
 }
 
-/// The highest minimum across every slice of a Mach-O file, or `None` when
-/// it is not one or names none.
-pub fn minimum(bytes: &[u8]) -> Option<Version> {
-    if be(bytes, 0)? == FAT_MAGIC {
-        let slices = be(bytes, 4)? as usize;
-        (0..slices)
-            .filter_map(|i| {
-                be(bytes, 8 + i * 20 + 8).and_then(|offset| thin(bytes, offset as usize))
-            })
-            .max()
-    } else {
-        thin(bytes, 0)
+fn arch_name(cputype: u32) -> &'static str {
+    match cputype {
+        CPU_X86_64 => "x86_64",
+        CPU_ARM64 => "arm64",
+        _ => "other",
     }
 }
 
-/// Every Mach-O file under `dir` whose minimum is above `declared`.
-pub fn above(dir: &Path, declared: Version) -> Vec<(PathBuf, Version)> {
+/// Each slice of a Mach-O file with its architecture and minimum; empty
+/// when it is not one, or names none.
+pub fn slices(bytes: &[u8]) -> Vec<(&'static str, Version)> {
+    if be(bytes, 0) == Some(FAT_MAGIC) {
+        let count = be(bytes, 4).unwrap_or(0) as usize;
+        return (0..count)
+            .filter_map(|i| {
+                let entry = 8 + i * 20;
+                let cpu = be(bytes, entry)?;
+                let offset = be(bytes, entry + 8)? as usize;
+                Some((arch_name(cpu), thin(bytes, offset)?))
+            })
+            .collect();
+    }
+    match (le(bytes, 4), thin(bytes, 0)) {
+        (Some(cpu), Some(version)) => vec![(arch_name(cpu), version)],
+        _ => Vec::new(),
+    }
+}
+
+/// The highest minimum across every slice of a Mach-O file, or `None` when
+/// it is not one or names none.
+#[cfg(test)]
+fn minimum(bytes: &[u8]) -> Option<Version> {
+    slices(bytes).into_iter().map(|(_, v)| v).max()
+}
+
+/// Every slice of every Mach-O file under `dir` whose minimum is above
+/// `declared`, as (file, architecture, minimum).
+pub fn above(dir: &Path, declared: Version) -> Vec<(PathBuf, &'static str, Version)> {
     let mut found = Vec::new();
     let mut stack = vec![dir.to_path_buf()];
     while let Some(next) = stack.pop() {
@@ -88,9 +111,10 @@ pub fn above(dir: &Path, declared: Version) -> Vec<(PathBuf, Version)> {
             if kind.is_dir() {
                 stack.push(path);
             } else if kind.is_file() {
-                if let Some(version) = std::fs::read(&path).ok().and_then(|b| minimum(&b)) {
+                let bytes = std::fs::read(&path).unwrap_or_default();
+                for (arch, version) in slices(&bytes) {
                     if version > declared {
-                        found.push((path, version));
+                        found.push((path.clone(), arch, version));
                     }
                 }
             }
@@ -98,6 +122,59 @@ pub fn above(dir: &Path, declared: Version) -> Vec<(PathBuf, Version)> {
     }
     found.sort();
     found
+}
+
+/// One part of the app that needs a newer macOS, per architecture.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Part {
+    pub name: String,
+    pub arch: &'static str,
+    /// The highest minimum among its files.
+    pub minimum: Version,
+    pub files: usize,
+}
+
+/// The part a file under `root` belongs to: a sidecar's directory without
+/// its target triple (`postgres`), or the program's own name.
+fn part_of(root: &Path, file: &Path) -> String {
+    let relative = file.strip_prefix(root).unwrap_or(file);
+    let parts: Vec<String> = relative
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().into_owned())
+        .collect();
+    let name = match parts.iter().position(|p| p == "sidecars") {
+        Some(at) if at + 1 < parts.len() => parts[at + 1].clone(),
+        _ => parts.last().cloned().unwrap_or_default(),
+    };
+    ["-x86_64-apple-darwin", "-aarch64-apple-darwin"]
+        .iter()
+        .find_map(|triple| name.strip_suffix(triple))
+        .map_or(name.clone(), str::to_string)
+}
+
+/// What [`above`] found, one line per part and architecture.
+pub fn summarize(root: &Path, found: &[(PathBuf, &'static str, Version)]) -> Vec<Part> {
+    let mut summary: Vec<Part> = Vec::new();
+    for (file, arch, version) in found {
+        let name = part_of(root, file);
+        match summary
+            .iter_mut()
+            .find(|p| p.name == name && p.arch == *arch)
+        {
+            Some(part) => {
+                part.minimum = part.minimum.max(*version);
+                part.files += 1;
+            }
+            None => summary.push(Part {
+                name,
+                arch,
+                minimum: *version,
+                files: 1,
+            }),
+        }
+    }
+    summary.sort_by(|a, b| (&a.name, a.arch).cmp(&(&b.name, b.arch)));
+    summary
 }
 
 #[cfg(test)]
@@ -137,6 +214,45 @@ mod tests {
         fat.extend_from_slice(&a);
         fat.extend_from_slice(&b);
         assert_eq!(minimum(&fat), Some((13, 3)));
+        assert_eq!(slices(&fat), vec![("x86_64", (11, 0)), ("x86_64", (13, 3))]);
+    }
+
+    #[test]
+    fn the_summary_names_each_sidecar_and_architecture() {
+        let root = Path::new("/app");
+        let side = |rest: &str| root.join("Contents/Resources/sidecars").join(rest);
+        let found = vec![
+            (
+                side("postgres-aarch64-apple-darwin/bin/initdb"),
+                "arm64",
+                (26, 0),
+            ),
+            (
+                side("postgres-aarch64-apple-darwin/lib/libpq.dylib"),
+                "arm64",
+                (15, 0),
+            ),
+            (
+                side("postgres-x86_64-apple-darwin/bin/postgres"),
+                "x86_64",
+                (26, 0),
+            ),
+            (side("cache/cache-server"), "arm64", (15, 0)),
+            (side("cache/cache-server"), "x86_64", (15, 0)),
+        ];
+        let lines: Vec<_> = summarize(root, &found)
+            .into_iter()
+            .map(|p| (p.name, p.arch, p.minimum, p.files))
+            .collect();
+        assert_eq!(
+            lines,
+            vec![
+                ("cache".to_string(), "arm64", (15, 0), 1),
+                ("cache".to_string(), "x86_64", (15, 0), 1),
+                ("postgres".to_string(), "arm64", (26, 0), 2),
+                ("postgres".to_string(), "x86_64", (26, 0), 1),
+            ]
+        );
     }
 
     #[test]
@@ -154,7 +270,7 @@ mod tests {
         std::fs::write(dir.join("sidecars/new"), image((13, 3))).unwrap();
         std::fs::write(dir.join("notes.txt"), b"text").unwrap();
         let found = above(&dir, (11, 0));
-        assert_eq!(found, vec![(dir.join("sidecars/new"), (13, 3))]);
+        assert_eq!(found, vec![(dir.join("sidecars/new"), "x86_64", (13, 3))]);
         assert!(above(&dir, (13, 3)).is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }
