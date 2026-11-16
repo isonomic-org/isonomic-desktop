@@ -69,3 +69,7 @@ Version 1 ships without a Developer ID (no account for at least two weeks), as a
 - `CFBundleVersion`, the build: the commit count on `main`, 96 today. It only goes up, so any two builds compare correctly even across versions; `ISONOMIC_BUILD_NUMBER` can override it.
 - The file name stays `Isonomic-<version>-<build>.dmg`.
 - Nothing changes until it's approved: the workspace version is still 0.0.1.
+
+## 2026-11-16 · Version 0.9.0
+
+- The numbering proposed above is approved (orchestrator, for Omar): `0.9.N` for test builds starting at 0.9.0, then `1.0.0` for version 1, and the build number from the commit count on `main`. The workspace version is now 0.9.0, so the next release is `Isonomic-0.9.0-<build>.dmg`.
