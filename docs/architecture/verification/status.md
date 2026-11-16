@@ -2,6 +2,16 @@
 
 Newest first.
 
+## 2026-11-16 · The link run is a second launch again
+
+- **Why it's back:** with the engine's isonomic-capsule #75, approving the same app again signs nothing, so a second engine on the same scratch Capsule can open Chat.
+- **Now:** the prompt run gets a fresh scratch Capsule. The link run is a second launch on that same Capsule, as it was before #58, so "first run already done" and a relaunch with an existing ID are tested again.
+- **Confirmed by the engine:** the link run's key check expects two `keys kept in memory: scratch Capsule` lines, one for each engine run on the Capsule.
+- **Kept from #58:**
+  - a failed tab fails the step at once, with its reason;
+  - a failed run prints the last lines of the engine's and the window's logs.
+- **Needs an engine at a6dc338 or later.** With an older engine, the link run fails at once with the engine's key-store refusal.
+
 ## 2026-11-16 · The link run fails on a second engine with in-memory keys: each run gets its own scratch Capsule
 
 - **Build 143:** the link run failed twice with "timed out after 180s waiting for the app to open". Build 134 passed it.
