@@ -247,8 +247,11 @@ impl Render for FirstRun {
                 div()
                     .id("first-run-wordmark")
                     .test_support()
+                    // Design 0.2: the display serif at 20 / 28. Medium is the
+                    // bundled serif's heaviest weight.
+                    .font_family(theme.serif_font_family.clone())
                     .text_xl()
-                    .font_semibold()
+                    .font_medium()
                     .text_color(theme.foreground)
                     .child("Isonomic"),
             )
