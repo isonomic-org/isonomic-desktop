@@ -444,3 +444,25 @@ fn a_refused_key_store_says_why_and_can_be_tried_again(cx: &mut TestAppContext) 
     assert!(shown(cx, window, "id-ready"));
     assert!(shown(cx, window, "model-installed"));
 }
+
+/// The adapter over the real client, against the testkit's identity: the
+/// ID as the engine gives it, and a refusal's words as written.
+#[test]
+fn the_client_adapter_reads_the_id_and_a_refusal() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let engine = runtime.block_on(async { TestEngine::new() });
+    let client = engine.client_on(runtime.handle());
+    runtime.block_on(async {
+        let id = shell::first_run::identity_from(&client).await.unwrap();
+        assert_eq!(id, isonomic_testkit::DEFAULT_IDENTITY);
+        let refused =
+            "Your Mac's keychain did not let Isonomic save your ID. Unlock it and try again.";
+        engine.identity().refuse(refused);
+        assert_eq!(
+            shell::first_run::identity_from(&client).await,
+            Err(refused.to_string())
+        );
+        engine.identity().recover();
+        assert_eq!(shell::first_run::identity_from(&client).await.unwrap(), id);
+    });
+}

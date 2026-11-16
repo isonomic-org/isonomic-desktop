@@ -2,14 +2,14 @@
 
 Newest first.
 
-## 2026-11-16 · First run: "Your Isonomic ID" (branch; waits on the engine's R7)
+## 2026-11-16 · First run: "Your Isonomic ID"
 
 - First run gains a step after the memory check and before the local model. The engine creates the person's ID on the Capsule's first start, and the window asks for it (`Setup::identity`) and shows it. It appears in a monospace line with a copy button (Isonomic UI's `Clipboard`), and a plain sentence says what it is for and that its key stays on this Mac.
 - If it can't be made, for example because the Mac's key store refused or is unavailable, an `Alert` gives the engine's reason in its own words, with Try again. The model waits, and Continue needs the ID.
 - The stepper now reads Capsule, Memory, Isonomic ID, Local model. The Capsule is one line under the title rather than a group. The steps scroll while Continue stays in a footer, so it's always in view.
 - The self-check prints the ID, and fails with the engine's reason when there's none.
 - Tested headless: the ID is shown with its copy button; a refused key store shows its reason, the model waits, Continue does nothing, and Try again goes on to the model. Also tested: first run finished by keyboard, which now tabs past Copy.
-- **Not wired:** the app's `identity` answers "This build can't create an Isonomic ID yet." until the engine worker says how the window reads the ID (a call or a `welcome` field). This branch doesn't merge before then.
+- **Wired to `identity.get`** (isonomic-sdk #34, built against its head d530e54): `first_run::identity_from` returns the `id` as the engine gives it, and an `identity_unavailable` refusal's message as written. Tested against the testkit's scripted identity (`set_id`, `refuse`, `recover`). `SDK_REF` moves to #34's merge before this merges, and `CHAT_REF` is ed43f66 on the same harness.
 
 ## 2026-11-16 · Problem reports, part 2: the notice, the review and the setting
 

@@ -57,9 +57,7 @@ impl Setup for FirstRunSetup {
     }
 
     fn identity(&self) -> BoxFuture<'static, Result<String, String>> {
-        // Waits on the engine's identity (isonomic-capsule R7): this branch
-        // does not merge before it reads the ID from there.
-        Box::pin(async { Err("This build can't create an Isonomic ID yet.".into()) })
+        first_run::identity_from(&self.client)
     }
 
     fn finish(&self) -> BoxFuture<'static, Result<(), String>> {

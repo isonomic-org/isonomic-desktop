@@ -51,6 +51,22 @@ pub trait Setup: Send + Sync + 'static {
     fn finish(&self) -> BoxFuture<'static, Result<(), String>>;
 }
 
+/// The person's Isonomic ID through the shell's client (`identity.get`). A
+/// refusal (`identity_unavailable`) gives the engine's words as written.
+pub fn identity_from(client: &Client) -> BoxFuture<'static, Result<String, String>> {
+    let client = client.clone();
+    Box::pin(async move {
+        match client.identity().await {
+            Ok(identity) => Ok(identity.id),
+            Err(isonomic_client::ClientError::Engine(error)) => Err(error.message),
+            Err(isonomic_client::ClientError::Disconnected) => {
+                Err("Isonomic isn't connected to its engine yet. Try again in a moment.".into())
+            }
+            Err(error) => Err(error.to_string()),
+        }
+    })
+}
+
 /// The engine's hardware profile, through the shell's client.
 pub fn profile_from(client: &Client) -> BoxFuture<'static, Result<HardwareProfile, String>> {
     let client = client.clone();
