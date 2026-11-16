@@ -188,3 +188,20 @@ fn a_problem_reaching_the_engine_shows_until_it_connects(cx: &mut TestAppContext
     cx.run_until_parked();
     assert!(!shown(cx, window, None, "engine-problem"));
 }
+
+#[ui::test]
+fn a_notice_asks_to_move_the_app_in_plain_words(cx: &mut TestAppContext) {
+    let (_publish, live) = watch::channel(Live::default());
+    let (window, shell) = open(cx, live);
+    assert!(!shown(cx, window, None, "home-notice"));
+    shell.update(cx, |shell, cx| {
+        shell.home().update(cx, |home, cx| {
+            home.set_notice(
+                "Move Isonomic to the Applications folder and open it from there.".into(),
+                cx,
+            )
+        })
+    });
+    cx.run_until_parked();
+    assert!(shown(cx, window, None, "home-notice"));
+}

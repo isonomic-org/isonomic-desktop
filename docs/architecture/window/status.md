@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-16 · Installing a model an app asks for (window side)
+
+- `Shell::install_model(model, app, source)` shows a download view for that one model in place of the tab on screen. It returns a future that resolves to `Installed`, `Declined` (the person said not now) or `Failed` (the engine couldn't say whether the model is installed). A model that is already installed resolves at once and nothing is shown.
+- The download, cancel and retry behave as in first run: the engine owns the download, an unknown size shows the MB received, and a stream that ends without an outcome is a failure. `install::ModelSource` is the client in the window and a scripted source in tests.
+- This is the window's half of an app asking for a model (isonomic-sdk #31, coming in isonomic-sdk #30 as `AppContext::request(WindowRequest::InstallModel { model })`). When that trait exists, the window implements it by calling `install_model`, and Chat's `ModelUnavailable` reaches it.
+- Tested headless: a download that fails, is retried and installs; not now; and an already-installed model. Also tested: the move-to-Applications notice shows on Home.
+
 ## 2026-11-15 (late) · Chat 2981abb: models in the manifest
 
 - `CHAT_REF` moves to 2981abb. It's the same SDK (c0d2bf7) and the same harness rev, so only the Chat pin moves.
