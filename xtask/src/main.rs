@@ -13,6 +13,10 @@
 //!     The release folder: the universal app in a disk image, its SHA-256,
 //!     a JSON manifest and the first-open note. macOS only.
 //!
+//! cargo xtask self-check --models <dir>
+//!     The acceptance check for a built app: the window drives itself
+//!     through first run, a Chat turn, stop and continue, and a link.
+//!
 //! cargo xtask e2e
 //!     Build the engine, fetch its services, and run the window's engine
 //!     link against it in a scratch Capsule. Not as root.
@@ -28,6 +32,7 @@ mod gate;
 mod procs;
 mod release;
 mod report;
+mod selfcheck;
 mod sidecars;
 mod util;
 
@@ -37,7 +42,8 @@ const USAGE: &str = "usage:
   cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
   cargo xtask report [--host-only] [--no-build]
   cargo xtask release
-  cargo xtask e2e";
+  cargo xtask e2e
+  cargo xtask self-check --models <dir> [--capsule <dir>] [--prompt <text>]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -51,6 +57,9 @@ fn main() -> ExitCode {
         .map(|built| built.print()),
         Some("e2e") => e2e::run(),
         Some("release") => dist::run(),
+        Some("self-check") => {
+            selfcheck::Options::parse(&args[1..]).and_then(|o| selfcheck::run(&o))
+        }
         Some("report") => report::run(&report::Options {
             host_only: flag("--host-only"),
             build: !flag("--no-build"),
