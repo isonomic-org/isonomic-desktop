@@ -19,9 +19,10 @@ pub use isonomic_app::ui::*;
 pub mod tokens {
     use isonomic_app::ui::{px, size, Pixels, Size};
 
-    /// Size of the main window when it first opens.
+    /// Size of the main window when it first opens: the design's 1440 × 900,
+    /// fitted to the screen when that is smaller.
     pub fn window_size() -> Size<Pixels> {
-        size(px(1100.), px(720.))
+        size(px(1440.), px(900.))
     }
 
     /// The widest a page of text and controls grows, so lines stay

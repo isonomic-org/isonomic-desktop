@@ -3837,6 +3837,7 @@ dependencies = [
 name = "isonomic-desktop"
 version = "0.9.0"
 dependencies = [
+ "conversation-model",
  "conversation-ui",
  "desktop-ui",
  "engine-link",

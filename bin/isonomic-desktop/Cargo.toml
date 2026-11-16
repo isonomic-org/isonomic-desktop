@@ -22,6 +22,7 @@ isonomic-app.workspace = true
 reports.workspace = true
 isonomic-chat.workspace = true
 conversation-ui.workspace = true
+conversation-model.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true
 serde_json.workspace = true

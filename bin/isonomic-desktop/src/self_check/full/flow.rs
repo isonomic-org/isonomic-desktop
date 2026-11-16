@@ -61,7 +61,11 @@ pub async fn after_prompt(
         super::more::acknowledgements(window, started, cx).await,
     );
     if let Some(capsule) = super::super::capsule() {
-        super::more::notice_screen(window, shell, &capsule, started, cx).await;
+        note(
+            12,
+            "problem-report-notice",
+            super::more::notice_screen(window, shell, &capsule, started, cx).await,
+        );
     }
     match super::more::state(chat, client, cx).await {
         Ok(state) => say(started, &format!("state {}", state.line())),

@@ -267,9 +267,9 @@ async fn new_chat(
     Ok(named)
 }
 
-/// Step 6: Three chats; pin one (it moves to the top), rename one (the name
-/// holds after the list is read again), delete one (gone). Pin, rename and
-/// delete go through Chat's shell: its rows have no test ids yet.
+/// Step 6: Three chats; through each row's menu, pin one (it moves to the
+/// top), rename one (the name holds after the list is read again from
+/// Chat's store), delete one (gone).
 pub async fn chat_list(
     window: AnyWindowHandle,
     chat: &Entity<ChatShell>,
@@ -282,9 +282,7 @@ pub async fn chat_list(
     if count != 3 {
         return Err(format!("{count} chats, not 3"));
     }
-    let _ = window.update(cx, |_, _, cx| {
-        chat.update(cx, |s, cx| s.set_pinned(&third, true, cx))
-    });
+    menu(window, &third, "pin", cx)?;
     until_within(cx, chat, "the pinned chat at the top", UI_STEP, |s, _| {
         s.sessions()
             .first()
@@ -293,14 +291,7 @@ pub async fn chat_list(
     .await?;
     shot(window, "sidebar-pinned", true, started, cx);
 
-    window
-        .update(cx, |_, window, cx| {
-            chat.update(cx, |s, cx| {
-                s.open_session(second.clone(), window, cx);
-                s.begin_rename(window, cx);
-            })
-        })
-        .map_err(|e| e.to_string())?;
+    menu(window, &second, "rename", cx)?;
     until_within(cx, chat, "the rename field", UI_STEP, |s, _| {
         s.is_renaming()
     })
@@ -315,6 +306,10 @@ pub async fn chat_list(
                 .any(|x| x.id == second && x.title.as_ref() == RENAMED)
     })
     .await?;
+    // Chat replaces its whole list when a reload's answer lands, and its
+    // `is_loaded` stays true throughout: wait for the new list itself, so
+    // the answer can't land after the delete and bring the chat back.
+    let before = cx.update(|cx| chat.read(cx).sessions().as_ptr() as usize);
     let _ = window.update(cx, |_, _, cx| chat.update(cx, |s, cx| s.reload(cx)));
     until_within(
         cx,
@@ -322,7 +317,7 @@ pub async fn chat_list(
         "the list read again with the name",
         MODEL_STEP,
         |s, _| {
-            s.is_loaded()
+            s.sessions().as_ptr() as usize != before
                 && s.sessions()
                     .iter()
                     .any(|x| x.id == second && x.title.as_ref() == RENAMED)
@@ -330,21 +325,80 @@ pub async fn chat_list(
     )
     .await?;
 
-    window
-        .update(cx, |_, window, cx| {
-            chat.update(cx, |s, cx| s.delete_session(&third, window, cx))
-        })
-        .map_err(|e| e.to_string())?;
+    menu(window, &third, "delete", cx)?;
     until_within(cx, chat, "the deleted chat gone", UI_STEP, |s, _| {
         !s.sessions().iter().any(|x| x.id == third)
     })
     .await?;
-    Ok("3 chats; the pinned one moved to the top; the rename held after a reload; the deleted one is gone (through Chat's shell, not the row menu)".into())
+    Ok("3 chats; through the row menu: pinned to the top, renamed (it held after a reload), deleted (gone)".into())
 }
 
-/// Step 7: Search: the palette opens, a word from the renamed title is typed,
-/// and Return opens that chat. The row's last-active text is in the
-/// screenshot; the palette's rows have no test ids yet.
+/// Open the row menu of chat `id` and choose `item` (`pin`, `rename`, …).
+fn menu(window: AnyWindowHandle, id: &str, item: &str, cx: &mut AsyncApp) -> Result<(), String> {
+    click(window, format!("chat-row-menu-{id}"), cx)?;
+    click(window, format!("chat-row-menu-{id}-{item}"), cx)
+}
+
+/// Click the element `id` through the window's own events, once it is on
+/// screen. Needs Isonomic UI's test support: the check build, or a test.
+#[cfg(any(test, feature = "check-build"))]
+pub fn click(
+    window: AnyWindowHandle,
+    id: impl Into<ui::ElementId>,
+    cx: &mut AsyncApp,
+) -> Result<(), String> {
+    use ui::test::TestWindowExt as _;
+    let id = id.into();
+    window
+        .update(cx, |_, window, cx| {
+            window.render_frame(cx);
+            if window.try_find(id.clone()).is_none() {
+                return Err(format!("no {id:?} on screen"));
+            }
+            window.click(id, cx);
+            window.render_frame(cx);
+            Ok(())
+        })
+        .map_err(|e| e.to_string())?
+}
+
+#[cfg(not(any(test, feature = "check-build")))]
+pub fn click(
+    _: AnyWindowHandle,
+    id: impl Into<ui::ElementId>,
+    _: &mut AsyncApp,
+) -> Result<(), String> {
+    Err(format!("{:?}: {}", id.into(), screens::NOT_THIS_BUILD))
+}
+
+/// An element's accessible label, if it is on screen.
+#[cfg(any(test, feature = "check-build"))]
+pub fn label(
+    window: AnyWindowHandle,
+    id: impl Into<ui::ElementId>,
+    cx: &mut AsyncApp,
+) -> Option<String> {
+    use ui::test::TestWindowExt as _;
+    let id = id.into();
+    window
+        .update(cx, |_, window, cx| {
+            window.render_frame(cx);
+            window
+                .try_find(id)
+                .and_then(|e| e.label().map(str::to_string))
+        })
+        .ok()
+        .flatten()
+}
+
+#[cfg(not(any(test, feature = "check-build")))]
+pub fn label(_: AnyWindowHandle, _: impl Into<ui::ElementId>, _: &mut AsyncApp) -> Option<String> {
+    None
+}
+
+/// Step 7: Search: the palette opens, a word from the renamed title is
+/// typed, its row shows with its last-active text, and Return opens that
+/// chat.
 pub async fn search(
     window: AnyWindowHandle,
     chat: &Entity<ChatShell>,
@@ -373,11 +427,15 @@ pub async fn search(
     })
     .await?;
     type_text(window, "Renamed", cx)?;
+    let active = label(window, format!("command-{renamed}-meta"), cx)
+        .ok_or("the renamed chat's row shows no last-active text")?;
     shot(window, "search", true, started, cx);
     press(window, "enter", cx)?;
     until_within(cx, chat, "the found chat to open", UI_STEP, |s, _| {
         !s.is_searching() && *s.route() == Route::Session(renamed.clone())
     })
     .await?;
-    Ok("typed \"Renamed\"; Return opened the renamed chat".into())
+    Ok(format!(
+        "typed \"Renamed\"; its row read \"{active}\"; Return opened it"
+    ))
 }

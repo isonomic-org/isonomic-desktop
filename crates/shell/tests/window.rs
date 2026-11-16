@@ -212,7 +212,7 @@ fn a_notice_asks_to_move_the_app_in_plain_words(cx: &mut TestAppContext) {
 /// checked on the Mac.
 #[ui::test]
 fn the_window_opens_titled(cx: &mut TestAppContext) {
-    let options = cx.update(|cx| shell::lifecycle::window_options(cx));
+    let options = cx.update(|cx| shell::lifecycle::window_options(cx, None));
     let title = options.titlebar.and_then(|bar| bar.title);
     assert_eq!(title.as_deref(), Some(shell::lifecycle::TITLE));
     assert!(options.window_bounds.is_some(), "it opens at a set size");

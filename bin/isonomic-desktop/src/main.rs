@@ -7,6 +7,7 @@ extern crate ui as gpui;
 mod engine_notices;
 mod problems;
 mod self_check;
+mod window_size;
 
 use std::sync::Arc;
 
@@ -53,7 +54,11 @@ impl Setup for FirstRunSetup {
         let (client, model) = (self.client.clone(), model.to_string());
         Box::pin(async move {
             let models = client.models().list().await.ok()?;
-            models.into_iter().find(|m| m.id == model).map(|m| m.name)
+            // Named as Chat names it: without the quantisation tag.
+            models
+                .into_iter()
+                .find(|m| m.id == model)
+                .map(|m| conversation_model::display_name(&m.name))
         })
     }
 
@@ -197,6 +202,8 @@ fn main() {
     let settings: Arc<dyn SettingsStore> = Arc::new(CapsuleSettings(settings));
     // A self-check clicks through the window; no notice may cover it.
     let notices_root = config.root.clone();
+    let size_root = config.root.clone();
+    let remembered = window_size::load(&config.root);
     let kept = check
         .is_none()
         .then(|| Arc::new(reports::kept::Kept::in_capsule(&config.root)));
@@ -268,7 +275,7 @@ fn main() {
             MenuItem::action("Quit Isonomic", Quit),
         ])]);
 
-        let options = lifecycle::window_options(cx);
+        let options = lifecycle::window_options(cx, remembered);
         let live = client.live();
         let logs = client.clone();
         // Settings live in the Capsule until the engine stores them.
@@ -282,6 +289,14 @@ fn main() {
         let (window, shell) = ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
+                // The size the person leaves the window at is the next one.
+                let size_root = size_root.clone();
+                cx.observe_window_bounds(window, move |_, window, cx| {
+                    let (root, now) = (size_root.clone(), window.bounds().size);
+                    cx.background_spawn(async move { window_size::save(&root, now) })
+                        .detach();
+                })
+                .detach();
                 let mut shell = Shell::new(live, Arc::new(logs), cx);
                 shell.serve_requests(queued, Arc::new(request_client), cx);
                 let problems = link.problems();

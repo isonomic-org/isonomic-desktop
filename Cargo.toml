@@ -34,6 +34,8 @@ hello-app = { path = "../isonomic-sdk/examples/hello-app" }
 isonomic-chat = { path = "../isonomic-chat/crates/chat" }
 # The conversation kit's view, which the self-check drives.
 conversation-ui = { path = "../isonomic-chat/crates/conversation-ui" }
+# Chat's rule for a model's name, so first run names it as Chat does.
+conversation-model = { path = "../isonomic-chat/crates/conversation-model" }
 futures = "0.3"
 libc = "0.2"
 # Menu bar status item on macOS. Pinned exactly: it drives native APIs.
