@@ -2,6 +2,22 @@
 
 Newest first.
 
+## 2026-11-16 · The link run fails on a second engine with in-memory keys: each run gets its own scratch Capsule
+
+- **Build 143:** the link run failed twice with "timed out after 180s waiting for the app to open". Build 134 passed it.
+- **The cause, from the code:**
+  - Since #55, a scratch Capsule's Isonomic ID keys live only in its engine's memory.
+  - The link run started a second engine on the same Capsule. The person's key log was there from the first run, but the keys were gone.
+  - Opening Chat asks `apps.grant`. The engine records the approval, then gives the app its ID and grants, which needs the person's signing key (`Person::signer`). That key can't be opened, so `apps.grant` answers an error.
+  - Chat's tab went to Failed with it, and `link_check` waited only for Open, so it waited out the step.
+  - A person's real Capsule isn't affected: its keys stay in the computer's key store.
+  - Not run here: the engine's identity crates need the private `isonomic-id` checkout.
+- **Fixes:**
+  - `cargo xtask self-check` gives each run its own fresh scratch Capsule. Model files are hard-linked where the disk allows, else copied. The link run therefore goes through first run again, with its own ID, and the second launch on one Capsule is no longer covered by this check.
+  - `link_check` fails at once with the tab's reason, as `open` already did.
+  - A failed run prints the last 20 lines of the scratch Capsule's `logs/engine.stderr`, `logs/engine.log` and `logs/window.log`, with home paths as `~`, so a failure on the Mac explains itself.
+- **Softer, not addressed:** turn 2's first text (8.5 s and 32.9 s against 0.9 s) and turn 1's end (91 s and 98 s against 38 s). The Mac was busy with other apps; the next build will show whether it holds.
+
 ## 2026-11-16 · The self-check writes nothing to the keychain
 
 - **Why:** each `cargo xtask self-check` made a fresh scratch Capsule, and the engine kept that Capsule's Isonomic ID keys in the person's login keychain. That's three items per run, never removed.
