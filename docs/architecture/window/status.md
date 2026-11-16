@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-16 · The window opens at 1440 × 900 and remembers its size; the model named as Chat names it
+
+- **Opening size:** the design's 1440 × 900 (`tokens::window_size`), fitted to the screen's visible area when that is smaller. On the 13-inch Mac that's about 1440 × 875. At 1100 × 720, Chat's 720-wide column nearly filled the content area.
+- **Remembered:** the size the person leaves the window at is kept in the Capsule's `settings/window.json`, written off the foreground thread when the size changes, and used at the next launch, still fitted to the screen.
+- **First run names the model as Chat does:** with `conversation_model::display_name`, so "Qwen3.5 2B", without the quantisation tag.
+- **Pins:** `SDK_REF` 8f21cb6 (Isonomic UI 527d955) and `CHAT_REF` 99f310a (every QA id) move together.
+
 ## 2026-11-16 · Icons draw; first run reads as progress; the full pass explains itself
 
 - **No icon drew, in every build so far.** The window created its app without Isonomic UI's asset source (`ui::application()` with no `.with_assets(..)`). Every icon was an SVG with no file behind it, so its space was drawn empty: the rail's buttons, the sidebar rows, Send, and the actions under a reply. The app now registers `ui::assets::AllAssets`.

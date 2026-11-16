@@ -10,7 +10,10 @@ use std::time::Duration;
 
 use futures::future::{select, Either};
 use isonomic_client::Client;
-use ui::{tokens, App, AsyncApp, Bounds, TitlebarOptions, Window, WindowBounds, WindowOptions};
+use ui::{
+    size, tokens, App, AsyncApp, Bounds, Pixels, Size, TitlebarOptions, Window, WindowBounds,
+    WindowOptions,
+};
 
 /// How long Quit waits for the engine to finish stopping before the window
 /// exits anyway. The engine keeps stopping in order on its own after that.
@@ -20,12 +23,27 @@ pub const QUIT_WAIT: Duration = Duration::from_secs(20);
 /// and the app switcher.
 pub const TITLE: &str = "Isonomic";
 
-/// How the main window opens: centred at its first size, titled.
-pub fn window_options(cx: &App) -> WindowOptions {
+/// The size to open at: the one last kept, else the design's
+/// ([`tokens::window_size`], 1440 × 900), never larger than `screen`.
+pub fn opening_size(
+    remembered: Option<Size<Pixels>>,
+    screen: Option<Size<Pixels>>,
+) -> Size<Pixels> {
+    let wanted = remembered.unwrap_or_else(tokens::window_size);
+    match screen {
+        Some(fit) => size(wanted.width.min(fit.width), wanted.height.min(fit.height)),
+        None => wanted,
+    }
+}
+
+/// How the main window opens: centred, titled, at [`opening_size`] for the
+/// screen it opens on.
+pub fn window_options(cx: &App, remembered: Option<Size<Pixels>>) -> WindowOptions {
+    let screen = cx.primary_display().map(|d| d.visible_bounds().size);
     WindowOptions {
         window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
             None,
-            tokens::window_size(),
+            opening_size(remembered, screen),
             cx,
         ))),
         titlebar: Some(TitlebarOptions {
@@ -76,5 +94,22 @@ async fn stop_engine(client: &Client, cx: &mut AsyncApp) {
     };
     if gave_up {
         eprintln!("[isonomic-desktop] engine still stopping after {QUIT_WAIT:?}; quitting anyway");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ui::px;
+
+    #[test]
+    fn the_window_opens_at_the_design_size_or_the_last_one_and_always_fits() {
+        let mac13 = Some(size(px(1440.), px(875.)));
+        assert_eq!(opening_size(None, None), size(px(1440.), px(900.)));
+        assert_eq!(opening_size(None, mac13), size(px(1440.), px(875.)));
+        let kept = Some(size(px(1200.), px(800.)));
+        assert_eq!(opening_size(kept, mac13), size(px(1200.), px(800.)));
+        let big = Some(size(px(2400.), px(1400.)));
+        assert_eq!(opening_size(big, mac13), size(px(1440.), px(875.)));
     }
 }

@@ -159,45 +159,59 @@ pub async fn picker(
             "the picked model is not installed (installed: {installed:?})"
         ));
     };
-    let opened = open_picker(window, cx)?;
-    if opened {
-        shot(window, "model-picker", true, started, cx);
-        let _ = super::press(window, "escape", cx);
-    }
+    open_picker(window, &picked, cx)?;
+    shot(window, "model-picker", true, started, cx);
+    let _ = super::press(window, "escape", cx);
     Ok(format!(
-        "{picked} is installed and picked{}",
-        if opened {
-            "; the list opened"
-        } else {
-            "; the list not opened (not the check build)"
-        }
+        "{picked} is installed and picked; the list opened with its row chosen"
     ))
 }
 
-#[cfg(feature = "check-build")]
-fn open_picker(window: AnyWindowHandle, cx: &mut AsyncApp) -> Result<bool, String> {
+/// Open the picker by its trigger, and say whether `picked`'s row is the
+/// chosen one in the list that opened.
+fn open_picker(window: AnyWindowHandle, picked: &str, cx: &mut AsyncApp) -> Result<(), String> {
+    use ui::extra::model_picker::{list_id, row_id};
+    let trigger: ui::ElementId = (ui::ElementId::from("model-picker"), "trigger").into();
+    super::click(window, trigger, cx)?;
+    chosen(
+        window,
+        list_id("model-picker"),
+        row_id("model-picker", picked),
+        cx,
+    )
+}
+
+#[cfg(any(test, feature = "check-build"))]
+fn chosen(
+    window: AnyWindowHandle,
+    list: ui::ElementId,
+    row: ui::ElementId,
+    cx: &mut AsyncApp,
+) -> Result<(), String> {
     use ui::test::TestWindowExt as _;
-    // `click` panics on an id it can't find: look first, so a missing id is
-    // a step's FAIL with its reason, not the end of the run.
     window
         .update(cx, |_, window, cx| {
             window.render_frame(cx);
-            if window.try_find("model-picker").is_none() {
-                return Err(
-                    "the model picker's trigger has no test id (asked of isonomic-chat)"
-                        .to_string(),
-                );
+            if !window.try_find(list).is_some_and(|l| l.visible()) {
+                return Err("the model list did not open".to_string());
             }
-            window.click("model-picker", cx);
-            window.render_frame(cx);
-            Ok(true)
+            match window.try_find(row).map(|r| r.selected()) {
+                Some(Some(true)) => Ok(()),
+                Some(_) => Err("the picked model's row is not marked chosen".to_string()),
+                None => Err("the picked model has no row in the list".to_string()),
+            }
         })
         .map_err(|e| e.to_string())?
 }
 
-#[cfg(not(feature = "check-build"))]
-fn open_picker(_: AnyWindowHandle, _: &mut AsyncApp) -> Result<bool, String> {
-    Ok(false)
+#[cfg(not(any(test, feature = "check-build")))]
+fn chosen(
+    _: AnyWindowHandle,
+    _: ui::ElementId,
+    _: ui::ElementId,
+    _: &mut AsyncApp,
+) -> Result<(), String> {
+    Err(super::super::screens::NOT_THIS_BUILD.to_string())
 }
 
 /// The bundled programs, by the names their folders carry under
@@ -260,7 +274,7 @@ pub async fn acknowledgements(
     if !open {
         return Err("the Acknowledgements dialog did not open".into());
     }
-    shot(window, "acknowledgements", false, started, cx);
+    shot(window, "acknowledgements", true, started, cx);
     let _ = window.update(cx, |_, window, cx| window.close_dialog(cx));
     if !missing.is_empty() {
         return Err(format!("no notice for {missing:?}"));
@@ -269,26 +283,28 @@ pub async fn acknowledgements(
 }
 
 /// A problem-report notice, for its screenshot: a sample report kept in the
-/// scratch Capsule, shown the way a real one is, then kept.
+/// scratch Capsule, shown the way a real one is, then kept. Says whether
+/// the notice opened.
 pub async fn notice_screen(
     window: AnyWindowHandle,
     shell: &Entity<shell::Shell>,
     capsule: &std::path::Path,
     started: Instant,
     cx: &mut AsyncApp,
-) {
+) -> Result<String, String> {
     let sample = serde_json::json!({
         "format": 1, "kind": "app_error",
         "component": { "id": "com.isonomic.chat", "version": "self-check" },
         "message": "A sample report for the self-check's screenshot",
     });
     let store = reports::store::Store::in_capsule(capsule);
-    if store.save(&sample, 1).is_err() {
-        return;
-    }
+    store
+        .save(&sample, 1)
+        .map_err(|e| format!("keeping the sample report: {e}"))?;
     let kept = Arc::new(reports::kept::Kept::in_capsule(capsule));
-    let _ = window.update(cx, |_, _, cx| {
-        shell.update(cx, |s, cx| s.watch_reports(kept, cx))
+    let _ = window.update(cx, |_, window, cx| {
+        shell.update(cx, |s, cx| s.watch_reports(kept, cx));
+        window.refresh();
     });
     for _ in 0..50 {
         let shown = window
@@ -297,10 +313,11 @@ pub async fn notice_screen(
         if shown {
             shot(window, "problem-report-notice", true, started, cx);
             let _ = window.update(cx, |_, window, cx| window.close_dialog(cx));
-            return;
+            return Ok("the notice opened for a sample report".into());
         }
         cx.background_executor().timer(UI_STEP / 50).await;
     }
+    Err(format!("no notice opened within {}s", UI_STEP.as_secs()))
 }
 
 #[cfg(test)]

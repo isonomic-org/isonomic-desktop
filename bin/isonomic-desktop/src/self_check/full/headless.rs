@@ -129,7 +129,7 @@ fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
     let started = Instant::now();
     let results: Results = Arc::default();
     let into = Arc::clone(&results);
-    let (chat_for, window_for) = (chat.clone(), window);
+    let (chat_for, window_for, shell_for) = (chat.clone(), window, shell.clone());
     cx.spawn(move |mut cx| async move {
         let cx = &mut cx;
         let mut out = Vec::new();
@@ -154,6 +154,36 @@ fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
             super::chat_list(window_for, &chat_for, started, cx).await,
         ));
         out.push((7, super::search(window_for, &chat_for, started, cx).await));
+        out.push((
+            10,
+            super::more::picker(window_for, &chat_for, started, cx).await,
+        ));
+        let capsule = tempfile::tempdir().expect("a scratch folder");
+        out.push((
+            12,
+            super::more::notice_screen(window_for, &shell_for, capsule.path(), started, cx).await,
+        ));
+        // What a relaunch reads: the list from Chat's store, as in memory.
+        let kept = cx.update(|cx| chat_for.read(cx).sessions().len());
+        let before = cx.update(|cx| chat_for.read(cx).sessions().as_ptr() as usize);
+        cx.update(|cx| chat_for.update(cx, |s, cx| s.reload(cx)));
+        let reread = super::super::until_within(
+            cx,
+            &chat_for,
+            "the list read again",
+            super::UI_STEP,
+            |s, _| s.sessions().as_ptr() as usize != before,
+        )
+        .await
+        .map(|_| cx.update(|cx| chat_for.read(cx).sessions().len()));
+        out.push((
+            9,
+            match reread {
+                Ok(n) if n == kept && n == 2 => Ok(format!("{n} chats in memory and in the store")),
+                Ok(n) => Err(format!("{kept} chats in memory, {n} in the store")),
+                Err(e) => Err(e),
+            },
+        ));
         *into.lock().unwrap() = Some(out);
     })
     .detach();
@@ -166,5 +196,5 @@ fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
     }
     let failed: Vec<_> = results.iter().filter(|(_, r)| r.is_err()).collect();
     assert!(failed.is_empty(), "{failed:?}");
-    assert_eq!(results.len(), 4);
+    assert_eq!(results.len(), 7);
 }
