@@ -5,12 +5,14 @@
 //! with a fresh scratch Capsule, never through `open` or the URL scheme:
 //! first `ISONOMIC_SELF_CHECK=<prompt>` (first run, Chat, a turn, then stop
 //! and continue), then `ISONOMIC_SELF_CHECK=link` with `isonomic://chat/home`
-//! as a launch argument. Each run gets its own fresh scratch Capsule, with
-//! the model files in `--models` linked or copied in: a scratch Capsule's
-//! ID keys live only as long as its engine (below), so a second engine on
-//! the same Capsule could not sign for an app. Prints each run's
-//! `[self-check]` lines, and a failed run's last engine and window log
-//! lines; fails unless both pass.
+//! as a launch argument. The prompt run gets a fresh scratch Capsule, with
+//! the model files in `--models` linked or copied in. The link run is a
+//! second launch on that same Capsule: first run already done, and the ID
+//! made in the first run read again. That relaunch needs an engine that
+//! approves the same app again without signing anything (isonomic-capsule
+//! #75), since a scratch Capsule's keys last only as long as its engine.
+//! Prints each run's `[self-check]` lines, and a failed run's last engine
+//! and window log lines; fails unless both pass.
 //!
 //! The scratch Capsule is marked `"scratch": true` in its `capsule.json`
 //! before the engine first opens it, and every run sets
@@ -70,10 +72,10 @@ pub fn run(options: &Options) -> Result<(), String> {
     fresh_capsule(&options.capsule, &options.models)?;
     let prompt = check(&window, &options.capsule, &options.prompt, None)?;
     let prompt = prompt && keys_in_memory(&options.capsule, 1);
-    // A fresh Capsule again: the first engine took its keys with it.
-    fresh_capsule(&options.capsule, &options.models)?;
+    // A second launch on the same Capsule: first run is done and the ID
+    // exists. The engine approves Chat again without signing anything.
     let link = check(&window, &options.capsule, "link", Some(LINK))?;
-    let link = link && keys_in_memory(&options.capsule, 1);
+    let link = link && keys_in_memory(&options.capsule, 2);
     match (prompt, link) {
         (true, true) => {
             println!("self-check: PASS (prompt and link)");
