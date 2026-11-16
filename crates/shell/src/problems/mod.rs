@@ -256,11 +256,11 @@ impl Shell {
         self.reports_due(cx);
     }
 
-    /// Look at the reports again whenever the engine's status changes
-    /// while a service is degraded: the engine writes `service_failed`
-    /// when a breaker trips. A model server's report waits for the next
-    /// look (launch, or another degraded change).
-    pub fn review_on_degraded(
+    /// Look at the reports again after the engine's status changes: at
+    /// once when a service is degraded, and again a moment later
+    /// ([`ui::tokens::report_rescan_delay`]) after any change, because the
+    /// engine writes its report after its own watch sees the failure.
+    pub fn review_on_status(
         &mut self,
         mut live: tokio::sync::watch::Receiver<isonomic_client::Live>,
         cx: &mut Context<Self>,
@@ -272,7 +272,19 @@ impl Shell {
                         .iter()
                         .any(|svc| svc.state == isonomic_proto::ServiceState::Degraded)
                 });
-                if degraded && shell.update(cx, |shell, cx| shell.reports_due(cx)).is_err() {
+                let later = shell.clone();
+                let looked = shell.update(cx, |shell, cx| {
+                    if degraded {
+                        shell.reports_due(cx);
+                    }
+                    cx.spawn(async move |_, cx| {
+                        let delay = ui::tokens::report_rescan_delay();
+                        cx.background_executor().timer(delay).await;
+                        let _ = later.update(cx, |shell, cx| shell.reports_due(cx));
+                    })
+                    .detach();
+                });
+                if looked.is_err() {
                     break;
                 }
             }

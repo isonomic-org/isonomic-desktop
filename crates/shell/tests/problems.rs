@@ -197,7 +197,7 @@ fn a_service_failing_while_open_is_asked_about(cx: &mut TestAppContext) {
     let capsule = tempfile::tempdir().unwrap();
     let (publish, live) = watch::channel(Live::default());
     let (window, reports, shell) = open(cx, capsule.path());
-    shell.update(cx, |shell, cx| shell.review_on_degraded(live, cx));
+    shell.update(cx, |shell, cx| shell.review_on_status(live, cx));
     assert!(!dialog_open(cx, window));
     // The engine writes its report, then the service shows as degraded.
     let failed = json!({ "format": 1, "kind": "service_failed",
@@ -222,4 +222,25 @@ fn a_service_failing_while_open_is_asked_about(cx: &mut TestAppContext) {
     draw(cx, window);
     assert!(dialog_open(cx, window));
     assert_eq!(title(cx, &reports), "The database stopped working");
+}
+
+#[ui::test]
+fn a_report_written_after_the_status_is_still_asked_about(cx: &mut TestAppContext) {
+    let capsule = tempfile::tempdir().unwrap();
+    let (publish, live) = watch::channel(Live::default());
+    let (window, reports, shell) = open(cx, capsule.path());
+    shell.update(cx, |shell, cx| shell.review_on_status(live, cx));
+    // The status changes first; the engine's report follows it.
+    publish.send_modify(|l| l.connected = true);
+    draw(cx, window);
+    assert!(!dialog_open(cx, window));
+    let failed = json!({ "format": 1, "kind": "model_server_failed",
+        "component": { "id": "engine/llama-server" } });
+    Store::in_capsule(capsule.path()).save(&failed, 1).unwrap();
+    cx.executor()
+        .advance_clock(ui::tokens::report_rescan_delay());
+    draw(cx, window);
+    draw(cx, window);
+    assert!(dialog_open(cx, window));
+    assert_eq!(title(cx, &reports), "The local model stopped working");
 }

@@ -33,6 +33,13 @@ pub mod tokens {
         px(360.)
     }
 
+    /// How long after an engine status change the window looks at the
+    /// kept problem reports again: the engine writes a report after its
+    /// own watch sees the failure, so the file can follow the status.
+    pub fn report_rescan_delay() -> std::time::Duration {
+        std::time::Duration::from_secs(3)
+    }
+
     /// Width of the left rail of app icons.
     pub fn rail_width() -> Pixels {
         px(56.)

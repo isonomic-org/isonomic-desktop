@@ -10,10 +10,15 @@ Newest first.
   - `model_server_failed`: "The local model stopped working".
 - **When they're asked about:**
   - at launch, like the window's own reports;
-  - while the window is open, on every engine status change that has a degraded service (`Shell::review_on_degraded`). A review is one directory read and never asks about a report twice.
-- **Gap:** the engine writes `service_failed` after its own watch sees the breaker trip, so the window may see the status before the file exists. The next status change, or the next launch, picks it up. A `model_server_failed` from a restart that doesn't degrade anything waits for the next look. Closing this needs a signal from the engine; asked of the shared report crate.
+  - while the window is open: at once when the engine's status shows a degraded service, and again 3 s (`tokens::report_rescan_delay`) after any status change (`Shell::review_on_status`).
+- **Why the second look:** the engine writes its report after its own watch sees the failure, so the file can follow the status. A review is one directory read and never asks about a report twice.
+- **No file-system watch:** it would add a dependency to cover what the second look already does.
 - **Scrubber rule from the engine:** a run of 24 or more key characters with at least 6 digits becomes `[key removed]`, covering tokens, digests and the person's ID. The rule and its test cases are the engine's, word for word, so the two scrubbers match until both move to the SDK's shared crate.
-- **Tested:** the titles, the scrubber's key cases, and a `service_failed` kept while open being asked about when the service turns degraded.
+- **Pins:** `SDK_REF` abe8fe4 (Isonomic UI b4c9670) and `CHAT_REF` fa3886f move together, so one copy of Isonomic UI is built. Chat brings its run status bar, no attaching, newest-first list order, prompt editing, and Try again with versions.
+- **Tested:**
+  - the titles and the scrubber's key cases;
+  - a `service_failed` written while open, asked about when the service turns degraded;
+  - a report written after the status change, asked about at the second look.
 
 ## 2026-11-16 · Chat 292b12d: design 0.2
 
