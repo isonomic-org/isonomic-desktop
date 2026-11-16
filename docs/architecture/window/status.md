@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-11-16 · The wordmark in the sans: the brand rule
+
+- **The rule (Omar):** no serif wordmark. "Isonomic" is set in the sans, Regular, and a product word after it in the sans, Light.
+- **First run** now draws Isonomic UI's `Wordmark` component (`ui::extra::wordmark::Wordmark::new()`), at 20 px (`tokens::wordmark_size`). The window no longer names the serif anywhere.
+- **Nowhere else** does the window draw the name. The window title and the Isonomic menu are the system's own text.
+- **`crates/ui`** re-exports the SDK's `extra` (`isonomic-app` with the `extra` feature).
+- **Pins:** `SDK_REF` is a3ac3bf (Isonomic UI a1b30e1, with the `Wordmark` component and the sans in Light), moved together with Chat's commit on it.
+
 ## 2026-11-16 · The wordmark in the serif; the recovering engine's message
 
 - **Pins:** `SDK_REF` 1f28327 (Isonomic UI 0a8f39d, which bundles the serif) and `CHAT_REF` 8262fc8 move together.

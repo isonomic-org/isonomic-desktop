@@ -15,6 +15,7 @@ use ui::component::progress::Progress;
 use ui::component::spinner::Spinner;
 use ui::component::stepper::{Stepper, StepperItem};
 use ui::component::theme::ActiveTheme as _;
+use ui::extra::wordmark::Wordmark;
 use ui::component::{Disableable as _, Sizable as _, StyledExt as _};
 use ui::{
     div, tokens, Context, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -244,16 +245,11 @@ impl Render for FirstRun {
             .items_center()
             .gap_4()
             .child(
+                // The brand's wordmark: "Isonomic" in the sans, Regular.
                 div()
                     .id("first-run-wordmark")
                     .test_support()
-                    // Design 0.2: the display serif at 20 / 28. Medium is the
-                    // bundled serif's heaviest weight.
-                    .font_family(theme.serif_font_family.clone())
-                    .text_xl()
-                    .font_medium()
-                    .text_color(theme.foreground)
-                    .child("Isonomic"),
+                    .child(Wordmark::new().size(tokens::wordmark_size())),
             )
             .child(
                 Stepper::new("first-run-steps")

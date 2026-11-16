@@ -10,4 +10,5 @@ publish.workspace = true
 test-support = ["isonomic-app/test-support"]
 
 [dependencies]
-isonomic-app.workspace = true
+# `extra`: Isonomic UI's extra components, such as the wordmark.
+isonomic-app = { workspace = true, features = ["extra"] }
