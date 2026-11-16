@@ -2,6 +2,19 @@
 
 Newest first.
 
+## 2026-11-16 · The self-check writes nothing to the keychain
+
+- **Why:** each `cargo xtask self-check` made a fresh scratch Capsule, and the engine kept that Capsule's Isonomic ID keys in the person's login keychain. That's three items per run, never removed.
+- **Now:**
+  - The scratch Capsule's `capsule.json` is written as `"scratch": true` before the engine first opens it. The engine keeps the mark.
+  - Every run sets `ISONOMIC_KEY_STORE=memory`, so the engine keeps the ID's keys in memory for the run (isonomic-capsule #70, which honours it only for a scratch Capsule).
+- **Confirmed by the engine:**
+  - After each run, the check reads the scratch Capsule's `logs/engine.log` for the engine's line, `keys kept in memory: scratch Capsule`: one for each run so far.
+  - With it, the check prints `keys: memory (scratch Capsule), nothing written to the keychain`.
+  - Without it, the run fails with `keys: FAIL, the engine did not confirm a memory key store`, followed by the engine's refusal if it logged one.
+- **Not touched:** the items earlier runs left in the keychain. Removing them is Omar's call.
+- **Tested:** the fresh Capsule is marked scratch, and the engine's log lines are read for confirmation or refusal.
+
 ## 2026-11-16 · Acceptance check from the disk image alone (Apple Silicon)
 
 - `ISONOMIC_SELF_CHECK_DOWNLOAD=1` lets the self-check download first run's model when it isn't installed, as a person would. The download gets 30 minutes; other steps keep 3. So the check runs on a machine with only the disk image: no repos, no toolchain, no model file.

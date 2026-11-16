@@ -47,14 +47,20 @@ impl Kept {
         settings::save(&self.capsule, settings)
     }
 
-    /// `report`'s id ([`crate::send::report_id`]).
+    /// `report`'s id: its own `id` when it has one (every report written
+    /// since format 1 carried one), else [`crate::send::derived_id`].
     pub fn report_id(&self, report: &Pending) -> String {
-        let name = report
-            .path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("");
-        crate::send::report_id(&capsule_id(&self.capsule), name)
+        match report.document.get("id").and_then(Value::as_str) {
+            Some(id) if isonomic_reports::id::is_id(id) => id.to_string(),
+            _ => {
+                let name = report
+                    .path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("");
+                crate::send::derived_id(&capsule_id(&self.capsule), name)
+            }
+        }
     }
 }
 
@@ -103,5 +109,32 @@ mod tests {
         assert!(plain.get("isonomic_id").is_none());
         kept.discard(&report).unwrap();
         assert!(kept.pending().is_empty());
+    }
+
+    #[test]
+    fn a_report_s_own_id_is_used_and_an_older_one_gets_a_derived_one() {
+        let capsule = tempfile::tempdir().unwrap();
+        std::fs::write(
+            capsule.path().join("capsule.json"),
+            r#"{ "format": 1, "capsule_id": "cap-1" }"#,
+        )
+        .unwrap();
+        let kept = Kept::in_capsule(capsule.path());
+        let store = Store::in_capsule(capsule.path());
+        let own = "0123456789abcdef0123456789abcdef";
+        store
+            .save(&json!({ "format": 1, "kind": "panic", "id": own }), 1)
+            .unwrap();
+        store
+            .save(&json!({ "format": 1, "kind": "hang" }), 2)
+            .unwrap();
+        let pending = kept.pending();
+        assert_eq!(kept.report_id(&pending[0]), own);
+        let derived = kept.report_id(&pending[1]);
+        assert!(isonomic_reports::id::is_id(&derived), "{derived}");
+        assert_eq!(
+            derived,
+            crate::send::derived_id("cap-1", "0000000000000002-hang")
+        );
     }
 }

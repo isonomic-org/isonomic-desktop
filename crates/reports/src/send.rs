@@ -7,7 +7,7 @@
 //!   compiles the window; a test build may set the same names when it
 //!   runs. With no URL nothing is offered and nothing is sent.
 //! - **What:** the body, with `Content-Type: application/json`, the
-//!   report's id ([`report_id`], also the document's `id`) in
+//!   report's id (its own `id`, or [`derived_id`] for an older one) in
 //!   `Idempotency-Key`, and the key, if any, as `Authorization: Bearer`.
 //! - **Retries** ([`next_wait`]): network errors and 5xx are tried again
 //!   with a doubling wait, for a day; a 4xx never is.
@@ -93,14 +93,17 @@ fn allowed(url: &str) -> bool {
     matches!(host, "127.0.0.1" | "localhost" | "[::1]")
 }
 
-/// A report's id: the SHA-256, in hex, of the Capsule's id and the kept
-/// file's name. The same report keeps it across retries and launches, so
-/// the receiver can drop a repeat; two reports from one Mac share nothing
-/// a receiver could link. To be replaced by the SDK's helper once format 1
-/// carries an `id` of its own.
-pub fn report_id(capsule_id: &str, file_name: &str) -> String {
-    Sha256::digest(format!("{capsule_id}/{file_name}").as_bytes())
+/// The id of a report kept before format 1 carried one: the first 128
+/// bits of the SHA-256, in hex, of the Capsule's id and the file's name
+/// (without `.json`). The same report keeps it across retries and
+/// launches, so the receiver can drop a repeat; two reports from one Mac
+/// share nothing a receiver could link. It has the form of the SDK's ids
+/// (`isonomic_reports::id::is_id`); a newer report has its own, random.
+pub fn derived_id(capsule_id: &str, file_name: &str) -> String {
+    let stem = file_name.strip_suffix(".json").unwrap_or(file_name);
+    Sha256::digest(format!("{capsule_id}/{stem}").as_bytes())
         .iter()
+        .take(16)
         .map(|b| format!("{b:02x}"))
         .collect()
 }

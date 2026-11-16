@@ -6,7 +6,7 @@ use std::net::TcpListener;
 use std::sync::mpsc;
 use std::time::Duration;
 
-use reports::send::{self, next_wait, post, report_id, Attempt, Destination};
+use reports::send::{self, derived_id, next_wait, post, Attempt, Destination};
 
 /// What the server saw.
 struct Seen {
@@ -134,21 +134,18 @@ fn only_https_or_this_macs_loopback_is_a_destination() {
 }
 
 #[test]
-fn an_id_is_stable_for_a_report_and_differs_between_reports() {
-    let one = report_id("capsule-1", "0000001700000000000-panic.json");
-    assert_eq!(
-        one,
-        report_id("capsule-1", "0000001700000000000-panic.json")
-    );
-    assert_eq!(one.len(), 64);
+fn an_older_reports_id_is_stable_and_differs_between_reports() {
+    let one = derived_id("capsule-1", "0000001700000000000-panic.json");
+    assert_eq!(one, derived_id("capsule-1", "0000001700000000000-panic"));
+    assert!(isonomic_reports::id::is_id(&one), "{one}");
     assert!(!one.contains("capsule-1"));
     assert_ne!(
         one,
-        report_id("capsule-1", "0000001700000000001-panic.json")
+        derived_id("capsule-1", "0000001700000000001-panic.json")
     );
     assert_ne!(
         one,
-        report_id("capsule-2", "0000001700000000000-panic.json")
+        derived_id("capsule-2", "0000001700000000000-panic.json")
     );
 }
 
