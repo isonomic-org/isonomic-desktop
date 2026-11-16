@@ -1,5 +1,5 @@
 //! Chat's keyboard shortcuts, through the window's own key dispatch, after
-//! the prompt check: the sidebar toggle, and the next chat. Each result is
+//! the prompt check: both sidebar toggles, and the next chat. Each result is
 //! printed as `yes` or `no`; neither changes PASS or FAIL.
 
 use std::time::{Duration, Instant};
@@ -12,13 +12,13 @@ use super::{say, until_within};
 /// How long a shortcut has to show its effect.
 const KEY_LIMIT: Duration = Duration::from_secs(5);
 
-/// Chat's design 0.2 shortcuts: toggle the sidebar, a new chat, the chat
-/// below. Chat binds them in its own key context; the window binds only
-/// Quit and Hide.
+/// Chat's shortcuts: the design's sidebar toggle, Chat's second one (on
+/// macOS Cmd-. also means cancel), a new chat, the chat below. Chat binds
+/// them in its own key context; the window binds only Quit and Hide.
 #[cfg(target_os = "macos")]
-const KEYS: [&str; 3] = ["cmd-.", "cmd-shift-o", "alt-down"];
+const KEYS: [&str; 4] = ["cmd-.", "cmd-b", "cmd-shift-o", "alt-down"];
 #[cfg(not(target_os = "macos"))]
-const KEYS: [&str; 3] = ["ctrl-.", "ctrl-shift-o", "alt-down"];
+const KEYS: [&str; 4] = ["ctrl-.", "ctrl-b", "ctrl-shift-o", "alt-down"];
 
 fn press(window: AnyWindowHandle, key: &'static str, cx: &mut AsyncApp) -> Result<(), String> {
     let keystroke = Keystroke::parse(key).map_err(|e| format!("{key}: {e}"))?;
@@ -33,6 +33,8 @@ fn press(window: AnyWindowHandle, key: &'static str, cx: &mut AsyncApp) -> Resul
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Keys {
     pub sidebar_toggled: bool,
+    /// The second toggle put it back.
+    pub sidebar_back: bool,
     pub next_chat_opened: bool,
 }
 
@@ -43,9 +45,9 @@ pub(super) async fn check(
     started: Instant,
     cx: &mut AsyncApp,
 ) -> Result<Keys, String> {
-    let [sidebar, new_chat, next] = KEYS;
+    let [sidebar, sidebar_too, new_chat, next] = KEYS;
 
-    // The sidebar toggle, then back.
+    // The sidebar toggle, then the second toggle to put it back.
     let open = cx.update(|cx| chat.read(cx).sidebar_open());
     press(window, sidebar, cx)?;
     let toggled = until_within(cx, chat, "the sidebar to toggle", KEY_LIMIT, |s, _| {
@@ -53,16 +55,23 @@ pub(super) async fn check(
     })
     .await
     .is_ok();
-    if toggled {
-        press(window, sidebar, cx)?;
-        let _ = until_within(cx, chat, "the sidebar back", KEY_LIMIT, |s, _| {
-            s.sidebar_open() == open
-        })
-        .await;
-    }
     say(
         started,
         &format!("keys: {sidebar} toggled the sidebar: {}", yes(toggled)),
+    );
+    press(window, sidebar_too, cx)?;
+    let back = until_within(cx, chat, "the sidebar to toggle back", KEY_LIMIT, |s, _| {
+        s.sidebar_open() == open
+    })
+    .await
+    .is_ok()
+        && toggled;
+    say(
+        started,
+        &format!(
+            "keys: {sidebar_too} toggled the sidebar back: {}",
+            yes(back)
+        ),
     );
 
     // From a new chat, the chat below is the first in the sidebar.
@@ -87,6 +96,7 @@ pub(super) async fn check(
     );
     Ok(Keys {
         sidebar_toggled: toggled,
+        sidebar_back: back,
         next_chat_opened: opened,
     })
 }
@@ -136,6 +146,7 @@ mod tests {
             keys.unwrap(),
             Keys {
                 sidebar_toggled: true,
+                sidebar_back: true,
                 next_chat_opened: true,
             }
         );

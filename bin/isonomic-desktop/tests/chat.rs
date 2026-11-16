@@ -180,7 +180,7 @@ fn chat_asks_the_window_to_install_a_missing_model(cx: &mut TestAppContext) {
     });
     let chat_shell = chat.unwrap().read_with(cx, |chat, _| chat.shell().clone());
     // Home's "Install" button, as the person would press it.
-    let taken = chat_shell.update(cx, |s, _| s.install_model("chat-small"));
+    let taken = chat_shell.update(cx, |s, cx| s.install_model("chat-small", cx));
     assert!(taken, "the window took the request");
     wait_until(cx, &shell, |shell| shell.model_install().is_some());
     let model = shell.read_with(cx, |s, cx| {
