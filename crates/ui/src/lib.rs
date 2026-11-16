@@ -10,9 +10,9 @@
 //! them (`#[ui::test]`, derives) adds `extern crate ui as gpui;` at its root;
 //! that is an alias for this crate, not a dependency on GPUI.
 
-pub use isonomic_app::ui::*;
 /// Isonomic UI's extra components, such as the wordmark.
 pub use isonomic_app::extra;
+pub use isonomic_app::ui::*;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
 /// colors come from the theme, sizes from here or from the spacing scale.

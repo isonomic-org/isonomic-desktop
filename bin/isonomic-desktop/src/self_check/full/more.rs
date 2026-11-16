@@ -177,14 +177,22 @@ pub async fn picker(
 #[cfg(feature = "check-build")]
 fn open_picker(window: AnyWindowHandle, cx: &mut AsyncApp) -> Result<bool, String> {
     use ui::test::TestWindowExt as _;
+    // `click` panics on an id it can't find: look first, so a missing id is
+    // a step's FAIL with its reason, not the end of the run.
     window
         .update(cx, |_, window, cx| {
             window.render_frame(cx);
+            if window.try_find("model-picker").is_none() {
+                return Err(
+                    "the model picker's trigger has no test id (asked of isonomic-chat)"
+                        .to_string(),
+                );
+            }
             window.click("model-picker", cx);
             window.render_frame(cx);
+            Ok(true)
         })
-        .map_err(|e| e.to_string())?;
-    Ok(true)
+        .map_err(|e| e.to_string())?
 }
 
 #[cfg(not(feature = "check-build"))]

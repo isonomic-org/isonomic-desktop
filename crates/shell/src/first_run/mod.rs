@@ -36,6 +36,12 @@ pub trait Setup: Send + Sync + 'static {
     /// Whether `model`'s file is in place.
     fn installed(&self, model: &str) -> BoxFuture<'static, Result<bool, String>>;
 
+    /// The name a person reads for `model`, when the engine has one. With
+    /// none, first run shows the model's id.
+    fn model_name(&self, _model: &str) -> BoxFuture<'static, Option<String>> {
+        Box::pin(async { None })
+    }
+
     /// Download `model`, or attach to its running download.
     fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>>;
 
@@ -123,6 +129,8 @@ pub struct FirstRun {
     memory: Memory,
     id: IdStep,
     model: ModelStep,
+    /// The chosen model's name for a person, once known.
+    model_name: Option<String>,
     finishing: bool,
     error: Option<String>,
     /// Where keyboard focus starts, so Tab reaches first run's buttons.
@@ -144,6 +152,7 @@ impl FirstRun {
             memory: Memory::Checking,
             id: IdStep::Waiting,
             model: ModelStep::Waiting,
+            model_name: None,
             finishing: false,
             error: None,
             focus: cx.focus_handle(),
@@ -171,7 +180,13 @@ impl FirstRun {
         cx.notify();
         let setup = Arc::clone(&self.setup);
         cx.spawn(async move |view, cx| {
-            let step = match setup.recommended().await {
+            let recommended = setup.recommended().await;
+            let name = match &recommended {
+                Ok(model) => setup.model_name(&model.model).await,
+                Err(_) => None,
+            };
+            let _ = view.update(cx, |view, _| view.model_name = name);
+            let step = match recommended {
                 Err(error) => ModelStep::Failed { model: None, error },
                 Ok(model) => match setup.installed(&model.model).await {
                     Ok(true) => ModelStep::Installed(model),
@@ -369,6 +384,11 @@ impl FirstRun {
             && matches!(self.model, ModelStep::Installed(_))
     }
 
+    /// The chosen model as a person reads it: its name, else its id.
+    fn shown<'a>(&'a self, id: &'a str) -> &'a str {
+        self.model_name.as_deref().unwrap_or(id)
+    }
+
     fn model_line(&self) -> Option<(&'static str, String)> {
         let line = match &self.model {
             ModelStep::Waiting => return None,
@@ -376,8 +396,14 @@ impl FirstRun {
             ModelStep::Ready(m) => (
                 "model-ready",
                 match m.size_bytes {
-                    Some(bytes) => format!("{} ({}) will run on this Mac", m.model, size(bytes)),
-                    None => format!("{} will run on this Mac", m.model),
+                    Some(bytes) => {
+                        format!(
+                            "{} ({}) will run on this Mac",
+                            self.shown(&m.model),
+                            size(bytes)
+                        )
+                    }
+                    None => format!("{} will run on this Mac", self.shown(&m.model)),
                 },
             ),
             ModelStep::Downloading {
@@ -389,16 +415,23 @@ impl FirstRun {
                 let text = match total.filter(|total| *total > 0) {
                     Some(total) => format!(
                         "Downloading {}: {}% ({} of {})",
-                        model.model,
+                        self.shown(&model.model),
                         received.saturating_mul(100) / total,
                         size(*received),
                         size(total)
                     ),
-                    None => format!("Downloading {}: {} so far", model.model, size(*received)),
+                    None => format!(
+                        "Downloading {}: {} so far",
+                        self.shown(&model.model),
+                        size(*received)
+                    ),
                 };
                 ("model-downloading", text)
             }
-            ModelStep::Installed(m) => ("model-installed", format!("{} is installed", m.model)),
+            ModelStep::Installed(m) => (
+                "model-installed",
+                format!("{} is installed", self.shown(&m.model)),
+            ),
             ModelStep::Failed { error, .. } => ("model-failed", error.clone()),
         };
         Some(line)

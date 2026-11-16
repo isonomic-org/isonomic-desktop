@@ -2,6 +2,22 @@
 
 Newest first.
 
+## 2026-11-16 · Icons draw; first run reads as progress; the full pass explains itself
+
+- **No icon drew, in every build so far.** The window created its app without Isonomic UI's asset source (`ui::application()` with no `.with_assets(..)`). Every icon was an SVG with no file behind it, so its space was drawn empty: the rail's buttons, the sidebar rows, Send, and the actions under a reply. The app now registers `ui::assets::AllAssets`.
+  - **Every self-check now checks it:** the app's asset source must serve a known icon, else the check fails at once.
+  - **The check build also counts pixels:** it counts the pixels the rail's Home icon draws, and fails at zero.
+  - **Fonts weren't affected:** `ui::init` registers them.
+- **First run:**
+  - **The stepper:** only finished steps are filled, each with a check mark. The step being worked on and the ones after it are not, so it reads as progress instead of four filled circles.
+  - **The Isonomic ID** is shortened in the middle (16 characters, an ellipsis, then the last 8), so it stays inside the card. The copy button beside it copies the whole ID.
+  - **The model** is named as the engine names it for a person (`models.list`'s `name`, through the new `Setup::model_name`), not by its id, falling back to the id.
+- **The full pass:**
+  - **Step 10 opens the picker safely.** It looks for the picker's trigger before clicking it. The test helper's `click` panics on an id it can't find, which ended the run on the Mac with no line for steps 10 and 11. A missing id is now that step's FAIL, with its reason.
+  - **The relaunch gets its state again:** it was missing only because that run died first.
+- **Pins:** `SDK_REF` a3ac3bf and `CHAT_REF` 90ddc05 (Chat's wordmark by the brand rule, the sans greeting, and `chat-row-menu-<session id>`) move together.
+- **Tested:** the window's asset source serves the icons; the ID shortening.
+
 ## 2026-11-16 · The wordmark in the sans: the brand rule
 
 - **The rule (Omar):** no serif wordmark. "Isonomic" is set in the sans, Regular, and a product word after it in the sans, Light.

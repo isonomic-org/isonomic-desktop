@@ -49,6 +49,14 @@ impl Setup for FirstRunSetup {
         downloads::installed(&self.client, model)
     }
 
+    fn model_name(&self, model: &str) -> BoxFuture<'static, Option<String>> {
+        let (client, model) = (self.client.clone(), model.to_string());
+        Box::pin(async move {
+            let models = client.models().list().await.ok()?;
+            models.into_iter().find(|m| m.id == model).map(|m| m.name)
+        })
+    }
+
     fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>> {
         downloads::download(&self.client, model)
     }
@@ -199,7 +207,9 @@ fn main() {
     // The link owns the connection: it lives for the whole process.
     let link: &'static EngineLink = Box::leak(Box::new(link));
 
-    let app = ui::application();
+    // Isonomic UI's icons are embedded in its asset source, which the app
+    // registers: without it every icon draws nothing.
+    let app = ui::application().with_assets(ui::assets::AllAssets);
     // Dock icon clicked while the window is hidden.
     app.on_reopen(lifecycle::show);
     // Deep links (isonomic://...) arrive outside the app's context; they
