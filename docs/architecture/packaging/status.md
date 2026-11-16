@@ -4,6 +4,10 @@ The engine side of packaging (install shapes, bundled services) is recorded in `
 
 Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go below.
 
+## 2026-11-16 · The bundle carries the acceptance check
+
+- `Contents/Resources/acceptance-check` (mode 755), from `packaging/macos/acceptance-check.sh`, copied before signing, so the signature seals it. See verification's status.
+
 ## 2026-11-16 · The login agent's standard error is `logs/engine.stderr`
 
 - **What changed:** the engine writes its own rotating `logs/engine.log` (isonomic-capsule #71). The plist's `StandardErrorPath` now points at `logs/engine.stderr`, so the two never write the same file.
