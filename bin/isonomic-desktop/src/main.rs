@@ -202,13 +202,18 @@ fn main() {
         let live = client.live();
         let logs = client.clone();
         // Settings live in the Capsule until the engine stores them.
-        let host = AppHost::new(client.clone(), settings);
+        // Apps' window requests (installing a model) queue here until the
+        // shell exists to serve them.
+        let (requests, queued) = shell::install::requests();
+        let host = AppHost::new(client.clone(), settings).with_requests(requests);
+        let request_client = client.clone();
         let host_client = client.clone();
         let profile_client = client.clone();
         let (window, shell) = ui::open_window(options, cx, |window, cx| {
             lifecycle::hide_on_close(window, cx);
             cx.new(|cx| {
                 let mut shell = Shell::new(live, Arc::new(logs), cx);
+                shell.serve_requests(queued, Arc::new(request_client), cx);
                 let problems = link.problems();
                 shell
                     .home()
