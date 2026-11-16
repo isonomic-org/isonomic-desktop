@@ -1,5 +1,8 @@
-//! First run's layout: a stepper across the three steps, one group per
-//! step, and the person's actions at the foot. Isonomic UI's components as
+//! First run's layout, after the design's onboarding page (design 0.2,
+//! "First run and system states"): on the muted page fill, the wordmark,
+//! the stepper, then one card holding the steps, one group per step.
+//! Continue stays in a footer pinned at the foot (a recorded deviation: the
+//! steps can be taller than the window). Isonomic UI's components as
 //! built, its spacing and type, both themes, every action a button.
 
 use ui::base::{h_flex, v_flex};
@@ -55,9 +58,11 @@ impl Render for FirstRun {
         let theme = cx.theme();
         let muted = theme.muted_foreground;
         let capsule = if self.created {
-            "Your Capsule was created on this Mac. It keeps everything Isonomic stores."
+            "A few checks before your first chat. Your Capsule was created on this Mac: \
+             it keeps everything Isonomic stores, and everything runs here."
         } else {
-            "Your Capsule is on this Mac. It keeps everything Isonomic stores."
+            "A few checks before your first chat. Your Capsule is on this Mac: it keeps \
+             everything Isonomic stores, and everything runs here."
         };
         let (memory_id, memory_text) = self.memory_line();
 
@@ -205,17 +210,48 @@ impl Render for FirstRun {
         }
 
         let ready = self.ready();
-        let mut page = v_flex()
+        // The design's card: white, a 1 px border, 16 radius, 28 padding,
+        // 14 between its children, a medium shadow, 600 wide.
+        let mut card = v_flex()
+            .id("first-run-card")
+            .test_support()
             .w_full()
-            .max_w(tokens::content_width())
-            .gap_4()
-            .child(Label::new("Welcome to Isonomic").text_xl().font_semibold())
+            .max_w(tokens::card_width())
+            .p_7()
+            .gap_3p5()
+            .bg(theme.background)
+            .border_1()
+            .border_color(theme.border)
+            .rounded_2xl()
+            .shadow_md()
             .child(
                 div()
                     .text_color(muted)
-                    .child("A few checks before your first chat. Everything runs on this Mac."),
+                    .child(line("capsule-ready", capsule)),
             )
-            .child(line("capsule-ready", capsule))
+            .child(memory)
+            .child(id)
+            .child(model);
+        if let Some(error) = &self.error {
+            card = card.child(div().id("first-run-failed").test_support().child(
+                Alert::error("first-run-failed-alert", error.clone()).title("Couldn't finish"),
+            ));
+        }
+        // The page: wordmark, stepper, card, 20 apart and centred.
+        let page = v_flex()
+            .w_full()
+            .max_w(tokens::card_width())
+            .items_center()
+            .gap_4()
+            .child(
+                div()
+                    .id("first-run-wordmark")
+                    .test_support()
+                    .text_xl()
+                    .font_semibold()
+                    .text_color(theme.foreground)
+                    .child("Isonomic"),
+            )
             .child(
                 Stepper::new("first-run-steps")
                     .w_full()
@@ -228,25 +264,20 @@ impl Render for FirstRun {
                         StepperItem::new().child("Local model"),
                     ]),
             )
-            .child(memory)
-            .child(id)
-            .child(model);
-        if let Some(error) = &self.error {
-            page = page.child(div().id("first-run-failed").test_support().child(
-                Alert::error("first-run-failed-alert", error.clone()).title("Couldn't finish"),
-            ));
-        }
+            .child(card);
         let footer = h_flex()
             .id("first-run-footer")
+            .test_support()
             .w_full()
             .justify_center()
             .p_4()
+            .bg(theme.background)
             .border_t_1()
             .border_color(theme.border)
             .child(
                 h_flex()
                     .w_full()
-                    .max_w(tokens::content_width())
+                    .max_w(tokens::card_width())
                     .justify_end()
                     .child(
                         Button::new("first-run-continue")
@@ -266,7 +297,7 @@ impl Render for FirstRun {
             .test_support()
             .track_focus(&self.focus)
             .size_full()
-            .bg(theme.background)
+            .bg(theme.sidebar)
             .text_color(theme.foreground)
             .child(
                 v_flex()
@@ -274,7 +305,7 @@ impl Render for FirstRun {
                     .flex_1()
                     .w_full()
                     .items_center()
-                    .p_6()
+                    .p_4()
                     .overflow_y_scroll()
                     .child(page),
             )

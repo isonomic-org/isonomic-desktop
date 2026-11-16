@@ -183,6 +183,9 @@ fn first_run_checks_memory_then_shows_the_tabs(cx: &mut TestAppContext) {
     cx.run_until_parked();
 
     assert!(shown(cx, window, "first-run"));
+    // The design's onboarding page: the wordmark, then the steps in a card.
+    assert!(shown(cx, window, "first-run-wordmark"));
+    assert!(shown(cx, window, "first-run-card"));
     assert!(shown(cx, window, "capsule-ready"));
     assert!(shown(cx, window, "memory-enough"));
     assert!(
@@ -272,6 +275,18 @@ fn the_model_downloads_with_progress_then_first_run_can_finish(cx: &mut TestAppC
         ModelStep::Downloading { received, total, .. } if received == SIZE / 4 && total == Some(SIZE)
     ));
     assert!(shown(cx, window, "model-downloading"));
+    // At the window's opening size, the tallest step still clears the
+    // pinned footer: Cancel is never under it.
+    cx.update_window(window, |_, window, cx| {
+        window.render_frame(cx);
+        let cancel = window.find("model-cancel").bounds();
+        let footer = window.find("first-run-footer").bounds();
+        assert!(
+            cancel.bottom() <= footer.top(),
+            "{cancel:?} under {footer:?}"
+        );
+    })
+    .unwrap();
     click(cx, window, "model-cancel");
     assert_eq!(setup.cancelled.load(Ordering::SeqCst), 1);
     first

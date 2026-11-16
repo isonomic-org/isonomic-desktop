@@ -40,6 +40,16 @@ pub mod tokens {
         std::time::Duration::from_secs(3)
     }
 
+    /// A rail button, square: the design's 28 px ghost icon button.
+    pub fn rail_button() -> Pixels {
+        px(28.)
+    }
+
+    /// First run's card: the design's onboarding card is 600 wide.
+    pub fn card_width() -> Pixels {
+        px(600.)
+    }
+
     /// Width of the left rail of app icons.
     pub fn rail_width() -> Pixels {
         px(56.)
