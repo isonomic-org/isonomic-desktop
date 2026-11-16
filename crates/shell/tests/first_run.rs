@@ -421,7 +421,7 @@ fn the_isonomic_id_is_shown_to_read_and_copy(cx: &mut TestAppContext) {
 
 #[ui::test]
 fn a_refused_key_store_says_why_and_can_be_tried_again(cx: &mut TestAppContext) {
-    let refused = "The Mac's keychain is locked. Unlock it and try again.";
+    let refused = "The key store is locked. Unlock it and try again.";
     let setup = Scripted::new(vec![Ok(MEMORY_FLOOR_BYTES)]);
     *setup.identities.lock().unwrap() = vec![Err(refused.into()), Ok(ID.into())];
     let (window, shell) = open(cx, setup.clone());
@@ -455,8 +455,7 @@ fn the_client_adapter_reads_the_id_and_a_refusal() {
     runtime.block_on(async {
         let id = shell::first_run::identity_from(&client).await.unwrap();
         assert_eq!(id, isonomic_testkit::DEFAULT_IDENTITY);
-        let refused =
-            "Your Mac's keychain did not let Isonomic save your ID. Unlock it and try again.";
+        let refused = "The key store did not let Isonomic save your ID. Unlock it and try again.";
         engine.identity().refuse(refused);
         assert_eq!(
             shell::first_run::identity_from(&client).await,

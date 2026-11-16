@@ -9,7 +9,7 @@ Newest first.
 - The stepper now reads Capsule, Memory, Isonomic ID, Local model. The Capsule is one line under the title rather than a group. The steps scroll while Continue stays in a footer, so it's always in view.
 - The self-check prints the ID, and fails with the engine's reason when there's none.
 - Tested headless: the ID is shown with its copy button; a refused key store shows its reason, the model waits, Continue does nothing, and Try again goes on to the model. Also tested: first run finished by keyboard, which now tabs past Copy.
-- **Wired to `identity.get`** (isonomic-sdk #34, built against its head d530e54): `first_run::identity_from` returns the `id` as the engine gives it, and an `identity_unavailable` refusal's message as written. Tested against the testkit's scripted identity (`set_id`, `refuse`, `recover`). `SDK_REF` moves to #34's merge before this merges, and `CHAT_REF` is ed43f66 on the same harness.
+- **Wired to `identity.get`** (isonomic-sdk #34, merged as 90eb83f; `SDK_REF` moves there): `first_run::identity_from` returns the `id` as the engine gives it, and an `identity_unavailable` refusal's message as written. Tested against the testkit's scripted identity (`set_id`, `refuse`, `recover`). `CHAT_REF` stays ed43f66, on the same harness (ae4f1a7) and Isonomic UI (2e3116b). Refusal texts in tests say "the key store", as the SDK's fixtures do.
 
 ## 2026-11-16 · Problem reports, part 2: the notice, the review and the setting
 
