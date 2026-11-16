@@ -23,6 +23,7 @@ reports = { path = "crates/reports" }
 # commit in SDK_REF.
 isonomic-client = { path = "../isonomic-sdk/crates/client" }
 isonomic-proto = { path = "../isonomic-sdk/crates/proto" }
+isonomic-reports = { path = "../isonomic-sdk/crates/reports" }
 isonomic-testkit = { path = "../isonomic-sdk/crates/testkit" }
 # The app platform: the trait every first-party app crate implements.
 isonomic-app = { path = "../isonomic-sdk/crates/app" }

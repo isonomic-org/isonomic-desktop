@@ -37,6 +37,8 @@ pub struct ProblemReports {
     include_id: bool,
     /// App names by id, for titles such as "Chat stopped working".
     names: HashMap<String, String>,
+    /// Writes reports apps hand the window, with this process's build.
+    writer: Option<Arc<reports::panic::Context>>,
 }
 
 impl ProblemReports {
@@ -61,7 +63,14 @@ impl ProblemReports {
             identity: None,
             include_id: false,
             names: HashMap::new(),
+            writer: None,
         }
+    }
+
+    /// Write apps' reported problems with `writer`: the same build, system
+    /// and store the panic hook uses.
+    pub fn write_with(&mut self, writer: Arc<reports::panic::Context>) {
+        self.writer = Some(writer);
     }
 
     /// Titles name the app with `id` as `name`.
@@ -288,6 +297,47 @@ impl Shell {
                     break;
                 }
             }
+        })
+        .detach();
+    }
+
+    /// An app reported a handled problem (`WindowRequest::Report`): write it
+    /// as `app_error` with the app's id and version, then ask about it.
+    /// Without reports (a self-check), it is dropped.
+    pub fn app_reported(
+        &mut self,
+        app: &str,
+        problem: isonomic_app::Problem,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(writer) = self
+            .reports
+            .as_ref()
+            .and_then(|r| r.read(cx).writer.clone())
+        else {
+            return;
+        };
+        let version = self
+            .app(app)
+            .map(|tab| tab.read(cx).registration().manifest().version.clone())
+            .unwrap_or_default();
+        let message = match &problem.detail {
+            Some(detail) => format!("{}: {detail}", problem.summary),
+            None => problem.summary.clone(),
+        };
+        let component = reports::Component::App {
+            id: app.to_string(),
+            version,
+        };
+        let report = reports::Report::new(reports::Kind::AppError, component, message);
+        cx.spawn(async move |shell, cx| {
+            let saved = cx
+                .background_spawn(async move { writer.save(report) })
+                .await;
+            if let Err(error) = saved {
+                reports::log::line(&format!("app report not saved: {}", error.kind()));
+            }
+            let _ = shell.update(cx, |shell, cx| shell.reports_due(cx));
         })
         .detach();
     }

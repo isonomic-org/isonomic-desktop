@@ -214,7 +214,8 @@ impl Shell {
 
     /// Serve apps' window requests from `queued` (see [`install::requests`]).
     /// Installing a model shows its download with the app's name; the app
-    /// learns the outcome from the engine (`models.info`).
+    /// learns the outcome from the engine (`models.info`). A reported
+    /// problem is written as `app_error` and asked about.
     pub fn serve_requests(
         &mut self,
         mut queued: futures::channel::mpsc::UnboundedReceiver<(
@@ -228,6 +229,9 @@ impl Shell {
         cx.spawn(async move |shell, cx| {
             while let Some((app, request)) = queued.next().await {
                 let served = shell.update(cx, |shell, cx| {
+                    if let isonomic_app::WindowRequest::Report(problem) = request {
+                        return shell.app_reported(&app, problem, cx);
+                    }
                     if let isonomic_app::WindowRequest::InstallModel { model } = request {
                         let name = shell
                             .tabs
