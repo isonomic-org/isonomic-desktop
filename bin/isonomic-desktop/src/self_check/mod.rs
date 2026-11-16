@@ -8,12 +8,18 @@
 //! to standard error; the window then stops the engine and exits 0 (PASS)
 //! or 1 (FAIL).
 //!
+//! After the prompt check, Chat's sidebar toggle and next-chat keys go
+//! through the window's own key dispatch, and whether each worked is
+//! printed ([`keys`]).
+//!
 //! `ISONOMIC_SELF_CHECK=link`: the `isonomic://` link given as a launch
 //! argument is opened; PASS when the app it names is on screen and, for
 //! Chat, received it.
 //!
 //! It waits on notifications from the views it watches, never on a timer,
 //! except for each step's time limit.
+
+mod keys;
 
 use std::time::{Duration, Instant};
 
@@ -91,7 +97,7 @@ pub fn start(
     .detach();
 }
 
-fn say(started: Instant, what: &str) {
+pub(super) fn say(started: Instant, what: &str) {
     eprintln!(
         "[self-check] +{:.2}s {what}",
         started.elapsed().as_secs_f64()
@@ -109,7 +115,7 @@ async fn until<T: 'static>(
 }
 
 /// [`until`] with its own time limit.
-async fn until_within<T: 'static>(
+pub(super) async fn until_within<T: 'static>(
     cx: &mut AsyncApp,
     entity: &Entity<T>,
     what: &str,
@@ -461,7 +467,9 @@ async fn prompt_check(
             reply.len()
         ));
     }
-    Ok(())
+    keys::check(window, &chat_shell, started, cx)
+        .await
+        .map(|_| ())
 }
 
 async fn link_check(

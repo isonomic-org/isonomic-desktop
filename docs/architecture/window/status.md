@@ -2,6 +2,21 @@
 
 Newest first.
 
+## 2026-11-16 · The self-check presses Chat's shortcuts
+
+- **What it presses:** after the prompt check (turn, stop, continue), the self-check sends Chat's design 0.2 shortcuts through the window's own key dispatch (`dispatch_keystroke`), as a keyboard would:
+  - the design's sidebar toggle (`cmd-.`), then Chat's second toggle (`cmd-b`) to put it back. On macOS, `cmd-.` also means cancel;
+  - from a new chat (`cmd-shift-o`), the next chat (`alt-down`), which should open the first chat in the sidebar.
+- **What it prints:**
+  - `keys: cmd-. toggled the sidebar: yes|no`
+  - `keys: cmd-b toggled the sidebar back: yes|no`
+  - `keys: alt-down opened the next chat: yes|no`
+  Neither changes PASS or FAIL. Each key has 5 s to show its effect.
+- **No clash:** the window binds only `cmd-q` and `cmd-w`. Chat binds `cmd-shift-o`, `cmd-.`, `cmd-b`, `cmd-k`, `alt-up` and `alt-down` in its own key context.
+- **Pins:** `SDK_REF` aea8ba1 (Isonomic UI 66e93d3, with the run status bar aligned to the design, and the reports crate unchanged from fedba7d) and `CHAT_REF` 37f034c move together. Chat 37f034c is its design audit (58fe2d3) plus first run without a restart, versions on a real engine and the second sidebar key.
+- **Code:** `self_check.rs` became `self_check/mod.rs`, with the shortcuts in `self_check/keys.rs`.
+- **Tested headless:** against Chat's shell with its sample chats, both keys work through the window's dispatch.
+
 ## 2026-11-16 · Problem reports on the SDK's shared crate (SDK fedba7d)
 
 - **`isonomic-reports`:** the window's problem reports now use the crate the engine uses too: format 1, the scrubber, and the backtrace helpers.
