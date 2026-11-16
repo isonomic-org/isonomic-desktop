@@ -53,3 +53,19 @@ Version 1 ships without a Developer ID (no account for at least two weeks), as a
 | Permissions macOS remembers per app (microphone and the like) | None used yet. An ad-hoc signature changes with every build, so any such grant would be asked again after each update |
 
 **To check on the Mac:** a real first open from the disk image (Gatekeeper's dialog, Open Anyway, then the engine started by the launch agent at the next login).
+
+## 2026-11-16 · Minimum macOS is 13.3, and the bundle checks it
+
+- **The first universal release built on the Intel Mac:** `Isonomic-0.0.1-96.dmg`, 125.7 MB, both architectures, ad-hoc signed. Signing and notarization were skipped cleanly. The acceptance check passed: prompt, stop and continue, and the link.
+- **The manifest's 11.0 was wrong.** Read from the binaries: 39 of the model server's 40 Intel files and 41 of its 42 Apple Silicon files name macOS **13.3** as their minimum; one helper names 11.0. The app now declares 13.3 (`LSMinimumSystemVersion`, the manifest and the first-open note).
+- **The bundle refuses to drift:**
+  - Our own programs are built with `MACOSX_DEPLOYMENT_TARGET` at the declared minimum.
+  - After assembling, the bundle reads every Mach-O file's minimum from its load commands (`xtask/src/macho.rs`: thin and universal files, `LC_BUILD_VERSION` and `LC_VERSION_MIN_MACOSX`).
+  - It fails, naming the files, if any part needs more than the app declares.
+- **Not read here:** the database and cache sidecars for macOS. The cache is built from source and only builds on a Mac. The check covers both on the next Mac build.
+
+**Version numbering, proposed for V1:**
+- `CFBundleShortVersionString`, the workspace version, the manifest's `version` and the file name: `0.9.N` for builds people outside test (0.9.0 first), then `1.0.0` for V1. Fixes after that are `1.0.1` and so on. It's always three numbers, as macOS requires.
+- `CFBundleVersion`, the build: the commit count on `main`, 96 today. It only goes up, so any two builds compare correctly even across versions; `ISONOMIC_BUILD_NUMBER` can override it.
+- The file name stays `Isonomic-<version>-<build>.dmg`.
+- Nothing changes until it's approved: the workspace version is still 0.0.1.

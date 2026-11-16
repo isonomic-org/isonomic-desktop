@@ -29,6 +29,7 @@ mod bundle;
 mod dist;
 mod e2e;
 mod gate;
+mod macho;
 mod procs;
 mod release;
 mod report;

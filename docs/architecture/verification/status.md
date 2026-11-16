@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 2026-11-16 · Acceptance check from the disk image alone (Apple Silicon)
+
+- `ISONOMIC_SELF_CHECK_DOWNLOAD=1` lets the self-check download first run's model when it isn't installed, as a person would. The download gets 30 minutes; other steps keep 3. So the check runs on a machine with only the disk image: no repos, no toolchain, no model file.
+- **The release build on the Intel Mac passed the acceptance check** (build 96, both architectures):
+  - Turn 1: first text 6.78 s, end 16.76 s.
+  - Turn 2: first text 2.62 s, stopped with 5 characters.
+  - Continue: first text 0.54 s, Done at 10.14 s.
+  - Link: Chat received it.
+  
+  The Apple Silicon half needs an Apple Silicon Mac. The command is in the Worker reports.
+
 ## 2026-11-16 · Self-check PASS on the Intel Mac; `cargo xtask self-check` is the release acceptance check
 
 - **Rerun with the waiting fix:** PASS, exit 0, no processes left. Build: desktop 4d7c0e1, capsule 3139266, SDK c0d2bf7, Chat 2981abb, the 2B model, a scratch Capsule.
