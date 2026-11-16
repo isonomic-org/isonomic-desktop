@@ -15,7 +15,8 @@ use ui::component::progress::Progress;
 use ui::component::spinner::Spinner;
 use ui::component::stepper::{Stepper, StepperItem};
 use ui::component::theme::ActiveTheme as _;
-use ui::component::{Disableable as _, Sizable as _, StyledExt as _};
+use ui::component::{Disableable as _, Icon, IconName, Sizable as _, StyledExt as _};
+use ui::extra::wordmark::Wordmark;
 use ui::{
     div, tokens, Context, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     SharedString, StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
@@ -23,15 +24,29 @@ use ui::{
 
 use super::{FirstRun, IdStep, Memory, ModelStep};
 
+/// An Isonomic ID shortened in the middle so it fits its line: the first
+/// 16 and the last 8 characters, with an ellipsis between.
+pub fn shortened(id: &str) -> String {
+    const HEAD: usize = 16;
+    const TAIL: usize = 8;
+    let chars: Vec<char> = id.chars().collect();
+    if chars.len() <= HEAD + TAIL + 1 {
+        return id.to_string();
+    }
+    let head: String = chars[..HEAD].iter().collect();
+    let tail: String = chars[chars.len() - TAIL..].iter().collect();
+    format!("{head}…{tail}")
+}
+
 /// A line tests can find by `id`.
 fn line(id: &'static str, text: impl Into<SharedString>) -> impl IntoElement {
     div().id(id).test_support().child(text.into())
 }
 
 impl FirstRun {
-    /// Which step the person is on: the memory check until it passes, then
-    /// the model.
-    fn current_step(&self) -> usize {
+    /// How many steps are done, in order: the Capsule always is, then the
+    /// memory check, the ID and the model.
+    fn steps_done(&self) -> usize {
         match (&self.memory, &self.id, &self.model) {
             (Memory::Enough(_), IdStep::Ready(_), ModelStep::Installed(_)) => 4,
             (Memory::Enough(_), IdStep::Ready(_), _) => 3,
@@ -124,7 +139,9 @@ impl Render for FirstRun {
                                 .id("id-ready")
                                 .test_support()
                                 .font_family(theme.mono_font_family.clone())
-                                .child(SharedString::from(value.clone())),
+                                // Shortened in the middle; the copy button
+                                // beside it copies the whole ID.
+                                .child(SharedString::from(shortened(value))),
                         )
                         .child(
                             Clipboard::new("id-copy")
@@ -244,28 +261,33 @@ impl Render for FirstRun {
             .items_center()
             .gap_4()
             .child(
+                // The brand's wordmark: "Isonomic" in the sans, Regular.
                 div()
                     .id("first-run-wordmark")
                     .test_support()
-                    // Design 0.2: the display serif at 20 / 28. Medium is the
-                    // bundled serif's heaviest weight.
-                    .font_family(theme.serif_font_family.clone())
-                    .text_xl()
-                    .font_medium()
-                    .text_color(theme.foreground)
-                    .child("Isonomic"),
+                    .child(Wordmark::new().size(tokens::wordmark_size())),
             )
             .child(
+                // Only finished steps are filled, each with a check: the step
+                // being worked on and the ones after it are not, so the
+                // stepper reads as progress.
                 Stepper::new("first-run-steps")
                     .w_full()
                     .disabled(true)
-                    .selected_index(self.current_step().min(3))
-                    .items([
-                        StepperItem::new().child("Capsule"),
-                        StepperItem::new().child("Memory"),
-                        StepperItem::new().child("Isonomic ID"),
-                        StepperItem::new().child("Local model"),
-                    ]),
+                    .selected_index(self.steps_done() - 1)
+                    .items(
+                        ["Capsule", "Memory", "Isonomic ID", "Local model"]
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, label)| {
+                                let item = StepperItem::new().child(label);
+                                if i < self.steps_done() {
+                                    item.icon(Icon::from(IconName::Check))
+                                } else {
+                                    item
+                                }
+                            }),
+                    ),
             )
             .child(card);
         let footer = h_flex()
@@ -313,5 +335,19 @@ impl Render for FirstRun {
                     .child(page),
             )
             .child(footer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shortened;
+
+    #[test]
+    fn a_long_id_is_shortened_in_the_middle_and_a_short_one_is_not() {
+        let id = "did:iso:3f9c0a7e1b2d4c5f8e6a7b9c0d1e2f3a3f9c0a7e1b2d4c5f8e6a7b9c0d1e2f3a";
+        let short = shortened(id);
+        assert_eq!(short, "did:iso:3f9c0a7e…0d1e2f3a");
+        assert!(short.chars().count() < 30);
+        assert_eq!(shortened("did:iso:abc"), "did:iso:abc");
     }
 }

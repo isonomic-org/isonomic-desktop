@@ -173,6 +173,39 @@ pub(super) async fn until_within<T: 'static>(
     }
 }
 
+/// The icons draw: the app's asset source serves Isonomic UI's icons, and
+/// in the check build the rail's Home icon puts pixels on the screen.
+fn icons(window: AnyWindowHandle, started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
+    use ui::assets::IconName;
+    let path = IconName::Plus.path();
+    let loaded = cx.update(|cx| cx.asset_source().load(&path));
+    match loaded {
+        Ok(Some(bytes)) if !bytes.is_empty() => {}
+        _ => {
+            return Err(format!(
+                "icons: {path} is not in the app's assets, so no icon draws"
+            ))
+        }
+    }
+    #[cfg(feature = "check-build")]
+    {
+        let ink = cx.update(|cx| screens::ink_in(window, "rail-home", cx))?;
+        if ink == 0 {
+            return Err("icons: the rail's Home icon drew no pixels".into());
+        }
+        say(
+            started,
+            &format!("icons: loaded; the rail's Home icon drew {ink} pixels"),
+        );
+    }
+    #[cfg(not(feature = "check-build"))]
+    {
+        let _ = window;
+        say(started, &format!("icons: loaded ({path})"));
+    }
+    Ok(())
+}
+
 /// Connected, and first run finished (or never shown).
 async fn ready(
     window: AnyWindowHandle,
@@ -190,6 +223,7 @@ async fn ready(
         _ = timer => return Err("the engine never answered".into()),
     }
     say(started, "engine connected");
+    icons(window, started, cx)?;
 
     let Some(first_run) = cx.update(|cx| shell.read(cx).first_run().cloned()) else {
         say(started, "first run already done");

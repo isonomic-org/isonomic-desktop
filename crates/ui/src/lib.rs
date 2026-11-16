@@ -10,6 +10,8 @@
 //! them (`#[ui::test]`, derives) adds `extern crate ui as gpui;` at its root;
 //! that is an alias for this crate, not a dependency on GPUI.
 
+/// Isonomic UI's extra components, such as the wordmark.
+pub use isonomic_app::extra;
 pub use isonomic_app::ui::*;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
@@ -43,6 +45,11 @@ pub mod tokens {
     /// A rail button, square: the design's 28 px ghost icon button.
     pub fn rail_button() -> Pixels {
         px(28.)
+    }
+
+    /// The wordmark's size on first run.
+    pub fn wordmark_size() -> Pixels {
+        px(20.)
     }
 
     /// First run's card: the design's onboarding card is 600 wide.

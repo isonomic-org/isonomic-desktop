@@ -96,3 +96,58 @@ fn capture(_: AnyWindowHandle, name: &str, dark: bool, _: &mut App) -> Result<Pa
     let _ = next_path(name, dark);
     Err(NOT_THIS_BUILD.into())
 }
+
+/// How many pixels inside the element `id` differ from its top-left
+/// pixel: zero when nothing is drawn on its background, such as an icon
+/// that failed to load. The check build only.
+#[cfg(feature = "check-build")]
+pub fn ink_in(window: AnyWindowHandle, id: &'static str, cx: &mut App) -> Result<usize, String> {
+    use ui::test::TestWindowExt as _;
+    window
+        .update(cx, |_, window, cx| {
+            window.render_frame(cx);
+            let bounds = window
+                .try_find(id)
+                .ok_or(format!("no {id} on screen"))?
+                .bounds();
+            let image = window
+                .render_to_image()
+                .map_err(|e| format!("rendering the window: {e}"))?;
+            let scale = image.width() as f32 / f32::from(window.viewport_size().width);
+            let at = |v: ui::Pixels| (f32::from(v) * scale) as u32;
+            let (x0, y0) = (at(bounds.left()), at(bounds.top()));
+            let (x1, y1) = (
+                at(bounds.right()).min(image.width()),
+                at(bounds.bottom()).min(image.height()),
+            );
+            if x0 >= x1 || y0 >= y1 {
+                return Err(format!("{id} has no area"));
+            }
+            let ground = *image.get_pixel(x0, y0);
+            let mut ink = 0;
+            for y in y0..y1 {
+                for x in x0..x1 {
+                    if *image.get_pixel(x, y) != ground {
+                        ink += 1;
+                    }
+                }
+            }
+            Ok(ink)
+        })
+        .map_err(|e| e.to_string())?
+}
+
+#[cfg(test)]
+mod tests {
+    use ui::assets::IconName;
+    use ui::AssetSource as _;
+
+    /// The asset source the window registers serves Isonomic UI's icons.
+    #[test]
+    fn the_window_s_asset_source_has_the_icons() {
+        for icon in [IconName::Plus, IconName::Check, IconName::ArrowLeft] {
+            let bytes = ui::assets::AllAssets.load(&icon.path()).unwrap();
+            assert!(bytes.is_some_and(|b| !b.is_empty()), "{icon:?}");
+        }
+    }
+}
