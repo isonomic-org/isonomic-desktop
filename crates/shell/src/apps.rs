@@ -80,6 +80,11 @@ impl AppHost {
     }
 }
 
+/// An app panicked in a call the window made, and a report was written.
+pub struct Stopped;
+
+impl ui::EventEmitter<Stopped> for AppTab {}
+
 /// Where an app's tab is.
 pub enum AppState {
     /// Not opened yet.
@@ -175,6 +180,7 @@ impl AppTab {
     fn stopped(&mut self, error: String, cx: &mut Context<Self>) {
         self.state = AppState::Failed(format!("It stopped working ({error})"));
         self.attention = Attention::None;
+        cx.emit(Stopped);
         cx.notify();
     }
 

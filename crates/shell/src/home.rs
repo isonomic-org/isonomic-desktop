@@ -26,6 +26,7 @@ use ui::{
 };
 
 use crate::logs::{LogSource, LogsView};
+use crate::problems::{self, ProblemReports};
 
 pub struct HomeTab {
     live: Live,
@@ -36,6 +37,8 @@ pub struct HomeTab {
     problem: Option<String>,
     /// Something the person should do, shown until the next launch.
     notice: Option<String>,
+    /// The "Problem reports" setting, once the window has its reports.
+    reports: Option<Entity<ProblemReports>>,
 }
 
 /// Wire name of a state, used in element ids.
@@ -116,7 +119,15 @@ impl HomeTab {
             logs: None,
             problem: None,
             notice: None,
+            reports: None,
         }
+    }
+
+    /// Show the "Problem reports" setting, and redraw when it changes.
+    pub fn show_report_setting(&mut self, reports: Entity<ProblemReports>, cx: &mut Context<Self>) {
+        cx.observe(&reports, |_, _, cx| cx.notify()).detach();
+        self.reports = Some(reports);
+        cx.notify();
     }
 
     /// Show `notice` at the top of Home, such as "move the app".
@@ -290,15 +301,14 @@ impl Render for HomeTab {
                     Alert::warning("schema-unreadable-alert", warning).title("Update Isonomic"),
                 )
             }));
-        if rows.is_empty() {
-            return page;
-        }
-        page.child(
+        let services = (!rows.is_empty()).then(|| {
             GroupBox::new()
                 .id("services")
                 .title(Label::new("Services").font_semibold())
-                .child(v_flex().gap_1().children(rows)),
-        )
+                .child(v_flex().gap_1().children(rows))
+        });
+        let setting = self.reports.as_ref().map(|r| problems::setting_row(r, cx));
+        page.children(services).children(setting)
     }
 }
 

@@ -7,14 +7,17 @@
 //! - [`scrub`]: what never goes in a report (home paths, long quoted text).
 //! - [`Report`]: the document, with the build and system it came from.
 //! - [`store::Store`]: pending reports and their retention.
+//! - [`settings`]: the "Problem reports" setting; [`kept::Kept`]: both, for the notice.
 //! - [`guard::LaunchGuard`]: the crash-loop guard.
 //! - [`log::WindowLog`]: the window's own log, whose tail a report carries.
 //! - [`panic`]: the panic hook; [`watchdog`]: hangs.
 
 pub mod guard;
+pub mod kept;
 pub mod log;
 pub mod panic;
 pub mod scrub;
+pub mod settings;
 pub mod store;
 pub mod watchdog;
 

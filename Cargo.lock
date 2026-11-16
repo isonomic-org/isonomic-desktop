@@ -6772,6 +6772,8 @@ dependencies = [
  "isonomic-proto",
  "isonomic-testkit",
  "reports",
+ "serde_json",
+ "tempfile",
  "tokio",
  "tray-icon",
 ]

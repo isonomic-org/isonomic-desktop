@@ -2,6 +2,24 @@
 
 Newest first.
 
+## 2026-11-16 · Problem reports, part 2: the notice, the review and the setting
+
+- **Notice** (an Isonomic UI dialog), for each kept report, oldest first:
+  - shown at launch, after first run, for what an earlier run left (a crash or a hang), and straight away after a contained app failure;
+  - titled "Isonomic quit unexpectedly", "Isonomic stopped responding" or "<App> stopped working";
+  - one sentence on what a report is for, and "This report is kept on this Mac. Nothing leaves it.";
+  - buttons **Show report**, **Don't send** (deletes it, then the next is asked about) and **Keep on this Mac**. Closing it any other way also keeps it. A kept report isn't asked about again in the same run.
+- **Send is not offered:** this build has no destination and no sender (part 3 is held).
+- **Show report** opens exactly the bytes that would be sent, the pretty-printed JSON with its log tail, in a second dialog over the notice. **Deviation:** the design says a sheet; a stacked dialog keeps the notice under it and returns to it with Back.
+- **Isonomic ID checkbox,** off on every notice: "Include my Isonomic ID so you can contact me about this report". Ticked, the ID is added to the bytes shown; it is never written to a kept file. It appears once the shell is given the ID (`ProblemReports::set_identity`); the first-run ID branch wires that.
+- **Setting:** "Problem reports" on Home, with Ask each time (the default), Send automatically and Never send, kept in the Capsule's `settings/reports.json` with the destination, which is unset.
+  - **Never send** deletes kept reports quietly at the next look.
+  - **Send automatically,** with nowhere to send, keeps them and asks nothing.
+- **No path in the shell:** the shell is handed a `reports::kept::Kept` and does every disk call on the background executor.
+- **Self-check:** shows no notice, so nothing covers what it clicks.
+- **Not yet:** a hang that recovers is asked about at the next launch, not when it recovers. The watchdog runs off the foreground thread and the window has no signal from it yet.
+- **Tested:** the notice at launch, Show report's bytes, Don't send, Keep, Never send, Send automatically, the setting being kept, the checkbox, and the notice after a contained failure titled with the app's name.
+
 ## 2026-11-16 · Problem reports, part 1: capture (design agreed 02:56 UTC)
 
 - **New crate `reports`**, with no UI dependency:
@@ -23,7 +41,7 @@ Newest first.
   - the hook writing a report, and a contained panic being `app_failed`;
   - one hang report per hang, with its length;
   - an app whose build panics is contained in the real shell.
-- **Not yet:** the notice, the review sheet and the setting (part 2). The sender is held: nothing leaves the Mac.
+- **Not yet:** the sender is held, so nothing leaves the Mac.
 - **Chat ed43f66:** `CHAT_REF` moves on the same SDK and harness. Chat's rail icon is now `chat` from the catalog, and a picked model carries to every new chat.
 - **Vocabulary:** "app catalog", never "app store". The four spec lines and the window's crate list are fixed.
 

@@ -15,6 +15,7 @@ pub mod lifecycle;
 pub mod light;
 pub mod logs;
 pub mod menubar;
+pub mod problems;
 
 use std::sync::Arc;
 
@@ -37,6 +38,7 @@ use first_run::{Finished, FirstRun, Setup};
 use home::HomeTab;
 use install::{InstallOutcome, ModelInstall, ModelSource};
 use logs::LogSource;
+use problems::ProblemReports;
 
 /// One entry in the rail and the view it opens.
 struct Tab {
@@ -75,6 +77,10 @@ pub struct Shell {
     cap: Option<usize>,
     /// App tabs by index, least recently opened first.
     recent: Vec<usize>,
+    /// Problem reports, once the window has handed them over.
+    reports: Option<Entity<ProblemReports>>,
+    /// Look at the kept reports at the next draw.
+    reports_due: bool,
 }
 
 impl Shell {
@@ -104,6 +110,8 @@ impl Shell {
             install: None,
             cap: None,
             recent: Vec::new(),
+            reports: None,
+            reports_due: false,
         }
     }
 
@@ -289,6 +297,14 @@ impl Shell {
         let app = apps::tab(registration, host, cx);
         // The rail redraws when the app asks for attention.
         cx.observe(&app, |_, _, cx| cx.notify()).detach();
+        // A contained failure wrote a report: ask about it straight away.
+        cx.subscribe(&app, |shell, _, _: &apps::Stopped, cx| {
+            shell.reports_due(cx)
+        })
+        .detach();
+        if let Some(reports) = &self.reports {
+            reports.update(cx, |r, _| r.name_app(&id, &title));
+        }
         self.tabs.push(Tab {
             id: id.into(),
             title: title.into(),
@@ -400,6 +416,13 @@ impl Render for Shell {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         if let Some(first_run) = &self.first_run {
             return div().id("shell").size_full().child(first_run.clone());
+        }
+        // Notices wait until first run is over; a dialog opens outside the draw.
+        if let Some(reports) = self.reports.clone().filter(|_| self.reports_due) {
+            self.reports_due = false;
+            window.defer(cx, move |window, cx| {
+                reports.update(cx, |r, cx| r.review(window, cx));
+            });
         }
         // A rail button that takes keyboard focus is scrolled into view,
         // which GPUI and Isonomic UI don't do on their own.
