@@ -24,6 +24,7 @@ Newest first.
   - one hang report per hang, with its length;
   - an app whose build panics is contained in the real shell.
 - **Not yet:** the notice, the review sheet and the setting (part 2). The sender is held: nothing leaves the Mac.
+- **Chat ed43f66:** `CHAT_REF` moves on the same SDK and harness. Chat's rail icon is now `chat` from the catalog, and a picked model carries to every new chat.
 - **Vocabulary:** "app catalog", never "app store". The four spec lines and the window's crate list are fixed.
 
 ## 2026-11-16 · Version 0.9.0: final screens on Isonomic UI 2e3116b (SDK 439a069, Chat 9b58161)
