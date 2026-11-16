@@ -22,6 +22,8 @@
 mod full;
 mod keys;
 mod link;
+#[cfg(all(test, feature = "check-build"))]
+mod render_tests;
 pub mod screens;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -173,20 +175,27 @@ pub(super) async fn until_within<T: 'static>(
     }
 }
 
-/// The icons draw: the app's asset source serves Isonomic UI's icons, and
-/// in the check build the rail's Home icon puts pixels on the screen.
-fn icons(window: AnyWindowHandle, started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
+/// The icons load: the app's asset source serves Isonomic UI's icons. Run
+/// at connect, before first run.
+fn icons_load(started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
     use ui::assets::IconName;
     let path = IconName::Plus.path();
     let loaded = cx.update(|cx| cx.asset_source().load(&path));
     match loaded {
-        Ok(Some(bytes)) if !bytes.is_empty() => {}
-        _ => {
-            return Err(format!(
-                "icons: {path} is not in the app's assets, so no icon draws"
-            ))
+        Ok(Some(bytes)) if !bytes.is_empty() => {
+            say(started, &format!("icons: loaded ({path})"));
+            Ok(())
         }
+        _ => Err(format!(
+            "icons: {path} is not in the app's assets, so no icon draws"
+        )),
     }
+}
+
+/// The icons draw, in the check build: the rail's Home icon puts pixels
+/// on the screen. The rail is there only once first run is over, so this
+/// runs at the end of [`ready`].
+fn icons_drawn(window: AnyWindowHandle, started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
     #[cfg(feature = "check-build")]
     {
         let ink = cx.update(|cx| screens::ink_in(window, "rail-home", cx))?;
@@ -195,14 +204,11 @@ fn icons(window: AnyWindowHandle, started: Instant, cx: &mut AsyncApp) -> Result
         }
         say(
             started,
-            &format!("icons: loaded; the rail's Home icon drew {ink} pixels"),
+            &format!("icons: the rail's Home icon drew {ink} pixels"),
         );
     }
     #[cfg(not(feature = "check-build"))]
-    {
-        let _ = window;
-        say(started, &format!("icons: loaded ({path})"));
-    }
+    let _ = (window, started, cx);
     Ok(())
 }
 
@@ -223,11 +229,11 @@ async fn ready(
         _ = timer => return Err("the engine never answered".into()),
     }
     say(started, "engine connected");
-    icons(window, started, cx)?;
+    icons_load(started, cx)?;
 
     let Some(first_run) = cx.update(|cx| shell.read(cx).first_run().cloned()) else {
         say(started, "first run already done");
-        return Ok(());
+        return icons_drawn(window, started, cx);
     };
     FIRST_RUN_SHOWN.store(true, Ordering::Relaxed);
     until(
@@ -307,7 +313,7 @@ async fn ready(
     })
     .await?;
     say(started, "first run done");
-    Ok(())
+    icons_drawn(window, started, cx)
 }
 
 /// Open the app with `id` and wait until it is built.
