@@ -290,7 +290,7 @@ fn a_problem_an_app_reports_is_written_and_asked_about(cx: &mut TestAppContext) 
     draw(cx, window);
     draw(cx, window);
     assert!(dialog_open(cx, window));
-    assert_eq!(title(cx, &reports), "test-notes stopped working");
+    assert_eq!(title(cx, &reports), "Test-notes stopped working");
     let kept = Kept::in_capsule(capsule.path()).pending().remove(0);
     assert_eq!(kept.document["kind"], "app_error");
     assert_eq!(kept.document["component"]["id"], "com.isonomic.test-notes");

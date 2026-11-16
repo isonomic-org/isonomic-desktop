@@ -46,6 +46,7 @@ pub(super) fn open(reports: Entity<ProblemReports>, window: &mut Window, cx: &mu
         let on_close = reports.clone();
         dialog
             .title(state.title())
+            .centered()
             .child(
                 v_flex()
                     .id("report-notice")
@@ -101,6 +102,7 @@ fn review(reports: Entity<ProblemReports>, window: &mut Window, cx: &mut App) {
         });
         dialog
             .title("Problem report")
+            .centered()
             .w(tokens::content_width())
             .child(
                 v_flex()

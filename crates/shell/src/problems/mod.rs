@@ -266,7 +266,14 @@ fn title_for(document: &serde_json::Value, names: &HashMap<String, String>) -> S
         (_, "engine") => "The Isonomic engine quit unexpectedly".into(),
         (_, id) => {
             let name = names.get(id).cloned();
-            let name = name.unwrap_or_else(|| crate::apps::link_segment(id).to_string());
+            // An app not mounted here: its id's last part, capitalised.
+            let name = name.unwrap_or_else(|| {
+                let segment = crate::apps::link_segment(id);
+                let mut chars = segment.chars();
+                chars
+                    .next()
+                    .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
+            });
             format!("{name} stopped working")
         }
     }

@@ -2,6 +2,26 @@
 
 Newest first.
 
+## 2026-11-16 · The full pass: the stopped thread explained, the notice centred, first run in progress
+
+- **Screenshot 05 (the stopped state) showed "Here" under both prompts.**
+  - **What the script did:** turn 2 is the same prompt as turn 1, "Plan one day in Lisbon", sent again with the kit's `send`. The stop lands at turn 2's first text, so turn 2's "Here" is right.
+  - **Turn 1 should show its whole reply.** Two checks here say the window and Chat hold it and draw it whole after a stop:
+    - a headless test, `headless_stop`, on the SDK's test engine: the thread holds turn 1's whole reply after turn 2 is stopped;
+    - a real render of the same thread, with GPUI's headless renderer, looked at by eye: turn 1's whole reply, with copy and try again under it.
+  - **So the Mac's short first reply must come from something only the real engine does.** To tell which, the full pass now prints, beside the stopped screenshot, each turn's reply as the thread holds it: its length and first words.
+    - turn 1 held short means the engine, or the kit's fold of its events;
+    - turn 1 held whole but drawn short means Chat's drawing.
+- **The notice is centred, alone.**
+  - Step 11 now waits for Acknowledgements to close, and its closing to settle, before step 12. Before, the problem-report notice was drawn over it.
+  - The notice, its review and Acknowledgements are centred on the window (`Dialog::centered`). Checked in a real render.
+  - The notice's title capitalises an app named only by its id ("Test-notes", not "test-notes"). A mounted app uses its own name.
+- **First run in progress:**
+  - a screenshot as first run appears, mid-checks (`first-run-checking`);
+  - one with a download running (`first-run-downloading`), when the check downloads (`ISONOMIC_SELF_CHECK_DOWNLOAD=1` with no model in place);
+  - as before, the ID step before Continue (`first-run`).
+- **Code:** the icon checks move to `self_check/icons.rs`, keeping `mod.rs` under 20 KB.
+
 ## 2026-11-16 · The full pass through Chat's ids; the relaunch's count explained
 
 - **Steps through Chat 99f310a's ids** (Isonomic UI 527d955, stable ids):

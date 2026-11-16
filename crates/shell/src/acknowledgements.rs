@@ -52,6 +52,7 @@ pub fn open(notices: Option<String>, window: &mut Window, cx: &mut App) {
         };
         dialog
             .title("Acknowledgements")
+            .centered()
             .w(tokens::content_width())
             .child(body)
             .footer(
