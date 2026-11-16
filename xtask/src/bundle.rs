@@ -336,6 +336,7 @@ fn assemble(app: &Path, targets: &[String], desktop: &Path, capsule: &Path) -> R
 
     crate::sidecars::ship(capsule, targets, &sidecars)?;
     crate::sidecars::ship_notices(capsule, &contents.join("Resources"))?;
+    crate::selfcheck::ship_script(desktop, &contents.join("Resources"))?;
 
     let icon = crate::release::icon(desktop, &contents.join("Resources"))?;
     let build = crate::release::build_number(desktop);

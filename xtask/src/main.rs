@@ -26,6 +26,8 @@
 //! like the SDK (`../isonomic-sdk`).
 
 mod bundle;
+#[cfg(test)]
+mod check_script;
 mod dist;
 mod e2e;
 mod gate;

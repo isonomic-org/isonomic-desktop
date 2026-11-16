@@ -2,6 +2,27 @@
 
 Newest first.
 
+## 2026-11-16 · The acceptance check runs from the app, with no developer tools
+
+- **What changed:** the app carries the check as `Contents/Resources/acceptance-check`, a POSIX shell script (`packaging/macos/acceptance-check.sh`, shipped by `cargo xtask bundle`).
+  - It needs no developer tools, so any Mac with the app can run it: `sh /Applications/Isonomic.app/Contents/Resources/acceptance-check`.
+  - Before, the check was `cargo xtask self-check` only.
+- **What it does is what `cargo xtask self-check` does:**
+  - a scratch Capsule (`"scratch": true`) in the temporary folder, with keys in memory, confirmed from the engine's log;
+  - the prompt run, then the relaunch through a link, given the first run's state;
+  - the last log lines on a failure.
+- **What it adds:**
+  - it downloads the model into the scratch Capsule unless `ISONOMIC_CHECK_MODELS` names model files;
+  - it prints one line about the machine first: macOS, chip, memory, build;
+  - it deletes the Capsule when it ends, pass or fail.
+- **In the check build** it also runs the full pass, and copies the screenshots to a folder on the Desktop.
+- **Tests:** two hermetic tests (`xtask/src/check_script.rs`) run the script on a stand-in window:
+  - the pass, with two runs on one Capsule, then removed;
+  - a failure, which prints the engine's last lines and still removes the Capsule.
+- **Steps for a person:** `acceptance-check.md`, covering the disk image, letting macOS run the app without opening it, the command, and what to copy back.
+- **Below 16 GB:** the check's failure line now says it plainly: "this Mac has 8.0 GB of memory; Isonomic needs at least 16.0 GB, so first run offers no model". It used to be a debug dump.
+- **Not verified here:** how macOS's quarantine check treats the app and its bundled programs when they are started from Terminal. `acceptance-check.md` clears the quarantine mark first, which should make that moot. The first Apple Silicon run will confirm it.
+
 ## 2026-11-16 · Step 13: the stopped thread's first reply is drawn whole; Chat d413d78
 
 - **The Mac's answer to screenshot 05:** at the stop the thread held turn 1 whole (1223 characters), while the screenshot drew only "Here". The model was whole; Chat's drawing was wrong.

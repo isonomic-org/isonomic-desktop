@@ -51,6 +51,20 @@ pub fn mark_check_build(app: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// The acceptance check a person runs from the app, with no developer
+/// tools: `sh Isonomic.app/Contents/Resources/acceptance-check`.
+pub const SCRIPT: &str = "packaging/macos/acceptance-check.sh";
+pub const SCRIPT_NAME: &str = "acceptance-check";
+
+/// Put the acceptance check in the app's `Contents/Resources`.
+pub fn ship_script(desktop: &Path, resources: &Path) -> Result<(), String> {
+    use std::os::unix::fs::PermissionsExt as _;
+    let to = resources.join(SCRIPT_NAME);
+    std::fs::copy(desktop.join(SCRIPT), &to).map_err(|e| format!("{}: {e}", to.display()))?;
+    std::fs::set_permissions(&to, std::fs::Permissions::from_mode(0o755))
+        .map_err(|e| format!("{}: {e}", to.display()))
+}
+
 pub struct Options {
     pub models: PathBuf,
     pub capsule: PathBuf,

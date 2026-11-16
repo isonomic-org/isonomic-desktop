@@ -266,6 +266,13 @@ async fn ready(
         (Memory::Enough(_), step) => {
             return Err(format!("first run: the model isn't installed ({step:?}); put it in the Capsule's models directory, or set {DOWNLOAD}=1"));
         }
+        (Memory::TooLittle(p), _) => {
+            return Err(format!(
+                "first run: this Mac has {} of memory; Isonomic needs at least {}, so first run offers no model",
+                gib(p.total_memory_bytes),
+                gib(shell::first_run::MEMORY_FLOOR_BYTES)
+            ))
+        }
         (memory, _) => return Err(format!("first run: {memory:?}")),
     }
     if full::asked() {
@@ -527,6 +534,11 @@ fn moved_on(stopped_at: u64, revision: u64) -> bool {
 /// turn would read as already ended.
 fn continued(kept: usize, now: usize, open: bool) -> bool {
     now > kept || !open
+}
+
+/// Memory in GB, as first run says it.
+fn gib(bytes: u64) -> String {
+    format!("{:.1} GB", bytes as f64 / (1u64 << 30) as f64)
 }
 
 #[cfg(test)]
