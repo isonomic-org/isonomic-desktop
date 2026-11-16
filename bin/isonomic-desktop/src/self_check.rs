@@ -342,13 +342,30 @@ async fn prompt_check(
         eprintln!("[self-check] turn 2 finished before the stop; continue not exercised");
         return Ok(());
     }
+    // Continue is a request: the turn changes only when the engine answers,
+    // so wait for it to move on from the stop before reading it.
+    let stopped_at = cx.update(|cx| {
+        view.read(cx)
+            .thread()
+            .turns()
+            .last()
+            .map(|t| t.revision)
+            .unwrap_or(0)
+    });
     let _ = window.update(cx, |_, _, cx| view.update(cx, |v, cx| v.resume(cx)));
     let resumed = Instant::now();
+    until(cx, &view, "the continue to start", |v, _| {
+        v.thread()
+            .turns()
+            .last()
+            .is_some_and(|t| moved_on(stopped_at, t.revision))
+    })
+    .await?;
     until(cx, &view, "the continued text", |v, _| {
         v.thread()
             .turns()
             .last()
-            .is_some_and(|t| t.reply().len() > kept || !t.state.is_open())
+            .is_some_and(|t| continued(kept, t.reply().len(), t.state.is_open()))
     })
     .await?;
     let first = resumed.elapsed();
@@ -432,4 +449,38 @@ async fn link_check(
         say(started, "Chat received the link");
     }
     Ok(())
+}
+
+/// The turn changed after the person pressed Continue.
+fn moved_on(stopped_at: u64, revision: u64) -> bool {
+    revision > stopped_at
+}
+
+/// The continued reply has new text, or the turn ended. Only asked once the
+/// turn has moved on from the stop ([`moved_on`]); before that, a stopped
+/// turn would read as already ended.
+fn continued(kept: usize, now: usize, open: bool) -> bool {
+    now > kept || !open
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The Intel Mac run: stopped at the first character, Continue pressed,
+    /// and the check read the turn before the engine answered. The turn was
+    /// still the stopped one (revision unchanged, not open, one character).
+    #[test]
+    fn a_stopped_turn_is_not_read_as_continued_until_it_moves_on() {
+        let (stopped_at, kept) = (7, 1);
+        // Before the engine answers: same revision, so the check waits.
+        assert!(!moved_on(stopped_at, 7));
+        // The old check asked only `continued`, which a stopped turn passes.
+        assert!(continued(kept, 1, false));
+        // Once the engine answers, the turn is open again with no new text
+        // yet, and then has more.
+        assert!(moved_on(stopped_at, 8));
+        assert!(!continued(kept, 1, true));
+        assert!(continued(kept, 40, true));
+    }
 }
