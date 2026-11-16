@@ -196,7 +196,8 @@ fn a_notice_asks_to_move_the_app_in_plain_words(cx: &mut TestAppContext) {
     assert!(!shown(cx, window, None, "home-notice"));
     shell.update(cx, |shell, cx| {
         shell.home().update(cx, |home, cx| {
-            home.set_notice(
+            home.add_notice(
+                "Move Isonomic to Applications",
                 "Move Isonomic to the Applications folder and open it from there.".into(),
                 cx,
             )

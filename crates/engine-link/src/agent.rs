@@ -107,8 +107,10 @@ impl LoginAgent {
         format!("gui/{}/{LABEL}", self.user_id)
     }
 
+    /// The engine's standard error: what it says before it has accepted the
+    /// Capsule. After that it writes its own `logs/engine.log`.
     fn engine_log(&self) -> PathBuf {
-        self.root.join("logs").join("engine.log")
+        self.root.join("logs").join("engine.stderr")
     }
 
     /// The plist for this engine and Capsule.

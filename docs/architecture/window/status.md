@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 2026-11-16 · The engine's set-aside notice, and its standard error moves
+
+- **When the engine sets the registry aside:** a damaged list of approved apps is set aside at start (isonomic-capsule #72). Home then shows the engine's message as a plain warning, not an error, titled "Apps must be approved again". The text is the engine's own: "… Apps must be approved again. Their data and files are kept; chats from before are in the set-aside copy and are not shown."
+- **How the window learns it:** the engine says it only in its log. Once connected, the window reads the latest run's lines in `logs/engine.log` (and `engine.log.1`, for a rotated log), off the foreground thread (`engine_notices`).
+- **Shown once:** each incident appears once. The message names its timestamped set-aside file, so `settings/seen-engine-notices` remembers what has been shown.
+- **Home's notices have their own titles:** they were all titled "Move Isonomic to Applications", including the crash-loop guard's, which now reads "Isonomic opened without its apps". Several can show at once.
+- **Standard error moves:** the engine now writes its own `logs/engine.log` once it accepts the Capsule. The engine's standard error goes to `logs/engine.stderr`, from the window (`EngineBinary`) and from the login agent's plist (`StandardErrorPath`). An installed agent is rewritten at the next launch, since its plist's content changed.
+- **The window's "engine stopped" message** quotes the last line of whichever of the two files was written last.
+- **The gate and its report** read both the engine's standard error and the Capsule's `logs/engine.log`.
+- **Tested:** only the latest run's message counts; each incident is shown once, and a new one is shown again; the engine-link tests pass with the new path.
+
 ## 2026-11-16 · SDK 4947e43 and Chat 5692f70: each report has its own id
 
 - **Pins:** `SDK_REF` 4947e43 (Isonomic UI ecd21d1) and `CHAT_REF` 5692f70 (Chat's last design rows) move together. The window reads no `PaletteCommand::icon`, the one change that isn't additive.

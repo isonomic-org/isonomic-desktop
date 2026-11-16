@@ -117,7 +117,12 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
     let capsule = util::sibling("isonomic-capsule");
     let sdk = util::sibling("isonomic-sdk");
     let ui = util::sibling("isonomic-ui");
-    let engine_log = util::tail(&outcome.engine_log, 400);
+    // The database log sits in `<capsule>/logs/`, beside the engine's own.
+    let run_capsule = outcome.postgres_log.parent().and_then(Path::parent);
+    let engine_log = match run_capsule {
+        Some(capsule) => crate::gate::engine_lines(&outcome.engine_log, capsule, 400),
+        None => util::tail(&outcome.engine_log, 400),
+    };
     let mut out = Vec::new();
     let mut row = |label: &str, value: String| out.push(format!("{label:<11} {value}"));
 
@@ -268,9 +273,11 @@ fn render(engine: &Engine, app: Option<&Built>, outcome: &Outcome) -> String {
     if !outcome.passed() {
         let warm_log = outcome.engine_log.with_file_name("engine-warm.log");
         let cache_log = outcome.postgres_log.with_file_name("cache.log");
+        let own_log = outcome.postgres_log.with_file_name("engine.log");
         for (name, path) in [
-            ("engine", &outcome.engine_log),
-            ("engine, warm start", &warm_log),
+            ("engine, standard error", &outcome.engine_log),
+            ("engine, warm start, standard error", &warm_log),
+            ("engine's own log", &own_log),
             ("postgres", &outcome.postgres_log),
             ("cache", &cache_log),
         ] {

@@ -279,7 +279,10 @@ impl EngineLink {
         if let Some(path) = config.engine {
             let binary = EngineBinary {
                 path,
-                log: Some(config.root.join("logs").join("engine.log")),
+                // The engine's own log is `logs/engine.log`, which it writes
+                // once it has accepted the Capsule; before that it only has
+                // standard error.
+                log: Some(config.root.join("logs").join("engine.stderr")),
                 problems: problems.clone(),
             };
             let launcher: Arc<dyn Launcher> = match agent {

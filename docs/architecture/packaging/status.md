@@ -4,6 +4,11 @@ The engine side of packaging (install shapes, bundled services) is recorded in `
 
 Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go below.
 
+## 2026-11-16 · The login agent's standard error is `logs/engine.stderr`
+
+- **What changed:** the engine writes its own rotating `logs/engine.log` (isonomic-capsule #71). The plist's `StandardErrorPath` now points at `logs/engine.stderr`, so the two never write the same file.
+- **Existing installs:** the agent is rewritten at the next launch, since its content changed.
+
 ## 2026-11-16 · Where problem reports go is set at release
 
 - **Compiled in:** `ISONOMIC_REPORTS_URL` and `ISONOMIC_REPORTS_KEY` in the environment of `cargo xtask bundle` or `release` go into the window when it is compiled. The bundle prints "problem reports: sent to <host>, with a key" or "not sent (no ISONOMIC_REPORTS_URL); kept on the Mac". It never prints the key.
