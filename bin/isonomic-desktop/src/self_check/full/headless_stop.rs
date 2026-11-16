@@ -44,6 +44,9 @@ fn a_stopped_second_turn_leaves_the_first_reply_whole(cx: &mut TestAppContext) {
                     .is_some_and(|t| !t.state.is_open())
             })
             .await?;
+            // Step 13's own check, on what the frame draws.
+            let drawn = super::drawn::first_reply_whole(window, &view, cx)?;
+            eprintln!("step 13: {drawn}");
             Ok(cx.update(|cx| {
                 view.read(cx)
                     .thread()

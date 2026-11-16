@@ -67,6 +67,7 @@ pub async fn after_prompt(
             super::more::notice_screen(window, shell, &capsule, started, cx).await,
         );
     }
+    note(13, "stopped-thread-drawn", super::drawn::outcome());
     match super::more::state(chat, client, cx).await {
         Ok(state) => say(started, &format!("state {}", state.line())),
         Err(why) => failed.push(Box::leak(format!("state: {why}").into_boxed_str())),

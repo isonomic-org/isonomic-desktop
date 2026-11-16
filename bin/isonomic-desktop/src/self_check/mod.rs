@@ -437,6 +437,7 @@ async fn prompt_check(
     if stopped_shot {
         full::shot(window, "status-stopped", true, started, cx);
         say(started, &full::describe_turns(&view, cx));
+        full::drawn::check_at_stop(window, &view, cx);
     }
     let could = cx.update(|cx| {
         view.read(cx)
