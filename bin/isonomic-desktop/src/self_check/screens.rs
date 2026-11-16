@@ -97,11 +97,14 @@ fn capture(_: AnyWindowHandle, name: &str, dark: bool, _: &mut App) -> Result<Pa
     Err(NOT_THIS_BUILD.into())
 }
 
-/// How many pixels inside the element `id` differ from its top-left
-/// pixel: zero when nothing is drawn on its background, such as an icon
-/// that failed to load. The check build only.
+/// How many pixels in the middle of the element `id` differ from its
+/// commonest colour: zero when nothing is drawn on its fill, such as an
+/// icon that failed to load. Only the central half is counted, where an
+/// icon sits, so a button's own fill and its rounded corners don't count.
+/// The check build only.
 #[cfg(feature = "check-build")]
 pub fn ink_in(window: AnyWindowHandle, id: &'static str, cx: &mut App) -> Result<usize, String> {
+    use std::collections::HashMap;
     use ui::test::TestWindowExt as _;
     window
         .update(cx, |_, window, cx| {
@@ -115,24 +118,25 @@ pub fn ink_in(window: AnyWindowHandle, id: &'static str, cx: &mut App) -> Result
                 .map_err(|e| format!("rendering the window: {e}"))?;
             let scale = image.width() as f32 / f32::from(window.viewport_size().width);
             let at = |v: ui::Pixels| (f32::from(v) * scale) as u32;
-            let (x0, y0) = (at(bounds.left()), at(bounds.top()));
+            let (left, top) = (at(bounds.left()), at(bounds.top()));
+            let (w, h) = (at(bounds.size.width), at(bounds.size.height));
+            let (x0, y0) = (left + w / 4, top + h / 4);
             let (x1, y1) = (
-                at(bounds.right()).min(image.width()),
-                at(bounds.bottom()).min(image.height()),
+                (left + w * 3 / 4).min(image.width()),
+                (top + h * 3 / 4).min(image.height()),
             );
             if x0 >= x1 || y0 >= y1 {
                 return Err(format!("{id} has no area"));
             }
-            let ground = *image.get_pixel(x0, y0);
-            let mut ink = 0;
+            let mut counts: HashMap<[u8; 4], usize> = HashMap::new();
             for y in y0..y1 {
                 for x in x0..x1 {
-                    if *image.get_pixel(x, y) != ground {
-                        ink += 1;
-                    }
+                    *counts.entry(image.get_pixel(x, y).0).or_default() += 1;
                 }
             }
-            Ok(ink)
+            let fill = counts.values().copied().max().unwrap_or(0);
+            let total: usize = counts.values().sum();
+            Ok(total - fill)
         })
         .map_err(|e| e.to_string())?
 }

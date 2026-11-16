@@ -2,6 +2,23 @@
 
 Newest first.
 
+## 2026-11-16 · The icon check runs after first run, and is proven with real pixels
+
+- **Why `--full` failed on the Mac (0.9.0-155):** at once, with "no rail-home on screen". The check build's pixel count ran as soon as the engine connected, while first run was on screen and there was no rail yet. No step ran.
+- **Now the icon check has two halves:**
+  - At connect, every self-check checks that the app's asset source serves a known icon, as before.
+  - The pixel count runs at the end of `ready`: after first run finishes, or at once when first run was already done.
+- **The pixel count measures the icon now:**
+  - It counts only the central half of the button, where the icon sits.
+  - Ink is the pixels that differ from that area's commonest colour.
+  - Before, the selected Home button's own fill counted as ink.
+- **Proven for real, headless:** the new check-build test `render_tests` uses GPUI's headless renderer. That's Metal on macOS; on Linux, Mesa's software Vulkan driver (lavapipe), which this session has. It draws the real shell through first run, and:
+  - while first run is up, the check can't run, which is the Mac's failure;
+  - after first run, the Home icon draws 276 pixels;
+  - with an asset source that has no icons, the same button draws 0.
+  - Where no renderer starts, the test is skipped, not failed. Checked with Vulkan hidden.
+- **Pins:** `CHAT_REF` is 5cedc14, Chat's display names without the quantisation tag, on the same SDK, a3ac3bf. Chat's main has since moved to a newer SDK (8f21cb6), which this pin doesn't take.
+
 ## 2026-11-16 · `cargo xtask self-check --full`: the function pass, with screenshots
 
 - **How to run it:** `cargo xtask bundle --check-build`, then `cargo xtask self-check --models <dir> --full`. The short check stays the default. `--full` refuses a bundle that isn't the check build.
