@@ -205,3 +205,14 @@ fn a_notice_asks_to_move_the_app_in_plain_words(cx: &mut TestAppContext) {
     cx.run_until_parked();
     assert!(shown(cx, window, None, "home-notice"));
 }
+
+/// The headless test window can't read a title back (it keeps none), so
+/// this checks what the app opens its window with; the title bar itself is
+/// checked on the Mac.
+#[ui::test]
+fn the_window_opens_titled(cx: &mut TestAppContext) {
+    let options = cx.update(|cx| shell::lifecycle::window_options(cx));
+    let title = options.titlebar.and_then(|bar| bar.title);
+    assert_eq!(title.as_deref(), Some(shell::lifecycle::TITLE));
+    assert!(options.window_bounds.is_some(), "it opens at a set size");
+}

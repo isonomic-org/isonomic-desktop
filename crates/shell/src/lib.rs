@@ -22,11 +22,14 @@ use isonomic_app::{Attention, Registration};
 use isonomic_client::Live;
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
+use ui::component::badge::Badge;
+use ui::component::button::{Button, ButtonVariants as _};
 use ui::component::theme::ActiveTheme as _;
+use ui::component::{Icon, Selectable as _};
 use ui::{
-    div, tokens, AnyView, AppContext as _, Context, Entity, InteractiveElement as _, IntoElement,
-    ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
-    TestSupportExt as _, Window,
+    div, tokens, AnyView, AppContext as _, Context, Entity, FocusHandle, InteractiveElement as _,
+    IntoElement, ParentElement as _, Render, ScrollHandle, SharedString,
+    StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
 };
 
 use apps::{AppHost, AppTab};
@@ -41,6 +44,10 @@ struct Tab {
     /// an app's id.
     id: SharedString,
     title: SharedString,
+    /// The icon's name in Isonomic UI's catalog, as a manifest names it.
+    icon: SharedString,
+    /// The rail button's focus, so keyboard focus can be followed.
+    focus: FocusHandle,
     view: AnyView,
     /// Set for an app's tab.
     app: Option<Entity<AppTab>>,
@@ -50,6 +57,10 @@ pub struct Shell {
     home: Entity<HomeTab>,
     tabs: Vec<Tab>,
     selected: usize,
+    /// The rail scrolls when it holds more apps than the window is tall.
+    rail_scroll: ScrollHandle,
+    /// The rail button last scrolled into view because it had focus.
+    rail_followed: Option<usize>,
     /// Shown in place of the tabs until it finishes.
     first_run: Option<Entity<FirstRun>>,
     /// A model an app asked for, shown in place of the tab on screen.
@@ -75,10 +86,14 @@ impl Shell {
             tabs: vec![Tab {
                 id: "home".into(),
                 title: "Home".into(),
+                icon: "home".into(),
+                focus: cx.focus_handle(),
                 view: home.into(),
                 app: None,
             }],
             selected: 0,
+            rail_scroll: ScrollHandle::new(),
+            rail_followed: None,
             first_run: None,
             install: None,
             cap: None,
@@ -232,6 +247,22 @@ impl Shell {
         &self.home
     }
 
+    /// Put keyboard focus where a keyboard user starts: the selected tab's
+    /// rail button, or first run while it shows. The window calls it when
+    /// it opens.
+    pub fn focus_rail(&self, window: &mut Window, cx: &mut Context<Self>) {
+        match &self.first_run {
+            // First run stands in for the tabs, so focus starts there.
+            Some(first_run) => first_run.read(cx).focus_handle().clone().focus(window, cx),
+            None => self.tabs[self.selected].focus.focus(window, cx),
+        }
+    }
+
+    /// The rail button of the tab with `id`, for following keyboard focus.
+    pub fn rail_focus(&self, id: &str) -> Option<&FocusHandle> {
+        Some(&self.tabs.iter().find(|tab| tab.id == id)?.focus)
+    }
+
     /// Identifier of the tab on screen.
     pub fn selected_tab(&self) -> &str {
         &self.tabs[self.selected].id
@@ -242,12 +273,15 @@ impl Shell {
     pub fn mount(&mut self, registration: Registration, host: AppHost, cx: &mut Context<Self>) {
         let manifest = registration.manifest();
         let (id, title) = (manifest.id.clone(), manifest.name.clone());
+        let icon = manifest.icon.clone();
         let app = apps::tab(registration, host, cx);
         // The rail redraws when the app asks for attention.
         cx.observe(&app, |_, _, cx| cx.notify()).detach();
         self.tabs.push(Tab {
             id: id.into(),
             title: title.into(),
+            icon: icon.into(),
+            focus: cx.focus_handle(),
             view: app.clone().into(),
             app: Some(app),
         });
@@ -338,62 +372,77 @@ impl Shell {
     }
 }
 
+/// The icon a manifest names, when Isonomic UI's catalog has it.
+fn catalog_icon(name: &str) -> Option<ui::assets::IconName> {
+    let path = format!("icons/{name}.svg");
+    ui::assets::IconName::ALL
+        .iter()
+        .copied()
+        .find(|icon| icon.path().as_ref() == path)
+}
+
 impl Render for Shell {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         if let Some(first_run) = &self.first_run {
             return div().id("shell").size_full().child(first_run.clone());
         }
+        // A rail button that takes keyboard focus is scrolled into view,
+        // which GPUI and Isonomic UI don't do on their own.
+        let focused = self
+            .tabs
+            .iter()
+            .position(|tab| tab.focus.is_focused(window));
+        if focused.is_some() && focused != self.rail_followed {
+            if let Some(index) = focused {
+                self.rail_scroll.scroll_to_item(index);
+                window.refresh();
+            }
+        }
+        self.rail_followed = focused;
         let theme = cx.theme();
-        let (accent, accent_text) = (theme.sidebar_accent, theme.sidebar_accent_foreground);
-        let (badge, badge_text) = (theme.primary, theme.primary_foreground);
         let rail_items: Vec<_> = self
             .tabs
             .iter()
             .enumerate()
             .map(|(index, tab)| {
                 let selected = index == self.selected;
-                // A monogram stands in for the icon until the icon set lands.
-                let monogram: SharedString = tab.title.chars().take(1).collect::<String>().into();
                 let attention = tab
                     .app
                     .as_ref()
                     .map_or(Attention::None, |app| app.read(cx).attention());
-                let mut item = div()
-                    .id(SharedString::from(format!("rail-{}", tab.id)))
-                    .relative()
-                    .test_support()
-                    .size_9()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .rounded_md()
-                    .cursor_pointer()
-                    .child(monogram)
+                // An icon-only button, named by its tooltip; the tab order
+                // follows the rail.
+                let mut button = Button::new(SharedString::from(format!("rail-button-{}", tab.id)))
+                    .ghost()
+                    .selected(selected)
+                    .tooltip(tab.title.clone())
+                    .accessibility_label(tab.title.clone())
+                    .track_focus(&tab.focus)
                     .on_click(
                         cx.listener(move |shell, _, window, cx| shell.select(index, window, cx)),
                     );
-                if selected {
-                    item = item.bg(accent).text_color(accent_text);
-                }
-                let marker = match attention {
-                    Attention::None => None,
-                    Attention::Dot => Some(div().size(tokens::status_dot())),
-                    Attention::Count(n) => Some(div().px_1().text_xs().child(n.to_string())),
+                button = match catalog_icon(&tab.icon) {
+                    Some(icon) => button.icon(Icon::from(icon)),
+                    // No such icon: the app's initial stands in.
+                    None => button.label(tab.title.chars().take(1).collect::<String>()),
                 };
-                if let Some(marker) = marker {
-                    item = item.child(
-                        marker
-                            .id(SharedString::from(format!("attention-{}", tab.id)))
-                            .test_support()
-                            .absolute()
-                            .top_0()
-                            .right_0()
-                            .rounded_full()
-                            .bg(badge)
-                            .text_color(badge_text),
-                    );
-                }
-                item
+                let marked = match attention {
+                    Attention::None => button.into_any_element(),
+                    Attention::Dot => div()
+                        .id(SharedString::from(format!("attention-{}", tab.id)))
+                        .test_support()
+                        .child(Badge::new().dot().child(button))
+                        .into_any_element(),
+                    Attention::Count(n) => div()
+                        .id(SharedString::from(format!("attention-{}", tab.id)))
+                        .test_support()
+                        .child(Badge::new().count(n as usize).child(button))
+                        .into_any_element(),
+                };
+                div()
+                    .id(SharedString::from(format!("rail-{}", tab.id)))
+                    .test_support()
+                    .child(marked)
             })
             .collect();
 
@@ -410,10 +459,11 @@ impl Render for Shell {
                     .h_full()
                     .flex_shrink_0()
                     .items_center()
-                    .gap_1()
-                    .py_2()
+                    .gap_2()
+                    .py_3()
+                    .overflow_y_scroll()
+                    .track_scroll(&self.rail_scroll)
                     .bg(theme.sidebar)
-                    .text_color(theme.sidebar_foreground)
                     .border_r_1()
                     .border_color(theme.sidebar_border)
                     .children(rail_items),

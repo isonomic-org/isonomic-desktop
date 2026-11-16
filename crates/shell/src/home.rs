@@ -11,10 +11,16 @@ use isonomic_proto::agents::SchemaVersion;
 use isonomic_proto::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
-use ui::component::button::Button;
+use ui::component::alert::Alert;
+use ui::component::button::{Button, ButtonVariants as _};
+use ui::component::group_box::GroupBox;
+use ui::component::label::Label;
+use ui::component::spinner::Spinner;
+use ui::component::tag::Tag;
 use ui::component::theme::ActiveTheme as _;
+use ui::component::{Icon, IconName, Sizable as _, StyledExt as _};
 use ui::{
-    div, tokens, App, AppContext as _, Context, Entity, Hsla, InteractiveElement as _, IntoElement,
+    div, AppContext as _, Context, Entity, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
     TestSupportExt as _, Window,
 };
@@ -77,16 +83,6 @@ pub fn headline(live: &Live) -> &'static str {
         Some(ServiceState::Starting) => "Services starting",
         Some(ServiceState::Degraded) => "A service needs attention",
         Some(ServiceState::Stopped) => "Services stopped",
-    }
-}
-
-fn state_color(state: ServiceState, cx: &App) -> Hsla {
-    let theme = cx.theme();
-    match state {
-        ServiceState::Healthy => theme.success,
-        ServiceState::Starting => theme.warning,
-        ServiceState::Degraded => theme.danger,
-        ServiceState::Stopped => theme.muted_foreground,
     }
 }
 
@@ -179,6 +175,11 @@ impl HomeTab {
     }
 }
 
+/// A message box that tests can find by `id`.
+fn alert(id: &'static str, alert: Alert) -> impl IntoElement {
+    div().id(id).test_support().child(alert)
+}
+
 impl Render for HomeTab {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         if let Some(logs) = &self.logs {
@@ -190,14 +191,15 @@ impl Render for HomeTab {
                 .child(
                     h_flex().child(
                         Button::new("logs-back")
-                            .label("Back")
+                            .ghost()
+                            .icon(Icon::from(IconName::ArrowLeft))
+                            .label("Home")
                             .on_click(cx.listener(|tab, _, _, cx| tab.close_logs(cx))),
                     ),
                 )
                 .child(logs.clone());
         }
         let muted = cx.theme().muted_foreground;
-        let border = cx.theme().border;
         let aggregate = self.live.system.as_ref().map(|system| system.aggregate);
         let headline_id = match aggregate {
             Some(state) => format!("aggregate-{}", state_id(state)),
@@ -218,16 +220,15 @@ impl Render for HomeTab {
                     1 => "1 restart".into(),
                     n => format!("{n} restarts").into(),
                 };
-                let name = service.name.clone();
+                let (name, from_row) = (service.name.clone(), service.name.clone());
                 h_flex()
                     .id(SharedString::from(format!("service-{}", service.name)))
                     .test_support()
                     .cursor_pointer()
-                    .on_click(cx.listener(move |tab, _, _, cx| tab.show_logs(name.clone(), cx)))
+                    .on_click(cx.listener(move |tab, _, _, cx| tab.show_logs(from_row.clone(), cx)))
+                    .w_full()
                     .gap_3()
-                    .py_2()
-                    .border_b_1()
-                    .border_color(border)
+                    .py_1()
                     .child(
                         div()
                             .id(SharedString::from(format!(
@@ -235,55 +236,89 @@ impl Render for HomeTab {
                                 state_id(service.state)
                             )))
                             .test_support()
-                            .size(tokens::status_dot())
-                            .rounded_full()
-                            .bg(state_color(service.state, cx)),
+                            .child(state_tag(service.state).child(state_label(service))),
                     )
+                    .child(div().flex_1().child(Label::new(service.name.clone())))
+                    .child(div().text_sm().text_color(muted).child(restarts))
                     .child(
-                        div()
-                            .flex_1()
-                            .child(SharedString::from(service.name.clone())),
+                        Button::new(SharedString::from(format!("logs-{}", service.name)))
+                            .ghost()
+                            .small()
+                            .label("Logs")
+                            .accessibility_label(format!("Logs for {}", service.name))
+                            .on_click(
+                                cx.listener(move |tab, _, _, cx| tab.show_logs(name.clone(), cx)),
+                            ),
                     )
-                    .child(div().text_color(muted).child(restarts))
-                    .child(div().text_color(muted).child(state_label(service)))
             })
             .collect();
 
-        v_flex()
+        let connecting = aggregate.is_none();
+        let mut headline = h_flex()
+            .id(SharedString::from(headline_id))
+            .test_support()
+            .gap_2()
+            .text_color(muted);
+        if connecting && self.problem().is_none() {
+            headline = headline.child(Spinner::new().small());
+        }
+        let page = v_flex()
             .id("home")
             .size_full()
             .p_6()
             .gap_4()
-            .child(
-                div()
-                    .id(SharedString::from(headline_id))
-                    .test_support()
-                    .text_lg()
-                    .child(headline(&self.live)),
-            )
+            .overflow_y_scroll()
+            .child(Label::new("Home").text_xl().font_semibold())
+            .child(headline.child(headline_text(&self.live, self.problem().is_some())))
             .children(self.notice.clone().map(|notice| {
-                div()
-                    .id("home-notice")
-                    .test_support()
-                    .text_color(cx.theme().warning)
-                    .child(SharedString::from(notice))
+                alert(
+                    "home-notice",
+                    Alert::warning("home-notice-alert", notice)
+                        .title("Move Isonomic to Applications"),
+                )
             }))
             .children(self.problem().map(|problem| {
-                div()
-                    .id("engine-problem")
-                    .test_support()
-                    .text_color(cx.theme().danger)
-                    .child(SharedString::from(problem.to_string()))
+                alert(
+                    "engine-problem",
+                    Alert::error("engine-problem-alert", problem.to_string())
+                        .title("The engine isn't running"),
+                )
             }))
             .children(schema_warning(&self.live).map(|warning| {
-                div()
-                    .id("schema-unreadable")
-                    .test_support()
-                    .text_color(cx.theme().danger)
-                    .child(SharedString::from(warning))
-            }))
-            .child(v_flex().id("services").children(rows))
+                alert(
+                    "schema-unreadable",
+                    Alert::warning("schema-unreadable-alert", warning).title("Update Isonomic"),
+                )
+            }));
+        if rows.is_empty() {
+            return page;
+        }
+        page.child(
+            GroupBox::new()
+                .id("services")
+                .title(Label::new("Services").font_semibold())
+                .child(v_flex().gap_1().children(rows)),
+        )
     }
+}
+
+/// The line under Home's title. While the engine can't be reached and the
+/// link knows why, the reason (in the alert below) takes over.
+fn headline_text(live: &Live, problem: bool) -> &'static str {
+    if live.system.is_none() && problem {
+        return "Not connected";
+    }
+    headline(live)
+}
+
+fn state_tag(state: ServiceState) -> Tag {
+    match state {
+        ServiceState::Healthy => Tag::success(),
+        ServiceState::Starting => Tag::warning(),
+        ServiceState::Degraded => Tag::danger(),
+        ServiceState::Stopped => Tag::secondary(),
+    }
+    .small()
 }
 
 #[cfg(test)]

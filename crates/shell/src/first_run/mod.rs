@@ -19,14 +19,7 @@ use futures::StreamExt as _;
 use isonomic_client::Client;
 use isonomic_proto::models::{DownloadOutcome, DownloadProgress, Recommendation};
 use isonomic_proto::HardwareProfile;
-use ui::base::{h_flex, v_flex};
-use ui::component::button::{Button, ButtonVariants as _};
-use ui::component::theme::ActiveTheme as _;
-use ui::component::Disableable as _;
-use ui::{
-    div, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement,
-    ParentElement as _, Render, SharedString, Styled as _, TestSupportExt as _, Window,
-};
+use ui::{AppContext as _, Context, EventEmitter};
 
 /// V1 runs local models only, and needs this much memory in the machine.
 pub const MEMORY_FLOOR_BYTES: u64 = 16 << 30;
@@ -97,6 +90,8 @@ pub struct FirstRun {
     model: ModelStep,
     finishing: bool,
     error: Option<String>,
+    /// Where keyboard focus starts, so Tab reaches first run's buttons.
+    focus: ui::FocusHandle,
 }
 
 impl EventEmitter<Finished> for FirstRun {}
@@ -115,9 +110,15 @@ impl FirstRun {
             model: ModelStep::Waiting,
             finishing: false,
             error: None,
+            focus: cx.focus_handle(),
         };
         first_run.check_memory(cx);
         first_run
+    }
+
+    /// Where keyboard focus starts on first run.
+    pub fn focus_handle(&self) -> &ui::FocusHandle {
+        &self.focus
     }
 
     pub fn memory(&self) -> &Memory {
@@ -327,9 +328,7 @@ impl FirstRun {
                 ("model-downloading", text)
             }
             ModelStep::Installed(m) => ("model-installed", format!("{} is installed", m.model)),
-            ModelStep::Failed { error, .. } => {
-                ("model-failed", format!("Couldn't get the model: {error}"))
-            }
+            ModelStep::Failed { error, .. } => ("model-failed", error.clone()),
         };
         Some(line)
     }
@@ -367,84 +366,4 @@ fn size(bytes: u64) -> String {
     }
 }
 
-fn step(id: &'static str, text: impl Into<SharedString>) -> impl IntoElement {
-    div().id(id).test_support().child(text.into())
-}
-
-impl Render for FirstRun {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let theme = cx.theme();
-        let capsule = if self.created {
-            "Your Capsule was created on this Mac"
-        } else {
-            "Your Capsule is on this Mac"
-        };
-        let (memory_id, memory_text) = self.memory_line();
-        let ready = self.ready();
-        let mut actions = h_flex().gap_2().child(
-            Button::new("first-run-continue")
-                .primary()
-                .label(if self.finishing {
-                    "Finishing"
-                } else {
-                    "Continue"
-                })
-                .disabled(!ready || self.finishing)
-                .on_click(cx.listener(|view, _, _, cx| view.finish(cx))),
-        );
-        match &self.model {
-            ModelStep::Ready(_) => {
-                actions = actions.child(
-                    Button::new("model-download")
-                        .label("Download")
-                        .on_click(cx.listener(|view, _, _, cx| view.start_download(cx))),
-                )
-            }
-            ModelStep::Downloading { .. } => {
-                actions = actions.child(
-                    Button::new("model-cancel")
-                        .label("Cancel download")
-                        .on_click(cx.listener(|view, _, _, cx| view.cancel_download(cx))),
-                )
-            }
-            ModelStep::Failed { .. } => {
-                actions = actions.child(
-                    Button::new("model-retry")
-                        .label("Try again")
-                        .on_click(cx.listener(|view, _, _, cx| view.start_download(cx))),
-                )
-            }
-            _ => {}
-        }
-        if matches!(self.memory, Memory::Failed(_)) {
-            actions = actions.child(
-                Button::new("memory-check-again")
-                    .label("Check again")
-                    .on_click(cx.listener(|view, _, _, cx| view.check_memory(cx))),
-            );
-        }
-        let mut view = v_flex()
-            .id("first-run")
-            .test_support()
-            .size_full()
-            .p_6()
-            .gap_4()
-            .bg(theme.background)
-            .text_color(theme.foreground)
-            .child(div().text_lg().child("Welcome to Isonomic"))
-            .child(step("capsule-ready", capsule))
-            .child(step(memory_id, memory_text))
-            .children(self.model_line().map(|(id, text)| step(id, text)))
-            .child(actions);
-        if let Some(error) = &self.error {
-            view = view.child(
-                div()
-                    .id("first-run-failed")
-                    .test_support()
-                    .text_color(theme.danger)
-                    .child(SharedString::from(format!("Couldn't finish: {error}"))),
-            );
-        }
-        view
-    }
-}
+mod view;

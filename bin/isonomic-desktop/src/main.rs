@@ -24,9 +24,7 @@ use shell::downloads;
 use shell::first_run::{self, Setup};
 use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
-use ui::{
-    tokens, AppContext as _, Bounds, KeyBinding, Menu, MenuItem, WindowBounds, WindowOptions,
-};
+use ui::{AppContext as _, KeyBinding, Menu, MenuItem};
 
 ui::actions!(isonomic, [Quit, Hide]);
 
@@ -191,14 +189,7 @@ fn main() {
             MenuItem::action("Quit Isonomic", Quit),
         ])]);
 
-        let options = WindowOptions {
-            window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
-                None,
-                tokens::window_size(),
-                cx,
-            ))),
-            ..Default::default()
-        };
+        let options = lifecycle::window_options(cx);
         let live = client.live();
         let logs = client.clone();
         // Settings live in the Capsule until the engine stores them.
@@ -254,6 +245,10 @@ fn main() {
             })
         })
         .expect("failed to open the window");
+        // Keyboard focus starts on the rail (or first run).
+        let _ = window.update(cx, |_, window, cx| {
+            shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
+        });
         let link_shell = shell.clone();
         cx.spawn(async move |cx| {
             while let Some(url) = opened_links.next().await {

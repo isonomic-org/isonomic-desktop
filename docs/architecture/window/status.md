@@ -2,6 +2,36 @@
 
 Newest first.
 
+## 2026-11-16 · Version 0.9.0: final screens on Isonomic UI 2e3116b (SDK 439a069, Chat 9b58161)
+
+- **Pins:** `SDK_REF` 439a069 brings Isonomic UI 2e3116b, the components through QA, and harness ae4f1a7. `CHAT_REF` 9b58161 is on the same SDK. They move together. The workspace version is 0.9.0.
+- **Final layouts** use Isonomic UI's components as built, with no restyling and no custom widgets. They use its spacing scale, its type sizes and its theme colours, in both themes.
+  - **Rail:** a ghost icon `Button` per tab, using the manifest's icon from Isonomic UI's catalog, with the app's initial when the catalog has none. The tooltip names each button, which is also its accessible label. A `Badge` (a dot or a count) shows when an app asks for attention.
+  - **Home:**
+    - a title, then a line on the engine with a `Spinner` while connecting;
+    - an `Alert` for each of: the move-to-Applications notice, why the engine can't be reached (its own last words, from `engine.log`), and an unreadable session format;
+    - services in a `GroupBox`, each with a status `Tag` and a Logs button.
+  - **Logs:** a Home button back; for a degraded service, an `Alert` and a Retry button that shows it is loading.
+  - **First run:**
+    - a `Stepper` across Capsule, Memory and Local model, with a `GroupBox` per step;
+    - a `Progress` bar for the download, indeterminate when the size is unknown;
+    - an `Alert` when memory is below the floor;
+    - the engine's own words when a download fails, its disk-space refusal included;
+    - Continue at the foot;
+    - a readable width (`tokens::content_width`, 640 px).
+  - **Install a model:** the same parts. An app that is opening shows a `Spinner`, and one that couldn't open shows an `Alert`.
+- **Keyboard:** the window starts focus on the selected rail button, or on first run while it shows. Tab walks the rail and every button, and Enter or Space presses it. Tested: Tab then Enter opens an app; first run is finished by keyboard.
+- **Scrolling a focused control into view**, which QA couldn't cover: GPUI and Isonomic UI don't do it. With six apps in a 160 px window, the focused last button stayed at y 252, outside the rail. The rail now follows its focused button with a scroll handle. Tested, with the window's size and the rail's bounds.
+- **Title bar:** the window is titled "Isonomic" (see below). How the title bar is drawn needs a look on the Mac.
+- **One version:** `cargo xtask bundle` refuses to build when the engine's workspace version isn't the app's, so the two ship at one version.
+- **Not checked here:** how the screens look. A person needs to look once on the Mac, in light and dark.
+- Chat's manifest names the icon `message-circle`, which Isonomic UI's catalog doesn't have, so Chat's rail button shows its initial. Asked of Chat via the Worker reports.
+
+## 2026-11-16 · The window has a title
+
+- The main window opens titled "Isonomic" (`lifecycle::window_options`, used by the app). Before, it set no title, so macOS's title bar, Window menu and app switcher showed none.
+- Tested: the options the app opens with carry the title and a size. GPUI's headless window keeps no title, so the title bar itself needs a look on the Mac.
+
 ## 2026-11-16 · Apps' window requests reach the window (SDK #30)
 
 - The window implements the SDK's `WindowRequests`. Every app's `AppContext` is given the window's handler (`AppHost::with_requests`). An app calls `request` from its own code, outside the shell, so the handler only queues the request (`install::ShellRequests`). The shell serves the queue (`Shell::serve_requests`).

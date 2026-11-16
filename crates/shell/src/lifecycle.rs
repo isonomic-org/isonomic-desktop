@@ -10,11 +10,31 @@ use std::time::Duration;
 
 use futures::future::{select, Either};
 use isonomic_client::Client;
-use ui::{App, AsyncApp, Window};
+use ui::{tokens, App, AsyncApp, Bounds, TitlebarOptions, Window, WindowBounds, WindowOptions};
 
 /// How long Quit waits for the engine to finish stopping before the window
 /// exits anyway. The engine keeps stopping in order on its own after that.
 pub const QUIT_WAIT: Duration = Duration::from_secs(20);
+
+/// The window's title, as macOS shows it in the title bar, the Window menu
+/// and the app switcher.
+pub const TITLE: &str = "Isonomic";
+
+/// How the main window opens: centred at its first size, titled.
+pub fn window_options(cx: &App) -> WindowOptions {
+    WindowOptions {
+        window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
+            None,
+            tokens::window_size(),
+            cx,
+        ))),
+        titlebar: Some(TitlebarOptions {
+            title: Some(TITLE.into()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
+}
 
 /// Make the close button hide the app instead of closing the window.
 pub fn hide_on_close(window: &mut Window, cx: &mut App) {

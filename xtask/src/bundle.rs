@@ -178,6 +178,7 @@ pub fn run(options: &Options) -> Result<Built, String> {
     )?;
 
     let app = app_path();
+    same_version(&capsule)?;
     assemble(&app, &targets, &desktop, &capsule)?;
     check_minimum(&app)?;
     sign(&app)?;
@@ -204,6 +205,41 @@ fn build(repo: &Path, package: &str, target: &str, extra: &[&str]) -> Result<(),
             .env("MACOSX_DEPLOYMENT_TARGET", MINIMUM_MACOS),
         &format!("building {package} for {target}"),
     )
+}
+
+/// The workspace version a `Cargo.toml` declares under `[workspace.package]`.
+pub fn workspace_version(manifest: &str) -> Option<String> {
+    let mut in_package = false;
+    for line in manifest.lines() {
+        let line = line.trim();
+        if line.starts_with('[') {
+            in_package = line == "[workspace.package]";
+            continue;
+        }
+        if in_package {
+            if let Some(value) = line.strip_prefix("version") {
+                let value = value.trim_start().strip_prefix('=')?.trim();
+                return Some(value.trim_matches('"').to_string());
+            }
+        }
+    }
+    None
+}
+
+/// One version for the product: the engine ships at the app's version.
+fn same_version(capsule: &Path) -> Result<(), String> {
+    let text = std::fs::read_to_string(capsule.join("Cargo.toml"))
+        .map_err(|e| format!("reading the engine's Cargo.toml: {e}"))?;
+    let engine =
+        workspace_version(&text).ok_or("the engine's Cargo.toml names no workspace version")?;
+    let app = env!("CARGO_PKG_VERSION");
+    if engine != app {
+        return Err(format!(
+            "the engine is version {engine} and the app {app}: one version for the product, so move the engine to {app} first"
+        ));
+    }
+    println!("version {app}, the same for the app and the engine");
+    Ok(())
 }
 
 /// Refuse a bundle that holds a part needing a newer macOS than it declares.
@@ -380,6 +416,18 @@ pub fn is_mach_o(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_workspace_version_is_read_from_its_own_table() {
+        let manifest = "[workspace]\nmembers = []\n\n[workspace.package]\nversion = \"0.9.0\"\nedition = \"2021\"\n\n[workspace.dependencies]\nversion = \"9\"\n";
+        assert_eq!(workspace_version(manifest).as_deref(), Some("0.9.0"));
+        assert_eq!(workspace_version("[package]\nversion = \"1\""), None);
+        let ours = std::fs::read_to_string(util::desktop_root().join("Cargo.toml")).unwrap();
+        assert_eq!(
+            workspace_version(&ours).as_deref(),
+            Some(env!("CARGO_PKG_VERSION"))
+        );
+    }
 
     #[test]
     fn plist_names_the_window_and_the_isonomic_id() {
