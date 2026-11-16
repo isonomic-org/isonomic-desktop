@@ -1,7 +1,7 @@
 //! Build tasks for the window repo.
 //!
 //! ```text
-//! cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
+//! cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run] [--check-build]
 //!     Build dist/Isonomic.app: the window, the engine and PostgreSQL, as one
 //!     universal (Intel + Apple Silicon) app, ad-hoc signed. macOS only.
 //!
@@ -40,11 +40,11 @@ mod util;
 use std::process::ExitCode;
 
 const USAGE: &str = "usage:
-  cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run]
+  cargo xtask bundle [--host-only] [--example-app] [--sign-dry-run] [--check-build]
   cargo xtask report [--host-only] [--no-build]
   cargo xtask release
   cargo xtask e2e
-  cargo xtask self-check --models <dir> [--capsule <dir>] [--prompt <text>]";
+  cargo xtask self-check --models <dir> [--capsule <dir>] [--prompt <text>] [--full]";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -54,6 +54,7 @@ fn main() -> ExitCode {
             host_only: flag("--host-only"),
             example_app: flag("--example-app"),
             sign_dry_run: flag("--sign-dry-run"),
+            check_build: flag("--check-build"),
         })
         .map(|built| built.print()),
         Some("e2e") => e2e::run(),

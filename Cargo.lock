@@ -3837,10 +3837,12 @@ dependencies = [
 name = "isonomic-desktop"
 version = "0.9.0"
 dependencies = [
+ "conversation-ui",
  "desktop-ui",
  "engine-link",
  "futures",
  "hello-app",
+ "image",
  "isonomic-app",
  "isonomic-chat",
  "isonomic-client",

@@ -9,13 +9,19 @@ publish.workspace = true
 # Mount the SDK's smallest app as a tab, to see the app host by eye until
 # Chat lands. Not in a release build.
 example-app = ["dep:hello-app"]
+# The check build `cargo xtask bundle --check-build` makes for the full
+# self-check: Isonomic UI's test support (driving controls by their ids,
+# rendering the window to an image) and PNG writing. Never in a release.
+check-build = ["ui/test-support", "dep:image"]
 
 [dependencies]
 hello-app = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
 futures.workspace = true
 isonomic-app.workspace = true
 reports.workspace = true
 isonomic-chat.workspace = true
+conversation-ui.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true
 serde_json.workspace = true

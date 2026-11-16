@@ -2,6 +2,30 @@
 
 Newest first.
 
+## 2026-11-16 · `cargo xtask self-check --full`: the function pass, with screenshots
+
+- **How to run it:** `cargo xtask bundle --check-build`, then `cargo xtask self-check --models <dir> --full`. The short check stays the default. `--full` refuses a bundle that isn't the check build.
+- **The check build:** the window's `check-build` feature turns on Isonomic UI's test support, which can click a control by its id and render the window to an image, plus PNG writing. The bundle is marked `Contents/Resources/check-build`. A release never builds it (`dist` sets it off).
+- **Driven from inside the app:** through the window's own dispatch (`dispatch_keystroke`, `dispatch_action`, and clicks by id in the check build) and Chat's own entry points, never the system's mouse or keyboard. Each step prints `full NN name: PASS|FAIL (reason)`; a FAIL doesn't stop the steps after it, and any FAIL fails the run.
+- **The steps, after the prompt, stop and continue steps:**
+  - 4 Try again under turn one's reply: a second version, and the switcher reads 2 / 2, 1 / 2, 2 / 2.
+  - 5 Edit turn one's prompt: select all, type, save. Version 3 of 3, with 1 / 3 and 3 / 3 reachable.
+  - 6 The chat list: two more chats make three. Pin one, and it moves to the top. Rename one by typing, and the name holds after the list is read again. Delete one, and it's gone.
+  - 7 Search: the palette opens, "Renamed" is typed, and Return opens the renamed chat.
+  - 8 The keys, as before.
+  - 9 The relaunch, in the link run on the same Capsule: no first run, the same ID, the same chats, and the first chat's turns. The prompt run prints `state id=… chats=… chat=… turns=…`, and `xtask` hands it to the link run (`ISONOMIC_SELF_CHECK_EXPECT`).
+  - 10 The model picker on Chat's home: an installed model is picked, and the list opens by its trigger's id.
+  - 11 Isonomic › Acknowledgements: the dialog opens, and `NOTICES.txt` has a section for every program in `Resources/sidecars`.
+- **Screenshots:** `<scratch>/screens/NN-name.png`, rendered from the window's own last frame (`Window::render_to_image`), never a capture of the screen. They're taken light at the window's size, and again dark for the main screens: first run, a thread mid-answer, the status bar stopped and done, a finished thread with versions, the sidebar with a pinned chat, search, Chat's home, the model picker, Acknowledgements and a problem-report notice (a sample report kept in the scratch Capsule). `xtask` prints the folder at the end.
+- **Deviations:**
+  - Pin, rename's start and delete go through Chat's shell, not the row menu, and search's row text isn't read. Chat's sidebar rows, their menu and the palette's rows have no test ids, so these are asked of isonomic-chat.
+  - Two status bar states never come up in a passing run, failed and reconnecting, so they aren't captured.
+  - Turn 2's timing never fails the run.
+- **Tested headless:** steps 4 to 7 run the same functions against real Chat in the real shell, on the SDK's test engine, and pass. That run found two faults before the Mac would have:
+  - a new chat is first known by a provisional id;
+  - the edit field opens only once the turn can be tried again.
+  The relaunch, the picker list, Acknowledgements and the screenshots need the Mac.
+
 ## 2026-11-16 · The link run is a second launch again
 
 - **Why it's back:** with the engine's isonomic-capsule #75, approving the same app again signs nothing, so a second engine on the same scratch Capsule can open Chat.
