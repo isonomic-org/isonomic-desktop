@@ -2,6 +2,12 @@
 
 Newest first.
 
+## 2026-11-16 · Chat 292b12d: design 0.2
+
+- **`CHAT_REF`** moves to 292b12d. It brings Chat's shell and sidebar, home and composer, and thread to design 0.2 (Chat #25 to #27).
+- **Pins:** Chat pins SDK 439a069, and the window stays on 90eb83f. Both use harness ae4f1a7 and Isonomic UI 2e3116b, so one copy of each is built and `Cargo.lock` doesn't change.
+- **Keys:** Chat's search takes `cmd-k` inside its tab. The window binds only `cmd-q` and `cmd-w`, so nothing clashes.
+- **Tested:** fmt, clippy and the full suite, including the Chat tab mounted in the shell.
 ## 2026-11-16 · Acknowledgements
 
 - **Where:** the Isonomic menu's new first item, Acknowledgements, opens a dialog with the licence notices the app carries (`Contents/Resources/NOTICES.txt`, read off the foreground thread). It brings the window forward first.
