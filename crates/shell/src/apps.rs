@@ -20,7 +20,11 @@ use isonomic_app::{
 };
 use isonomic_client::{AppClient, Client};
 use tokio::sync::watch;
+use ui::base::h_flex;
+use ui::component::alert::Alert;
+use ui::component::spinner::Spinner;
 use ui::component::theme::ActiveTheme as _;
+use ui::component::Sizable as _;
 use ui::{
     div, AppContext as _, Context, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, TestSupportExt as _, Window,
@@ -238,20 +242,24 @@ impl Render for AppTab {
         match &self.state {
             AppState::Open(app) => host.child(app.view()),
             AppState::Closed | AppState::Granting => host.child(
-                div()
+                h_flex()
                     .id("app-opening")
                     .test_support()
-                    .p_6()
+                    .size_full()
+                    .justify_center()
+                    .gap_2()
                     .text_color(muted)
+                    .child(Spinner::new().small())
                     .child(format!("Opening {name}")),
             ),
             AppState::Failed(error) => host.child(
-                div()
-                    .id("app-failed")
-                    .test_support()
-                    .p_6()
-                    .text_color(cx.theme().danger)
-                    .child(format!("{name} could not open: {error}")),
+                div().id("app-failed").test_support().p_6().child(
+                    Alert::error(
+                        "app-failed-alert",
+                        format!("{error}. Open it again from the rail to retry."),
+                    )
+                    .title(format!("{name} couldn't open")),
+                ),
             ),
         }
     }

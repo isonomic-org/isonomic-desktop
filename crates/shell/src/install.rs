@@ -16,9 +16,13 @@ use isonomic_client::Client;
 use isonomic_proto::models::{DownloadOutcome, DownloadProgress};
 use ui::base::{h_flex, v_flex};
 use ui::component::button::{Button, ButtonVariants as _};
+use ui::component::group_box::GroupBox;
+use ui::component::label::Label;
+use ui::component::progress::Progress;
 use ui::component::theme::ActiveTheme as _;
+use ui::component::StyledExt as _;
 use ui::{
-    div, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement,
+    div, tokens, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, SharedString, Styled as _, TestSupportExt as _, Window,
 };
 
@@ -209,10 +213,8 @@ impl ModelInstall {
                 };
                 ("install-downloading", text)
             }
-            InstallStep::Failed(error) => (
-                "install-failed",
-                format!("Couldn't download {model}: {error}"),
-            ),
+            // The engine's own words, such as its disk-space refusal.
+            InstallStep::Failed(error) => ("install-failed", error.clone()),
         }
     }
 }
@@ -254,25 +256,38 @@ impl Render for ModelInstall {
                     .on_click(cx.listener(|view, _, _, cx| view.decline(cx))),
             );
         }
+        let mut group = GroupBox::new()
+            .id("install-model-group")
+            .title(Label::new(self.model.clone()).font_semibold())
+            .child(div().id(id).test_support().child(SharedString::from(text)));
+        if let InstallStep::Downloading { received, total } = self.step {
+            let progress = match total.filter(|total| *total > 0) {
+                Some(total) => Progress::new("install-progress")
+                    .value((received as f64 / total as f64 * 100.0) as f32),
+                None => Progress::new("install-progress").loading(true),
+            };
+            group = group.child(progress.accessibility_label("Model download"));
+        }
         v_flex()
             .id("model-install")
             .test_support()
             .size_full()
+            .items_center()
             .p_6()
-            .gap_4()
-            .child(div().text_lg().child("Install a model"))
             .child(
-                div()
-                    .id(id)
-                    .test_support()
-                    .text_color(if id == "install-failed" {
-                        cx.theme().danger
-                    } else {
-                        cx.theme().foreground
-                    })
-                    .child(SharedString::from(text)),
+                v_flex()
+                    .w_full()
+                    .max_w(tokens::content_width())
+                    .gap_4()
+                    .child(Label::new("Install a model").text_xl().font_semibold())
+                    .child(
+                        div()
+                            .text_color(cx.theme().muted_foreground)
+                            .child("It runs on this Mac and is downloaded once."),
+                    )
+                    .child(group)
+                    .child(actions.justify_end()),
             )
-            .child(actions)
     }
 }
 

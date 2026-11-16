@@ -22,6 +22,12 @@ pub mod tokens {
         size(px(1100.), px(720.))
     }
 
+    /// The widest a page of text and controls grows, so lines stay
+    /// readable on a wide window.
+    pub fn content_width() -> Pixels {
+        px(640.)
+    }
+
     /// Width of the left rail of app icons.
     pub fn rail_width() -> Pixels {
         px(56.)

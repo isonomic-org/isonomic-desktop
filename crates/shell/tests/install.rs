@@ -214,3 +214,25 @@ fn an_apps_request_shows_the_download_named_for_the_app(cx: &mut TestAppContext)
     assert_eq!(install.read_with(cx, |i, _| i.model().to_string()), MODEL);
     assert!(shown(cx, window, "install-ready"));
 }
+
+/// The engine refuses a download when the disk is too full; its message is
+/// shown as it wrote it.
+#[ui::test]
+fn the_engines_disk_space_refusal_is_shown_as_written(cx: &mut TestAppContext) {
+    use shell::install::InstallStep;
+    let refusal = "There is not enough free disk space to download Qwen3.5 2B: it needs 1.3 GB and 0.4 GB is free.";
+    let (source, senders) = source(Ok(false), 1);
+    let (window, shell, _asked) = open(cx, source);
+    cx.run_until_parked();
+    click(cx, window, "install-download");
+    senders[0].unbounded_send(Err(refusal.into())).unwrap();
+    cx.run_until_parked();
+    let install = shell
+        .read_with(cx, |s, _| s.model_install().cloned())
+        .unwrap();
+    assert_eq!(
+        install.read_with(cx, |i, _| i.step().clone()),
+        InstallStep::Failed(refusal.into())
+    );
+    assert!(shown(cx, window, "install-failed"));
+}

@@ -24,9 +24,7 @@ use shell::downloads;
 use shell::first_run::{self, Setup};
 use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
-use ui::{
-    tokens, AppContext as _, Bounds, KeyBinding, Menu, MenuItem, WindowBounds, WindowOptions,
-};
+use ui::{AppContext as _, KeyBinding, Menu, MenuItem};
 
 ui::actions!(isonomic, [Quit, Hide]);
 
@@ -247,6 +245,10 @@ fn main() {
             })
         })
         .expect("failed to open the window");
+        // Keyboard focus starts on the rail (or first run).
+        let _ = window.update(cx, |_, window, cx| {
+            shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
+        });
         let link_shell = shell.clone();
         cx.spawn(async move |cx| {
             while let Some(url) = opened_links.next().await {

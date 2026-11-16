@@ -360,3 +360,32 @@ fn an_unknown_size_shows_bytes_so_far_and_never_divides(cx: &mut TestAppContext)
     ));
     assert!(shown(cx, window, "model-downloading"));
 }
+
+#[ui::test]
+fn first_run_can_be_finished_by_keyboard(cx: &mut TestAppContext) {
+    let setup = Scripted::new(vec![Ok(MEMORY_FLOOR_BYTES)]);
+    let (window, shell) = open(cx, setup.clone());
+    cx.run_until_parked();
+    let mut visual = ui::VisualTestContext::from_window(window, cx);
+    let focus = shell.clone();
+    visual.update(|window, cx| {
+        window.activate_window();
+        window.draw(cx).clear(cx);
+        focus.update(cx, |s, cx| s.focus_rail(window, cx));
+        window.draw(cx).clear(cx);
+    });
+    // Continue is the one button once the model is installed.
+    for key in ["tab", "enter"] {
+        let keystroke = ui::Keystroke::parse(key).unwrap();
+        visual.simulate_event(ui::KeyDownEvent {
+            keystroke: keystroke.clone(),
+            is_held: false,
+            prefer_character_input: false,
+        });
+        visual.simulate_event(ui::KeyUpEvent { keystroke });
+        visual.update(|window, cx| window.draw(cx).clear(cx));
+    }
+    visual.run_until_parked();
+    assert_eq!(setup.finished.load(Ordering::SeqCst), 1);
+    assert!(shell.read_with(&visual, |s, _| s.first_run().is_none()));
+}

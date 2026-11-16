@@ -17,9 +17,11 @@ use isonomic_client::{Client, Live};
 use isonomic_proto::{ServiceState, ServiceStatus};
 use tokio::sync::watch;
 use ui::base::{h_flex, v_flex};
-use ui::component::button::Button;
+use ui::component::alert::Alert;
+use ui::component::button::{Button, ButtonVariants as _};
 use ui::component::theme::ActiveTheme as _;
 use ui::component::Disableable as _;
+use ui::component::{Icon, IconName};
 use ui::{
     div, Context, InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
     StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
@@ -243,28 +245,27 @@ impl Render for LogsView {
                 .child(SharedString::from(format!("{} logs", self.service))),
         );
         if let Some(note) = self.note() {
-            let id = if degraded {
-                "logs-degraded"
+            view = view.child(if degraded {
+                div().id("logs-degraded").test_support().child(
+                    Alert::error("logs-degraded-alert", note)
+                        .title(format!("{} stopped restarting", self.service)),
+                )
             } else {
-                "logs-note"
-            };
-            view = view.child(
                 div()
-                    .id(id)
+                    .id("logs-note")
                     .test_support()
-                    .text_color(if degraded {
-                        theme.danger
-                    } else {
-                        theme.muted_foreground
-                    })
-                    .child(SharedString::from(note)),
-            );
+                    .text_color(theme.muted_foreground)
+                    .child(SharedString::from(note))
+            });
         }
         if degraded {
             let sending = self.retry == Retry::Sending;
             let mut row = h_flex().gap_2().child(
                 Button::new("logs-retry")
+                    .primary()
+                    .icon(Icon::from(IconName::RefreshCw))
                     .label(if sending { "Retrying" } else { "Retry" })
+                    .loading(sending)
                     .disabled(sending)
                     .on_click(cx.listener(|view, _, _, cx| view.retry(cx))),
             );
