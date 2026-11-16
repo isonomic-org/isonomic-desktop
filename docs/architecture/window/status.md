@@ -10,6 +10,7 @@ Newest first.
 - The self-check prints the ID, and fails with the engine's reason when there's none.
 - Tested headless: the ID is shown with its copy button; a refused key store shows its reason, the model waits, Continue does nothing, and Try again goes on to the model. Also tested: first run finished by keyboard, which now tabs past Copy.
 - **Wired to `identity.get`** (isonomic-sdk #34, merged as 90eb83f; `SDK_REF` moves there): `first_run::identity_from` returns the `id` as the engine gives it, and an `identity_unavailable` refusal's message as written. Tested against the testkit's scripted identity (`set_id`, `refuse`, `recover`). `CHAT_REF` stays ed43f66, on the same harness (ae4f1a7) and Isonomic UI (2e3116b). Refusal texts in tests say "the key store", as the SDK's fixtures do.
+- **The problem-report notice gets the ID:** once connected, the window reads it with the same call and hands it over (`Shell::report_identity`), so the notice's checkbox appears. A refusal leaves it out.
 
 ## 2026-11-16 · Problem reports, part 2: the notice, the review and the setting
 
@@ -20,7 +21,7 @@ Newest first.
   - buttons **Show report**, **Don't send** (deletes it, then the next is asked about) and **Keep on this Mac**. Closing it any other way also keeps it. A kept report isn't asked about again in the same run.
 - **Send is not offered:** this build has no destination and no sender (part 3 is held).
 - **Show report** opens exactly the bytes that would be sent, the pretty-printed JSON with its log tail, in a second dialog over the notice. **Deviation:** the design says a sheet; a stacked dialog keeps the notice under it and returns to it with Back.
-- **Isonomic ID checkbox,** off on every notice: "Include my Isonomic ID so you can contact me about this report". Ticked, the ID is added to the bytes shown; it is never written to a kept file. It appears once the shell is given the ID (`ProblemReports::set_identity`); the first-run ID branch wires that.
+- **Isonomic ID checkbox,** off on every notice: "Include my Isonomic ID so you can contact me about this report". Ticked, the ID is added to the bytes shown; it is never written to a kept file. It appears once the shell is given the ID (`Shell::report_identity`).
 - **Setting:** "Problem reports" on Home, with Ask each time (the default), Send automatically and Never send, kept in the Capsule's `settings/reports.json` with the destination, which is unset.
   - **Never send** deletes kept reports quietly at the next look.
   - **Send automatically,** with nowhere to send, keeps them and asks nothing.

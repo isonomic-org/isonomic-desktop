@@ -245,4 +245,22 @@ impl Shell {
         self.reports_due = true;
         cx.notify();
     }
+
+    /// Once `id` resolves, the notice offers to include the person's
+    /// Isonomic ID. Without one (refused, or no engine) it never does.
+    pub fn report_identity(
+        &mut self,
+        id: futures::future::BoxFuture<'static, Result<String, String>>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(reports) = self.reports.clone() else {
+            return;
+        };
+        cx.spawn(async move |_, cx| {
+            if let Ok(id) = id.await {
+                reports.update(cx, |r, cx| r.set_identity(Some(id), cx));
+            }
+        })
+        .detach();
+    }
 }
