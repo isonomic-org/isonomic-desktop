@@ -14,7 +14,8 @@ use reports::store::Store;
 use reports::watchdog::{self, Beat};
 use reports::{Build, System};
 
-/// What Home says after a safe start.
+/// Home's notice after a safe start: its title, then what it says.
+pub const SAFE_TITLE: &str = "Isonomic opened without its apps";
 pub const SAFE_NOTICE: &str = "Isonomic stopped as it started three times in a row, so it opened \
 without its apps this time. Quit and open it again to bring them back.";
 

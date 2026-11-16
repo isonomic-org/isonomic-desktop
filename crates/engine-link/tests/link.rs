@@ -147,7 +147,7 @@ fn an_engine_that_is_missing_or_dies_on_start_says_why() {
         use std::os::unix::fs::PermissionsExt as _;
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
     }
-    let log = dir.path().join("logs/engine.log");
+    let log = dir.path().join("logs/engine.stderr");
     let dies = EngineBinary {
         path: script,
         log: Some(log.clone()),
@@ -166,7 +166,7 @@ fn an_engine_that_is_missing_or_dies_on_start_says_why() {
     let said = problems.current().unwrap();
     assert!(said.contains("exit code 3"), "{said}");
     assert!(said.contains("the database would not start"), "{said}");
-    assert!(said.contains("engine.log"), "{said}");
+    assert!(said.contains("engine.stderr"), "{said}");
 
     problems.clear();
     assert_eq!(problems.current(), None);

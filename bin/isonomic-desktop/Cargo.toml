@@ -24,6 +24,7 @@ shell.workspace = true
 ui.workspace = true
 
 [dev-dependencies]
+tempfile.workspace = true
 isonomic-proto.workspace = true
 isonomic-app = { workspace = true, features = ["test-support"] }
 isonomic-chat = { workspace = true, features = ["test-support"] }

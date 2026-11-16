@@ -4,6 +4,7 @@
 
 extern crate ui as gpui;
 
+mod engine_notices;
 mod problems;
 mod self_check;
 
@@ -187,6 +188,7 @@ fn main() {
     });
     let settings: Arc<dyn SettingsStore> = Arc::new(CapsuleSettings(settings));
     // A self-check clicks through the window; no notice may cover it.
+    let notices_root = config.root.clone();
     let kept = check
         .is_none()
         .then(|| Arc::new(reports::kept::Kept::in_capsule(&config.root)));
@@ -278,7 +280,8 @@ fn main() {
                     .update(cx, |home, cx| home.follow_problems(problems, cx));
                 if translocated {
                     shell.home().update(cx, |home, cx| {
-                        home.set_notice(
+                        home.add_notice(
+                            "Move Isonomic to Applications",
                             "Move Isonomic to the Applications folder and open it from there. \
                              Until then it can't start at login."
                                 .into(),
@@ -289,7 +292,7 @@ fn main() {
                 if safe {
                     // The crash-loop guard: no app this time, and Home says why.
                     shell.home().update(cx, |home, cx| {
-                        home.set_notice(problems::SAFE_NOTICE.into(), cx)
+                        home.add_notice(problems::SAFE_TITLE, problems::SAFE_NOTICE.into(), cx)
                     });
                 } else {
                     for app in first_party() {
@@ -369,6 +372,24 @@ fn main() {
             })
             .detach();
         });
+        // What the engine said at start that the person should see.
+        let notice_shell = shell.clone();
+        let notice_client = client.clone();
+        cx.spawn(async move |cx| {
+            let mut live = notice_client.live();
+            let _ = live.wait_for(|live| live.connected).await;
+            let found = cx
+                .background_spawn(async move { engine_notices::unseen(&notices_root) })
+                .await;
+            if let Some(message) = found {
+                notice_shell.update(cx, |shell, cx| {
+                    shell.home().update(cx, |home, cx| {
+                        home.add_notice(engine_notices::SET_ASIDE_TITLE, message, cx)
+                    })
+                });
+            }
+        })
+        .detach();
         let link_shell = shell.clone();
         cx.spawn(async move |cx| {
             while let Some(url) = opened_links.next().await {

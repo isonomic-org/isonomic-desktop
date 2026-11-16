@@ -59,6 +59,19 @@ pub fn not_started(binary: &Path, error: &std::io::Error) -> String {
     }
 }
 
+/// Of the engine's standard error at `stderr` and its own `engine.log`
+/// beside it, the one written last: where its last words are. Before it
+/// accepts the Capsule it has only standard error.
+fn latest_log(stderr: &Path) -> std::path::PathBuf {
+    let own = stderr.with_file_name("engine.log");
+    let written = |p: &Path| std::fs::metadata(p).and_then(|m| m.modified()).ok();
+    match (written(stderr), written(&own)) {
+        (Some(err), Some(log)) if log > err => own,
+        (None, Some(_)) => own,
+        _ => stderr.to_path_buf(),
+    }
+}
+
 /// The problem for an engine that exited before it answered, with the last
 /// line it wrote, when there is one.
 pub fn exited(status: &std::process::ExitStatus, log: Option<&Path>) -> String {
@@ -66,6 +79,8 @@ pub fn exited(status: &std::process::ExitStatus, log: Option<&Path>) -> String {
         .code()
         .map(|code| format!("exit code {code}"))
         .unwrap_or_else(|| "stopped by a signal".into());
+    let log = log.map(latest_log);
+    let log = log.as_deref();
     let last = log
         .and_then(|log| std::fs::read_to_string(log).ok())
         .and_then(|text| {

@@ -66,8 +66,23 @@ pub struct Outcome {
     pub healthy_after: Option<Duration>,
     pub profile: Option<String>,
     pub memory_bytes: Option<u64>,
+    /// The engine's standard error: what it said before it accepted the
+    /// Capsule.
     pub engine_log: PathBuf,
     pub postgres_log: PathBuf,
+}
+
+/// The engine's last lines: its standard error at `stderr`, then its own
+/// log in the Capsule (`logs/engine.log`), where it writes once it has
+/// accepted the Capsule.
+pub fn engine_lines(stderr: &Path, capsule: &Path, count: usize) -> Vec<String> {
+    let mut lines = crate::util::tail(stderr, count);
+    lines.extend(crate::util::tail(
+        &capsule.join("logs").join("engine.log"),
+        count,
+    ));
+    let skip = lines.len().saturating_sub(count);
+    lines.split_off(skip)
 }
 
 impl Outcome {
@@ -361,7 +376,7 @@ async fn stop(session: &mut Session, capsule: &Path, outcome: &Outcome) -> Check
     if session.socket.exists() {
         problems.push("engine socket left behind".into());
     }
-    let engine_log = crate::util::tail(&session.log, 400);
+    let engine_log = engine_lines(&session.log, capsule, 400);
     let requested = engine_log
         .iter()
         .position(|l| l.contains("shutdown requested over the socket"));

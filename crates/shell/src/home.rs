@@ -35,8 +35,9 @@ pub struct HomeTab {
     logs: Option<Entity<LogsView>>,
     /// Why the engine can't be reached, from the engine link.
     problem: Option<String>,
-    /// Something the person should do, shown until the next launch.
-    notice: Option<String>,
+    /// Things the person should know or do, each with its title, shown
+    /// until the next launch.
+    notices: Vec<(SharedString, String)>,
     /// The "Problem reports" setting, once the window has its reports.
     reports: Option<Entity<ProblemReports>>,
 }
@@ -118,7 +119,7 @@ impl HomeTab {
             source,
             logs: None,
             problem: None,
-            notice: None,
+            notices: Vec::new(),
             reports: None,
         }
     }
@@ -130,10 +131,19 @@ impl HomeTab {
         cx.notify();
     }
 
-    /// Show `notice` at the top of Home, such as "move the app".
-    pub fn set_notice(&mut self, notice: String, cx: &mut Context<Self>) {
-        self.notice = Some(notice);
-        cx.notify();
+    /// Show a notice titled `title` at the top of Home, such as "move the
+    /// app". Each one is shown once, under the ones before it.
+    pub fn add_notice(
+        &mut self,
+        title: impl Into<SharedString>,
+        text: String,
+        cx: &mut Context<Self>,
+    ) {
+        let title = title.into();
+        if !self.notices.iter().any(|(t, x)| *t == title && *x == text) {
+            self.notices.push((title, text));
+            cx.notify();
+        }
     }
 
     /// Follow the engine link's problems: shown while not connected.
@@ -281,11 +291,12 @@ impl Render for HomeTab {
             .overflow_y_scroll()
             .child(Label::new("Home").text_xl().font_semibold())
             .child(headline.child(headline_text(&self.live, self.problem().is_some())))
-            .children(self.notice.clone().map(|notice| {
-                alert(
-                    "home-notice",
-                    Alert::warning("home-notice-alert", notice)
-                        .title("Move Isonomic to Applications"),
+            .children((!self.notices.is_empty()).then(|| {
+                v_flex().id("home-notice").test_support().gap_2().children(
+                    self.notices.iter().enumerate().map(|(i, (title, text))| {
+                        Alert::warning(SharedString::from(format!("home-notice-{i}")), text.clone())
+                            .title(title.clone())
+                    }),
                 )
             }))
             .children(self.problem().map(|problem| {
