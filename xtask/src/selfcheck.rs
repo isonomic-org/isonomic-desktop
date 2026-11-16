@@ -8,6 +8,12 @@
 //! as a launch argument. The model files in `--models` are copied into the
 //! scratch Capsule first. Prints each run's `[self-check]` lines and fails
 //! unless both pass.
+//!
+//! The scratch Capsule is marked `"scratch": true` in its `capsule.json`
+//! before the engine first opens it, and every run sets
+//! `ISONOMIC_KEY_STORE=memory`: the engine then keeps the Isonomic ID's keys
+//! in memory, and writes nothing to the person's keychain. A run passes
+//! only if the engine's log confirms it ([`MEMORY_NOTE`]).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -16,6 +22,11 @@ use crate::{bundle, util};
 
 const DEFAULT_PROMPT: &str = "Plan one day in Lisbon";
 const LINK: &str = "isonomic://chat/home";
+/// The engine's line when it keeps the ID's keys in memory (isonomic-capsule
+/// `identity::store_choice::MEMORY_NOTE`).
+pub const MEMORY_NOTE: &str = "keys kept in memory: scratch Capsule";
+/// The engine's own variable for its key store.
+const ENV_KEY_STORE: &str = "ISONOMIC_KEY_STORE";
 
 pub struct Options {
     pub models: PathBuf,
@@ -55,7 +66,9 @@ pub fn run(options: &Options) -> Result<(), String> {
     }
     fresh_capsule(&options.capsule, &options.models)?;
     let prompt = check(&window, &options.capsule, &options.prompt, None)?;
+    let prompt = prompt && keys_in_memory(&options.capsule, 1);
     let link = check(&window, &options.capsule, "link", Some(LINK))?;
+    let link = link && keys_in_memory(&options.capsule, 2);
     match (prompt, link) {
         (true, true) => {
             println!("self-check: PASS (prompt and link)");
@@ -77,10 +90,43 @@ fn word(passed: bool) -> &'static str {
     }
 }
 
+/// Did the engine confirm, in its log, that the `runs`th run (and every
+/// one before it) kept the ID's keys in memory? Prints the answer.
+fn keys_in_memory(capsule: &Path, runs: usize) -> bool {
+    let log = std::fs::read_to_string(capsule.join("logs").join("engine.log")).unwrap_or_default();
+    let (confirmed, refusal) = key_store_lines(&log);
+    if confirmed >= runs {
+        println!("keys: memory (scratch Capsule), nothing written to the keychain");
+        return true;
+    }
+    println!(
+        "keys: FAIL, the engine did not confirm a memory key store{}",
+        refusal.map(|r| format!(": {r}")).unwrap_or_default()
+    );
+    false
+}
+
+/// How many times the engine's log says it kept keys in memory, and its
+/// last line about the key store if it refused.
+fn key_store_lines(log: &str) -> (usize, Option<String>) {
+    let confirmed = log.lines().filter(|l| l.contains(MEMORY_NOTE)).count();
+    let refusal = log
+        .lines()
+        .rev()
+        .find(|l| l.contains(ENV_KEY_STORE))
+        .map(|l| l.trim().to_string());
+    (confirmed, refusal)
+}
+
 fn fresh_capsule(capsule: &Path, models: &Path) -> Result<(), String> {
     let _ = std::fs::remove_dir_all(capsule);
     let into = capsule.join("models");
     std::fs::create_dir_all(&into).map_err(|e| format!("creating {}: {e}", into.display()))?;
+    // Marked before the engine first opens it: only a scratch Capsule may
+    // keep its keys in memory, and the engine keeps the mark.
+    let marker = capsule.join("capsule.json");
+    std::fs::write(&marker, "{\n  \"format\": 1,\n  \"scratch\": true\n}\n")
+        .map_err(|e| format!("writing {}: {e}", marker.display()))?;
     let entries =
         std::fs::read_dir(models).map_err(|e| format!("reading {}: {e}", models.display()))?;
     for entry in entries.flatten() {
@@ -105,6 +151,7 @@ fn check(window: &Path, capsule: &Path, mode: &str, link: Option<&str>) -> Resul
     command
         .env("ISONOMIC_CAPSULE_DIR", capsule)
         .env("ISONOMIC_SELF_CHECK", mode)
+        .env(ENV_KEY_STORE, "memory")
         .stdout(std::process::Stdio::null())
         .stderr(file);
     if let Some(link) = link {
@@ -145,10 +192,23 @@ mod tests {
         std::fs::write(capsule.join("settings/setup-done"), b"").unwrap();
         fresh_capsule(&capsule, &models).unwrap();
         assert!(capsule.join("models/m.gguf").is_file());
+        let marker = std::fs::read_to_string(capsule.join("capsule.json")).unwrap();
+        let marker: serde_json::Value = serde_json::from_str(&marker).unwrap();
+        assert_eq!(marker["scratch"], true, "marked before the engine opens it");
+        assert_eq!(marker["format"], 1);
         assert!(
             !capsule.join("settings/setup-done").exists(),
             "a fresh first run"
         );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_engine_s_log_confirms_memory_or_says_why_not() {
+        let both = format!("start\n{MEMORY_NOTE}\nstop\nstart\n{MEMORY_NOTE}\n");
+        assert_eq!(key_store_lines(&both), (2, None));
+        let refused = "ISONOMIC_KEY_STORE=memory refused: this Capsule is not a scratch Capsule";
+        assert_eq!(key_store_lines(refused), (0, Some(refused.to_string())));
+        assert_eq!(key_store_lines(""), (0, None));
     }
 }
