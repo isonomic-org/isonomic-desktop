@@ -15,7 +15,9 @@
 
 use std::sync::Arc;
 
-use isonomic_app::{AppContext, Attention, LoadedApp, Registration, SearchHit, SettingsStore};
+use isonomic_app::{
+    AppContext, Attention, LoadedApp, Registration, SearchHit, SettingsStore, WindowRequests,
+};
 use isonomic_client::{AppClient, Client};
 use tokio::sync::watch;
 use ui::component::theme::ActiveTheme as _;
@@ -52,13 +54,25 @@ pub fn loaded_cap(profile: &str) -> Option<usize> {
 pub struct AppHost {
     client: Client,
     settings: Arc<dyn SettingsStore>,
+    /// Where apps' window requests go; none means every request is refused.
+    requests: Option<Arc<dyn WindowRequests>>,
 }
 
 impl AppHost {
     /// `client` is the shell's own client; apps only ever see a client
     /// scoped to their token.
     pub fn new(client: Client, settings: Arc<dyn SettingsStore>) -> Self {
-        Self { client, settings }
+        Self {
+            client,
+            settings,
+            requests: None,
+        }
+    }
+
+    /// Hand apps' requests (such as installing a model) to `requests`.
+    pub fn with_requests(mut self, requests: Arc<dyn WindowRequests>) -> Self {
+        self.requests = Some(requests);
+        self
     }
 }
 
@@ -179,7 +193,11 @@ impl AppTab {
     fn open(&mut self, client: AppClient, window: &mut Window, cx: &mut Context<Self>) {
         self.client = Some(client.clone());
         let id = self.registration.manifest().id.clone();
-        let (context, attention) = AppContext::new(&id, client, Arc::clone(&self.host.settings));
+        let (mut context, attention) =
+            AppContext::new(&id, client, Arc::clone(&self.host.settings));
+        if let Some(requests) = &self.host.requests {
+            context = context.with_window(Arc::clone(requests));
+        }
         let app = self.registration.open(context, window, cx);
         for url in std::mem::take(&mut self.pending_links) {
             app.open_link(&url, cx);

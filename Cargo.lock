@@ -1072,7 +1072,7 @@ dependencies = [
 name = "conversation-model"
 version = "0.0.1"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165)",
 ]
 
 [[package]]
@@ -3151,10 +3151,18 @@ dependencies = [
 [[package]]
 name = "harness-compact"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "harness-log",
+]
+
+[[package]]
+name = "harness-core"
+version = "0.1.0"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -3168,9 +3176,9 @@ dependencies = [
 [[package]]
 name = "harness-host"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "harness-log",
  "harness-loop",
  "harness-policy",
@@ -3182,9 +3190,9 @@ dependencies = [
 [[package]]
 name = "harness-log"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "serde",
  "serde_json",
 ]
@@ -3192,10 +3200,10 @@ dependencies = [
 [[package]]
 name = "harness-loop"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
  "harness-compact",
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "harness-log",
  "harness-policy",
  "harness-preset",
@@ -3206,17 +3214,17 @@ dependencies = [
 [[package]]
 name = "harness-policy"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
 ]
 
 [[package]]
 name = "harness-preset"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "harness-policy",
  "serde",
  "toml 0.9.12+spec-1.1.0",
@@ -3225,18 +3233,18 @@ dependencies = [
 [[package]]
 name = "harness-toolkit"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "harness-tools",
 ]
 
 [[package]]
 name = "harness-tools"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=f0612113f6dcc8e11528642137e6dd9b24f48165#f0612113f6dcc8e11528642137e6dd9b24f48165"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d#9a3809f376e5f7307727f01fad0973b64b8d9e9d"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
 ]
 
 [[package]]
@@ -3855,7 +3863,7 @@ dependencies = [
 name = "isonomic-proto"
 version = "0.0.1"
 dependencies = [
- "harness-core",
+ "harness-core 0.1.0 (git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=9a3809f376e5f7307727f01fad0973b64b8d9e9d)",
  "serde",
  "serde_json",
  "thiserror 2.0.21",

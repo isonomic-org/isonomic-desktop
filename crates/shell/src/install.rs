@@ -275,3 +275,33 @@ impl Render for ModelInstall {
             .child(actions)
     }
 }
+
+/// The window's answer to apps' requests ([`isonomic_app::WindowRequests`]).
+/// An app calls it from its own code with no access to the shell, so it
+/// queues each request for [`Shell::serve_requests`](crate::Shell::serve_requests).
+pub struct ShellRequests {
+    queue: futures::channel::mpsc::UnboundedSender<(String, isonomic_app::WindowRequest)>,
+}
+
+/// The requests' two ends: hand the first to the app host, the second to
+/// the shell once it exists.
+pub fn requests() -> (
+    Arc<ShellRequests>,
+    futures::channel::mpsc::UnboundedReceiver<(String, isonomic_app::WindowRequest)>,
+) {
+    let (queue, queued) = futures::channel::mpsc::unbounded();
+    (Arc::new(ShellRequests { queue }), queued)
+}
+
+impl isonomic_app::WindowRequests for ShellRequests {
+    fn request(&self, app: &str, request: isonomic_app::WindowRequest) -> bool {
+        match request {
+            isonomic_app::WindowRequest::InstallModel { .. } => self
+                .queue
+                .unbounded_send((app.to_string(), request))
+                .is_ok(),
+            // A kind this window does not handle yet.
+            _ => false,
+        }
+    }
+}

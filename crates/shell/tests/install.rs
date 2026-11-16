@@ -180,3 +180,37 @@ fn an_installed_model_resolves_without_showing_anything(cx: &mut TestAppContext)
     assert_eq!(asked.try_recv().unwrap(), Some(InstallOutcome::Installed));
     assert!(!shown(cx, window, "model-install"));
 }
+
+/// An app's `AppContext::request(InstallModel)` reaches the window through
+/// the SDK's trait and shows the download, named for the app.
+#[ui::test]
+fn an_apps_request_shows_the_download_named_for_the_app(cx: &mut TestAppContext) {
+    use isonomic_app::{WindowRequest, WindowRequests as _};
+    let (source, _senders) = source(Ok(false), 0);
+    let (requests, queued) = shell::install::requests();
+    let (_, live) = watch::channel(Live::default());
+    let (window, shell) = cx.update(|cx| {
+        ui::init(cx);
+        ui::open_window(WindowOptions::default(), cx, |_, cx| {
+            cx.new(|cx| {
+                let mut shell = Shell::new(live, Arc::new(NoLogs), cx);
+                shell.serve_requests(queued, source, cx);
+                shell
+            })
+        })
+        .expect("open test window")
+    });
+    let taken = requests.request(
+        "com.isonomic.chat",
+        WindowRequest::InstallModel {
+            model: MODEL.into(),
+        },
+    );
+    assert!(taken);
+    cx.run_until_parked();
+    let install = shell
+        .read_with(cx, |s, _| s.model_install().cloned())
+        .unwrap();
+    assert_eq!(install.read_with(cx, |i, _| i.model().to_string()), MODEL);
+    assert!(shown(cx, window, "install-ready"));
+}

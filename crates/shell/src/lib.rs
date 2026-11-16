@@ -182,6 +182,41 @@ impl Shell {
         answered
     }
 
+    /// Serve apps' window requests from `queued` (see [`install::requests`]).
+    /// Installing a model shows its download with the app's name; the app
+    /// learns the outcome from the engine (`models.info`).
+    pub fn serve_requests(
+        &mut self,
+        mut queued: futures::channel::mpsc::UnboundedReceiver<(
+            String,
+            isonomic_app::WindowRequest,
+        )>,
+        source: Arc<dyn ModelSource>,
+        cx: &mut Context<Self>,
+    ) {
+        use futures::StreamExt as _;
+        cx.spawn(async move |shell, cx| {
+            while let Some((app, request)) = queued.next().await {
+                let served = shell.update(cx, |shell, cx| {
+                    if let isonomic_app::WindowRequest::InstallModel { model } = request {
+                        let name = shell
+                            .tabs
+                            .iter()
+                            .find(|tab| tab.id == app)
+                            .map(|tab| tab.title.to_string())
+                            .unwrap_or(app);
+                        // The app reads the outcome from the engine, not from here.
+                        drop(shell.install_model(model, name, Arc::clone(&source), cx));
+                    }
+                });
+                if served.is_err() {
+                    break; // the shell is gone
+                }
+            }
+        })
+        .detach();
+    }
+
     /// The model install on screen, if any.
     pub fn model_install(&self) -> Option<&Entity<ModelInstall>> {
         self.install.as_ref()

@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-16 · Apps' window requests reach the window (SDK #30)
+
+- The window implements the SDK's `WindowRequests`. Every app's `AppContext` is given the window's handler (`AppHost::with_requests`). An app calls `request` from its own code, outside the shell, so the handler only queues the request (`install::ShellRequests`). The shell serves the queue (`Shell::serve_requests`).
+- `InstallModel { model }` shows that model's download, named for the app that asked (`Shell::install_model`), and answers `true`. A kind this window doesn't handle answers `false`. The app learns the outcome from the engine (`models.info`), as the SDK says.
+- Tested headless: a request through the trait shows the download with the right model.
+- Pinned with `SDK_REF` at isonomic-sdk #30's merge, which carries harness 9a3809f. `CHAT_REF` moves in the same change to a Chat commit on the same harness rev, so cargo builds one harness-core.
+
 ## 2026-11-16 · Installing a model an app asks for (window side)
 
 - `Shell::install_model(model, app, source)` shows a download view for that one model in place of the tab on screen. It returns a future that resolves to `Installed`, `Declined` (the person said not now) or `Failed` (the engine couldn't say whether the model is installed). A model that is already installed resolves at once and nothing is shown.
