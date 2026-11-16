@@ -2,7 +2,8 @@
 //! Capsule.
 //!
 //! Steps: the Capsule (created by the engine link before the window
-//! opened), the memory check against V1's floor, then the local model the
+//! opened), the memory check against V1's floor, the person's Isonomic ID
+//! (made by the engine, shown here to read and copy), then the local model the
 //! engine recommends for this machine: downloaded with progress unless it
 //! is already installed. Continue needs both the memory and the model.
 //!
@@ -40,6 +41,12 @@ pub trait Setup: Send + Sync + 'static {
 
     fn cancel_download(&self, model: &str) -> BoxFuture<'static, Result<(), String>>;
 
+    /// The person's Isonomic ID, in the form a person reads and copies:
+    /// the engine creates it on the Capsule's first start, so this asks for
+    /// it and waits. `Err` carries why it couldn't be made, in plain words
+    /// (the Mac's key store refused, say).
+    fn identity(&self) -> BoxFuture<'static, Result<String, String>>;
+
     /// Remember that first run has finished.
     fn finish(&self) -> BoxFuture<'static, Result<(), String>>;
 }
@@ -55,6 +62,17 @@ pub enum Memory {
     Checking,
     Enough(HardwareProfile),
     TooLittle(HardwareProfile),
+    Failed(String),
+}
+
+/// The Isonomic ID step.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum IdStep {
+    /// Until the memory check passes.
+    Waiting,
+    Creating,
+    /// The ID, as the person reads it.
+    Ready(String),
     Failed(String),
 }
 
@@ -87,6 +105,7 @@ pub struct FirstRun {
     setup: Arc<dyn Setup>,
     created: bool,
     memory: Memory,
+    id: IdStep,
     model: ModelStep,
     finishing: bool,
     error: Option<String>,
@@ -107,6 +126,7 @@ impl FirstRun {
             setup,
             created,
             memory: Memory::Checking,
+            id: IdStep::Waiting,
             model: ModelStep::Waiting,
             finishing: false,
             error: None,
@@ -256,12 +276,45 @@ impl FirstRun {
                     Err(error) => Memory::Failed(error),
                 };
                 if matches!(view.memory, Memory::Enough(_)) {
+                    view.create_identity(cx);
+                }
+                cx.notify();
+            });
+        })
+        .detach();
+    }
+
+    pub fn identity(&self) -> &IdStep {
+        &self.id
+    }
+
+    /// Ask the engine for the person's ID (it makes it on first start),
+    /// then go on to the model. A failure stays on this step with Try again.
+    fn create_identity(&mut self, cx: &mut Context<Self>) {
+        self.id = IdStep::Creating;
+        cx.notify();
+        let asked = self.setup.identity();
+        cx.spawn(async move |view, cx| {
+            let answer = asked.await;
+            let _ = view.update(cx, |view, cx| {
+                view.id = match answer {
+                    Ok(id) => IdStep::Ready(id),
+                    Err(error) => IdStep::Failed(error),
+                };
+                if matches!(view.id, IdStep::Ready(_)) && matches!(view.model, ModelStep::Waiting) {
                     view.choose_model(cx);
                 }
                 cx.notify();
             });
         })
         .detach();
+    }
+
+    /// Press Try again on the ID step.
+    pub fn retry_identity(&mut self, cx: &mut Context<Self>) {
+        if matches!(self.id, IdStep::Failed(_)) {
+            self.create_identity(cx);
+        }
     }
 
     /// Press Continue, as the person would: does nothing until the memory
@@ -295,7 +348,9 @@ impl FirstRun {
     }
 
     fn ready(&self) -> bool {
-        matches!(self.memory, Memory::Enough(_)) && matches!(self.model, ModelStep::Installed(_))
+        matches!(self.memory, Memory::Enough(_))
+            && matches!(self.id, IdStep::Ready(_))
+            && matches!(self.model, ModelStep::Installed(_))
     }
 
     fn model_line(&self) -> Option<(&'static str, String)> {
