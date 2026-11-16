@@ -8,8 +8,8 @@ use ui::component::radio::{Radio, RadioGroup};
 use ui::component::theme::ActiveTheme as _;
 use ui::component::StyledExt as _;
 use ui::{
-    div, App, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Styled as _,
-    TestSupportExt as _,
+    div, App, Entity, InteractiveElement as _, IntoElement, ParentElement as _, SharedString,
+    Styled as _, TestSupportExt as _,
 };
 
 use super::{ProblemReports, KEPT_HERE};
@@ -22,6 +22,10 @@ const MODES: [(Mode, &str); 3] = [
 
 pub fn row(reports: &Entity<ProblemReports>, cx: &App) -> impl IntoElement {
     let mode = reports.read(cx).mode();
+    let line: SharedString = match reports.read(cx).host() {
+        Some(host) => format!("Reports you send go to {host}.").into(),
+        None => KEPT_HERE.into(),
+    };
     let selected = MODES.iter().position(|(m, _)| *m == mode);
     let reports = reports.clone();
     let radios = MODES
@@ -47,7 +51,7 @@ pub fn row(reports: &Entity<ProblemReports>, cx: &App) -> impl IntoElement {
                     div()
                         .text_sm()
                         .text_color(cx.theme().muted_foreground)
-                        .child(KEPT_HERE),
+                        .child(line),
                 ),
         );
     div().id("report-setting").test_support().child(group)

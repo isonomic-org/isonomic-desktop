@@ -4,6 +4,11 @@ The engine side of packaging (install shapes, bundled services) is recorded in `
 
 Newest first. Changes to this repo's `cargo xtask bundle` and the app bundle go below.
 
+## 2026-11-16 · Where problem reports go is set at release
+
+- **Compiled in:** `ISONOMIC_REPORTS_URL` and `ISONOMIC_REPORTS_KEY` in the environment of `cargo xtask bundle` or `release` go into the window when it is compiled. The bundle prints "problem reports: sent to <host>, with a key" or "not sent (no ISONOMIC_REPORTS_URL); kept on the Mac". It never prints the key.
+- **The key can be read:** it is compiled into the app, so anyone with the app can extract it. It should only allow posting reports.
+
 ## 2026-11-16 · The engine's reports carry the build
 
 - **What's set:** when the bundle compiles the engine, it sets `ISONOMIC_BUILD` (the bundle's build number, the same as `CFBundleVersion` and the window's) and `ISONOMIC_ENGINE_COMMIT` (the engine checkout's full commit). The engine reads both at compile time for its problem reports.

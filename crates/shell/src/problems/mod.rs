@@ -2,10 +2,13 @@
 //! section 3): a notice for each kept report, the review of its exact
 //! bytes, and the "Problem reports" setting on Home.
 //!
-//! This build has no sender and no destination, so Send is never offered:
-//! the notice says the report is kept on this Mac and nothing leaves it.
-//! Every disk call goes through [`Kept`] on the background executor.
+//! Send is offered only when the build is configured with a destination
+//! ([`reports::send::Destination`]): then [`deliver`] posts the report's
+//! exact bytes and retries for a day. Without one, the notice says the
+//! report is kept on this Mac and nothing leaves it. Every disk call goes
+//! through [`Kept`] on the background executor.
 
+mod deliver;
 mod notice;
 mod setting;
 
@@ -20,6 +23,7 @@ use ui::{AppContext as _, Context, Entity, Window};
 
 use crate::Shell;
 
+pub use deliver::{NOT_SENT, SENT};
 pub use setting::row as setting_row;
 
 pub struct ProblemReports {
@@ -27,8 +31,15 @@ pub struct ProblemReports {
     settings: ReportSettings,
     /// The setting has been read from the Capsule, or chosen here.
     loaded: bool,
-    /// The report the notice is about.
+    /// The report the notice is about, with its id.
     current: Option<Pending>,
+    current_id: String,
+    /// Sends reports, when the build has a destination; its host.
+    sender: Option<(Arc<dyn reports::send::Sender>, String)>,
+    /// Reports being sent now: not asked about, not sent twice.
+    sending: HashSet<PathBuf>,
+    /// How the last report the person sent went: shown, and read by tests.
+    last_outcome: Option<&'static str>,
     /// Reports the person kept this session: not asked about again.
     asked: HashSet<PathBuf>,
     /// The person's Isonomic ID, once the engine has given it.
@@ -59,6 +70,10 @@ impl ProblemReports {
             settings: ReportSettings::default(),
             loaded: false,
             current: None,
+            current_id: String::new(),
+            sender: None,
+            sending: HashSet::new(),
+            last_outcome: None,
             asked: HashSet::new(),
             identity: None,
             include_id: false,
@@ -93,9 +108,14 @@ impl ProblemReports {
         self.current.as_ref()
     }
 
-    /// Send needs a destination and a sender; this build has neither.
+    /// Send is offered once the build has a destination.
     pub fn offers_send(&self) -> bool {
-        false
+        self.sender.is_some()
+    }
+
+    /// Where reports go, when they can.
+    pub fn host(&self) -> Option<&str> {
+        self.sender.as_ref().map(|(_, host)| host.as_str())
     }
 
     /// The checkbox is there only once the ID is known.
@@ -107,12 +127,14 @@ impl ProblemReports {
         self.include_id
     }
 
-    /// Exactly what would be sent for the report on screen.
+    /// Exactly what would be sent for the report on screen: with its `id`
+    /// once it can be sent, and the person's ID only when ticked.
     pub fn outgoing(&self) -> Option<String> {
-        let id = self.identity.as_deref().filter(|_| self.include_id);
+        let person = self.identity.as_deref().filter(|_| self.include_id);
+        let report_id = self.offers_send().then_some(self.current_id.as_str());
         self.current
             .as_ref()
-            .map(|report| kept::outgoing(report, id))
+            .map(|report| kept::outgoing(report, report_id, person))
     }
 
     /// Look at the kept reports and act on the setting: ask about the
@@ -126,29 +148,46 @@ impl ProblemReports {
         // Until the setting has loaded, read it here: a review at launch
         // must not ask when the person chose Never send.
         let known = self.loaded.then_some(self.settings.mode);
-        let asked = self.asked.clone();
+        let mut skip = self.asked.clone();
+        skip.extend(self.sending.iter().cloned());
+        let can_send = self.sender.is_some();
         cx.spawn_in(window, async move |this, cx| {
-            let next = cx
+            let (next, send) = cx
                 .background_spawn(async move {
                     let mode = known.unwrap_or_else(|| kept.settings().mode);
-                    let pending = kept.pending();
+                    let pending: Vec<_> = kept
+                        .pending()
+                        .into_iter()
+                        .filter(|r| !skip.contains(&r.path))
+                        .map(|r| {
+                            let id = kept.report_id(&r);
+                            (r, id)
+                        })
+                        .collect();
                     match mode {
-                        Mode::Ask => pending.into_iter().find(|r| !asked.contains(&r.path)),
-                        Mode::Always => None,
+                        Mode::Ask => (pending.into_iter().next(), Vec::new()),
+                        // With nowhere to send, they stay kept.
+                        Mode::Always if can_send => (None, pending),
+                        Mode::Always => (None, Vec::new()),
                         Mode::Never => {
-                            for report in &pending {
+                            for (report, _) in &pending {
                                 let _ = kept.discard(report);
                             }
-                            None
+                            (None, Vec::new())
                         }
                     }
                 })
                 .await;
             let _ = this.update_in(cx, |this, window, cx| {
-                if this.current.is_some() || next.is_none() {
-                    return;
+                for (report, id) in send {
+                    // Sent as kept: no person's ID without a ticked box.
+                    let body = kept::outgoing(&report, Some(&id), None);
+                    this.deliver(report, body, id, false, window, cx);
                 }
-                this.current = next;
+                let Some((report, id)) = next.filter(|_| this.current.is_none()) else {
+                    return;
+                };
+                (this.current, this.current_id) = (Some(report), id);
                 this.include_id = false;
                 notice::open(cx.entity(), window, cx);
                 cx.notify();
@@ -247,6 +286,7 @@ fn service_name(name: &str) -> String {
 pub const PURPOSE: &str = "A problem report helps fix what went wrong. It has no conversations, \
 prompts or files, and you can see exactly what it holds.";
 pub const KEPT_HERE: &str = "This report is kept on this Mac. Nothing leaves it.";
+pub const SEND_OR_KEEP: &str = "Send it to help fix this, or keep it on this Mac.";
 pub const ID_LABEL: &str = "Include my Isonomic ID so you can contact me about this report";
 
 impl Shell {

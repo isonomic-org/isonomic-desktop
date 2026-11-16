@@ -2,6 +2,31 @@
 
 Newest first.
 
+## 2026-11-16 · Problem reports, part 3: the sender (Omar agreed to sending; the host isn't chosen)
+
+- **Where:** one URL from the build's configuration. A release compiles in `ISONOMIC_REPORTS_URL`, and optionally `ISONOMIC_REPORTS_KEY`, sent as `Authorization: Bearer`. A test build may set the same names when it runs, and those win. It must be `https://`; plain `http://` goes only to this Mac's loopback. With no URL, nothing is offered and nothing is sent, as before. `settings/reports.json` no longer has a `destination`.
+- **What:** an HTTPS `POST` of exactly the bytes Show report displays: the kept document, plus its `id`, plus `isonomic_id` only when the box was ticked. Both are added outside the scrubbed fields. The id is also in `Idempotency-Key`.
+  - The id is the SHA-256 of the Capsule's id and the kept file's name: stable for one report, and not linkable across reports.
+  - It switches to the SDK's helper once format 1 carries an `id`.
+- **Behaviour:**
+  - Ask each time stays the default.
+  - Send posts once, and the person sees "Sent" or "Couldn't send; kept on this Mac".
+  - After a network error or a 5xx, the window tries again quietly: 30 s, doubling to an hour, for a day.
+  - A 4xx is never tried again.
+  - A 2xx deletes the kept file.
+  - Send automatically posts every kept report quietly, never with the person's ID.
+- **Its own runtime:** the sender runs on a one-thread runtime of its own (`reports::send::HttpSender`), not the engine link's. It uses the HTTPS client the dependency tree already built, with the system's root certificates.
+- **The setting** reads "Reports you send go to <host>." once there is a destination.
+- **The receiver's contract:** [report-receiver.md](report-receiver.md). It covers the method, the headers, the document, the answers, the 64 KiB limit, repeats by `id`, and to answer 503, not 429.
+- **Never logged:** a body. The window log gets status codes and error kinds only.
+- **Deviations:**
+  - Retries live in the running window. After a quit, an unsent report is asked about again (Ask each time) or sent again (Send automatically) at the next launch.
+  - The person sees only the first attempt's outcome; a later success is quiet.
+- **Pins:** `CHAT_REF` is f928be5 (search shows when each chat was last active), on the same SDK, 72aca92.
+- **Tested:**
+  - against a local server on the loopback: the request line, the exact body, `Content-Type`, `Authorization` and `Idempotency-Key`; 201 sent; 400 refused; 503 and no server worth retrying; an oversized body refused before sending;
+  - which URLs are allowed; the wait sequence and giving up after a day; ids stable for one report and different between reports;
+  - in the shell: Send posts what Show report shows and deletes the file; a network error, then success after the wait; a 4xx never retried; Send automatically sends quietly without the person's ID.
 ## 2026-11-16 · The rail and first run after design 0.2
 
 Reference: isonomic-chat `docs/design/v0.2/screens/app-shell.md` (the collapsed rail) and `first-run-and-system-states.md` (onboarding).

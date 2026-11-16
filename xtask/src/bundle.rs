@@ -191,6 +191,7 @@ pub fn run(options: &Options) -> Result<Built, String> {
     assemble(&app, &targets, &desktop, &capsule)?;
     check_minimum(&app)?;
     crate::sidecars::check_notices(&app)?;
+    crate::release::report_destination();
     sign(&app)?;
     if options.sign_dry_run {
         crate::release::sign_dry_run(&app);

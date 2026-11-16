@@ -200,6 +200,22 @@ pub fn sign_commands(app: &Path, identity: &str) -> Vec<String> {
     ]
 }
 
+/// Say where the window's problem reports go: the URL is compiled in from
+/// `ISONOMIC_REPORTS_URL`, the key from `ISONOMIC_REPORTS_KEY`, which is
+/// never printed.
+pub fn report_destination() {
+    let url = std::env::var("ISONOMIC_REPORTS_URL").unwrap_or_default();
+    let key = std::env::var("ISONOMIC_REPORTS_KEY").is_ok_and(|k| !k.is_empty());
+    if url.is_empty() {
+        println!("problem reports: not sent (no ISONOMIC_REPORTS_URL); kept on the Mac");
+    } else {
+        let host = url.split_once("://").map_or(&*url, |(_, r)| r);
+        let host = host.split(['/', '?', '#']).next().unwrap_or(host);
+        let key = if key { "with a key" } else { "without a key" };
+        println!("problem reports: sent to {host}, {key}");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
