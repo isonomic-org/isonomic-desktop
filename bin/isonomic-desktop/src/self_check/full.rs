@@ -10,6 +10,8 @@
 pub mod flow;
 #[cfg(test)]
 mod headless;
+#[cfg(test)]
+mod headless_stop;
 pub mod more;
 
 use std::time::{Duration, Instant};
@@ -64,6 +66,51 @@ pub fn shot(
     if let Err(why) = taken {
         say(started, &format!("screen {name}: {why}"));
     }
+}
+
+/// Each turn's reply as the thread holds it now, in one line: its length
+/// and first words. Printed beside the stopped-state screenshot, so a
+/// reply drawn short can be told from a reply held short.
+pub fn describe_turns(view: &Entity<ConversationView>, cx: &mut AsyncApp) -> String {
+    let turns: Vec<String> = cx.update(|cx| {
+        view.read(cx)
+            .thread()
+            .turns()
+            .iter()
+            .enumerate()
+            .map(|(i, t)| {
+                let reply = t.reply();
+                let start: String = reply.chars().take(40).collect();
+                format!(
+                    "turn {}: {} characters, {start:?}",
+                    i + 1,
+                    reply.chars().count()
+                )
+            })
+            .collect()
+    });
+    format!("at the stop the thread holds: {}", turns.join("; "))
+}
+
+/// A screenshot of first run in progress, in the full pass: as it first
+/// appears, or with a download running once one has started.
+pub async fn first_run_shot(
+    window: AnyWindowHandle,
+    first_run: &Entity<shell::first_run::FirstRun>,
+    name: &str,
+    started: Instant,
+    cx: &mut AsyncApp,
+) {
+    if !asked() {
+        return;
+    }
+    if name.ends_with("downloading") {
+        let _ = until_within(cx, first_run, "the download to show", UI_STEP, |run, _| {
+            matches!(run.model(), shell::first_run::ModelStep::Downloading { .. })
+        })
+        .await;
+    }
+    shot(window, name, true, started, cx);
 }
 
 pub fn press(window: AnyWindowHandle, key: &'static str, cx: &mut AsyncApp) -> Result<(), String> {
@@ -215,6 +262,16 @@ async fn new_chat(
     chat: &Entity<ChatShell>,
     cx: &mut AsyncApp,
 ) -> Result<SharedString, String> {
+    new_chat_with(window, chat, SHORT_PROMPT, cx).await
+}
+
+/// Start a chat with `prompt`, as from home, and wait for its reply.
+pub(super) async fn new_chat_with(
+    window: AnyWindowHandle,
+    chat: &Entity<ChatShell>,
+    prompt: &str,
+    cx: &mut AsyncApp,
+) -> Result<SharedString, String> {
     let before: Vec<SharedString> = cx.update(|cx| {
         chat.read(cx)
             .sessions()
@@ -226,7 +283,7 @@ async fn new_chat(
         .update(cx, |_, window, cx| {
             chat.update(cx, |s, cx| {
                 s.new_chat(window, cx);
-                s.set_draft(SHORT_PROMPT, window, cx);
+                s.set_draft(prompt, window, cx);
             });
         })
         .map_err(|e| e.to_string())?;

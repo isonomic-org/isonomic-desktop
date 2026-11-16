@@ -37,7 +37,7 @@ const WAIT: Duration = Duration::from_secs(60);
 
 /// Run GPUI and the engine until `done` holds, waking on any of `watched`'s
 /// notifications; fail after [`WAIT`].
-fn run_until<T: 'static>(
+pub(super) fn run_until<T: 'static>(
     cx: &mut TestAppContext,
     watched: &[Entity<T>],
     mut done: impl FnMut(&mut TestAppContext) -> bool,
@@ -80,8 +80,16 @@ fn run_until<T: 'static>(
     }
 }
 
-#[ui::test]
-fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
+/// Real Chat in the real shell, on the SDK's test engine, with its tab open.
+pub(super) fn mount(
+    cx: &mut TestAppContext,
+) -> (
+    tokio::runtime::Runtime,
+    TestEngine,
+    ui::AnyWindowHandle,
+    Entity<Shell>,
+    Entity<isonomic_chat::ChatShell>,
+) {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(1)
         .enable_all()
@@ -124,6 +132,12 @@ fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
         _ => None,
     });
     let chat = chat.expect("Chat's root view");
+    (runtime, engine, window, shell, chat)
+}
+
+#[ui::test]
+fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
+    let (_runtime, _engine, window, shell, chat) = mount(cx);
 
     // The prompt run's first chat: two finished turns, as after continue.
     let started = Instant::now();

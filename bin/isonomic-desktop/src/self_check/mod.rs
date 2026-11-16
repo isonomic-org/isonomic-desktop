@@ -20,6 +20,7 @@
 //! except for each step's time limit.
 
 mod full;
+mod icons;
 mod keys;
 mod link;
 #[cfg(all(test, feature = "check-build"))]
@@ -175,43 +176,6 @@ pub(super) async fn until_within<T: 'static>(
     }
 }
 
-/// The icons load: the app's asset source serves Isonomic UI's icons. Run
-/// at connect, before first run.
-fn icons_load(started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
-    use ui::assets::IconName;
-    let path = IconName::Plus.path();
-    let loaded = cx.update(|cx| cx.asset_source().load(&path));
-    match loaded {
-        Ok(Some(bytes)) if !bytes.is_empty() => {
-            say(started, &format!("icons: loaded ({path})"));
-            Ok(())
-        }
-        _ => Err(format!(
-            "icons: {path} is not in the app's assets, so no icon draws"
-        )),
-    }
-}
-
-/// The icons draw, in the check build: the rail's Home icon puts pixels
-/// on the screen. The rail is there only once first run is over, so this
-/// runs at the end of [`ready`].
-fn icons_drawn(window: AnyWindowHandle, started: Instant, cx: &mut AsyncApp) -> Result<(), String> {
-    #[cfg(feature = "check-build")]
-    {
-        let ink = cx.update(|cx| screens::ink_in(window, "rail-home", cx))?;
-        if ink == 0 {
-            return Err("icons: the rail's Home icon drew no pixels".into());
-        }
-        say(
-            started,
-            &format!("icons: the rail's Home icon drew {ink} pixels"),
-        );
-    }
-    #[cfg(not(feature = "check-build"))]
-    let _ = (window, started, cx);
-    Ok(())
-}
-
 /// Connected, and first run finished (or never shown).
 async fn ready(
     window: AnyWindowHandle,
@@ -229,13 +193,14 @@ async fn ready(
         _ = timer => return Err("the engine never answered".into()),
     }
     say(started, "engine connected");
-    icons_load(started, cx)?;
+    icons::load(started, cx)?;
 
     let Some(first_run) = cx.update(|cx| shell.read(cx).first_run().cloned()) else {
         say(started, "first run already done");
-        return icons_drawn(window, started, cx);
+        return icons::drawn(window, started, cx);
     };
     FIRST_RUN_SHOWN.store(true, Ordering::Relaxed);
+    full::first_run_shot(window, &first_run, "first-run-checking", started, cx).await;
     until(
         cx,
         &first_run,
@@ -272,6 +237,7 @@ async fn ready(
             let _ = window.update(cx, |_, _, cx| {
                 first_run.update(cx, |run, cx| run.download_now(cx))
             });
+            full::first_run_shot(window, &first_run, "first-run-downloading", started, cx).await;
             until_within(
                 cx,
                 &first_run,
@@ -313,7 +279,7 @@ async fn ready(
     })
     .await?;
     say(started, "first run done");
-    icons_drawn(window, started, cx)
+    icons::drawn(window, started, cx)
 }
 
 /// Open the app with `id` and wait until it is built.
@@ -470,6 +436,7 @@ async fn prompt_check(
     );
     if stopped_shot {
         full::shot(window, "status-stopped", true, started, cx);
+        say(started, &full::describe_turns(&view, cx));
     }
     let could = cx.update(|cx| {
         view.read(cx)

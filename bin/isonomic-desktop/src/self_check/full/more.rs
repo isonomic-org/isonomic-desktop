@@ -276,6 +276,19 @@ pub async fn acknowledgements(
     }
     shot(window, "acknowledgements", true, started, cx);
     let _ = window.update(cx, |_, window, cx| window.close_dialog(cx));
+    // Let the dialog's closing finish, so nothing after it (the
+    // problem-report notice) is drawn over it.
+    for _ in 0..50 {
+        let open = window
+            .update(cx, |_, window, cx| window.has_active_dialog(cx))
+            .unwrap_or(false);
+        if !open {
+            break;
+        }
+        cx.background_executor().timer(UI_STEP / 50).await;
+    }
+    cx.background_executor().timer(UI_STEP / 20).await;
+    let _ = window.update(cx, |_, window, _| window.refresh());
     if !missing.is_empty() {
         return Err(format!("no notice for {missing:?}"));
     }
