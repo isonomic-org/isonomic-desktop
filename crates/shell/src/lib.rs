@@ -10,6 +10,7 @@ pub mod apps;
 pub mod downloads;
 pub mod first_run;
 pub mod home;
+pub mod install;
 pub mod lifecycle;
 pub mod light;
 pub mod logs;
@@ -31,6 +32,7 @@ use ui::{
 use apps::{AppHost, AppTab};
 use first_run::{Finished, FirstRun, Setup};
 use home::HomeTab;
+use install::{InstallOutcome, ModelInstall, ModelSource};
 use logs::LogSource;
 
 /// One entry in the rail and the view it opens.
@@ -50,6 +52,8 @@ pub struct Shell {
     selected: usize,
     /// Shown in place of the tabs until it finishes.
     first_run: Option<Entity<FirstRun>>,
+    /// A model an app asked for, shown in place of the tab on screen.
+    install: Option<Entity<ModelInstall>>,
     /// How many apps stay loaded; `None` until the profile is known, and
     /// on machines with no cap.
     cap: Option<usize>,
@@ -76,6 +80,7 @@ impl Shell {
             }],
             selected: 0,
             first_run: None,
+            install: None,
             cap: None,
             recent: Vec::new(),
         }
@@ -147,6 +152,39 @@ impl Shell {
         .detach();
         self.first_run = Some(first_run);
         cx.notify();
+    }
+
+    /// An app asked for `model`: show its download in place of the tab on
+    /// screen. Resolves with how it ended. A second request while one is
+    /// showing replaces it, and the first resolves `Declined`.
+    pub fn install_model(
+        &mut self,
+        model: String,
+        app: String,
+        source: Arc<dyn ModelSource>,
+        cx: &mut Context<Self>,
+    ) -> futures::channel::oneshot::Receiver<InstallOutcome> {
+        let (answer, answered) = futures::channel::oneshot::channel();
+        let view = cx.new(|cx| ModelInstall::new(source, model, app, cx));
+        let mut answer = Some(answer);
+        cx.subscribe(&view, move |shell, view, outcome: &InstallOutcome, cx| {
+            if let Some(answer) = answer.take() {
+                let _ = answer.send(outcome.clone());
+            }
+            if shell.install.as_ref() == Some(&view) {
+                shell.install = None;
+                cx.notify();
+            }
+        })
+        .detach();
+        self.install = Some(view);
+        cx.notify();
+        answered
+    }
+
+    /// The model install on screen, if any.
+    pub fn model_install(&self) -> Option<&Entity<ModelInstall>> {
+        self.install.as_ref()
     }
 
     /// The first-run flow, while it is showing.
@@ -351,7 +389,10 @@ impl Render for Shell {
                     .flex_1()
                     .h_full()
                     .overflow_hidden()
-                    .child(self.tabs[self.selected].view.clone()),
+                    .child(match &self.install {
+                        Some(install) => install.clone().into_any_element(),
+                        None => self.tabs[self.selected].view.clone().into_any_element(),
+                    }),
             )
     }
 }
