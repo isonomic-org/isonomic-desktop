@@ -5,9 +5,12 @@
 //! with a fresh scratch Capsule, never through `open` or the URL scheme:
 //! first `ISONOMIC_SELF_CHECK=<prompt>` (first run, Chat, a turn, then stop
 //! and continue), then `ISONOMIC_SELF_CHECK=link` with `isonomic://chat/home`
-//! as a launch argument. The model files in `--models` are copied into the
-//! scratch Capsule first. Prints each run's `[self-check]` lines and fails
-//! unless both pass.
+//! as a launch argument. Each run gets its own fresh scratch Capsule, with
+//! the model files in `--models` linked or copied in: a scratch Capsule's
+//! ID keys live only as long as its engine (below), so a second engine on
+//! the same Capsule could not sign for an app. Prints each run's
+//! `[self-check]` lines, and a failed run's last engine and window log
+//! lines; fails unless both pass.
 //!
 //! The scratch Capsule is marked `"scratch": true` in its `capsule.json`
 //! before the engine first opens it, and every run sets
@@ -67,8 +70,10 @@ pub fn run(options: &Options) -> Result<(), String> {
     fresh_capsule(&options.capsule, &options.models)?;
     let prompt = check(&window, &options.capsule, &options.prompt, None)?;
     let prompt = prompt && keys_in_memory(&options.capsule, 1);
+    // A fresh Capsule again: the first engine took its keys with it.
+    fresh_capsule(&options.capsule, &options.models)?;
     let link = check(&window, &options.capsule, "link", Some(LINK))?;
-    let link = link && keys_in_memory(&options.capsule, 2);
+    let link = link && keys_in_memory(&options.capsule, 1);
     match (prompt, link) {
         (true, true) => {
             println!("self-check: PASS (prompt and link)");
@@ -90,8 +95,31 @@ fn word(passed: bool) -> &'static str {
     }
 }
 
-/// Did the engine confirm, in its log, that the `runs`th run (and every
-/// one before it) kept the ID's keys in memory? Prints the answer.
+/// How many of each log's last lines a failed run prints.
+const LAST_LINES: usize = 20;
+
+/// After a failed run: the engine's and the window's last log lines, so a
+/// failure on a Mac explains itself. Home paths print as `~`.
+fn print_last_lines(capsule: &Path) {
+    let home = std::env::var("HOME").ok().filter(|h| h.len() > 1);
+    for name in ["engine.stderr", "engine.log", "window.log"] {
+        let path = capsule.join("logs").join(name);
+        let lines = util::tail(&path, LAST_LINES);
+        if lines.is_empty() {
+            continue;
+        }
+        println!("--- last {} lines of logs/{name}", lines.len());
+        for line in lines {
+            match &home {
+                Some(home) => println!("{}", line.replace(home.as_str(), "~")),
+                None => println!("{line}"),
+            }
+        }
+    }
+}
+
+/// Did the engine confirm, in its log, that its `runs` runs on this
+/// Capsule each kept the ID's keys in memory? Prints the answer.
 fn keys_in_memory(capsule: &Path, runs: usize) -> bool {
     let log = std::fs::read_to_string(capsule.join("logs").join("engine.log")).unwrap_or_default();
     let (confirmed, refusal) = key_store_lines(&log);
@@ -133,7 +161,11 @@ fn fresh_capsule(capsule: &Path, models: &Path) -> Result<(), String> {
         let from = entry.path();
         if from.is_file() {
             let to = into.join(entry.file_name());
-            std::fs::copy(&from, &to).map_err(|e| format!("copying {}: {e}", from.display()))?;
+            // A link where the disk allows it: a model is gigabytes.
+            if std::fs::hard_link(&from, &to).is_err() {
+                std::fs::copy(&from, &to)
+                    .map_err(|e| format!("copying {}: {e}", from.display()))?;
+            }
         }
     }
     Ok(())
@@ -164,6 +196,9 @@ fn check(window: &Path, capsule: &Path, mode: &str, link: Option<&str>) -> Resul
         if line.contains("[self-check]") {
             println!("{line}");
         }
+    }
+    if !status.success() {
+        print_last_lines(capsule);
     }
     Ok(status.success())
 }

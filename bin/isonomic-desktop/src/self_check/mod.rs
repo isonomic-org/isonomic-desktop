@@ -504,10 +504,19 @@ async fn link_check(
     let tab = cx
         .update(|cx| shell.read(cx).app(&id).cloned())
         .ok_or("no tab")?;
+    // Open, or failed with the engine's reason: a failure says why at
+    // once instead of waiting out the step.
     until(cx, &tab, "the app to open", |tab, _| {
-        matches!(tab.state(), AppState::Open(_))
+        matches!(tab.state(), AppState::Open(_) | AppState::Failed(_))
     })
     .await?;
+    let failed = cx.update(|cx| match tab.read(cx).state() {
+        AppState::Failed(error) => Some(error.clone()),
+        _ => None,
+    });
+    if let Some(error) = failed {
+        return Err(format!("{id} could not open: {error}"));
+    }
     say(started, &format!("{id} on screen"));
     if id == CHAT {
         let got = cx.update(|cx| match tab.read(cx).state() {
