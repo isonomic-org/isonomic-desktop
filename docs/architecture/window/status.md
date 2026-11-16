@@ -2,6 +2,11 @@
 
 Newest first.
 
+## 2026-11-16 · SDK a6276aa and Chat 60b8fbd: the quiet composer
+
+- **Pins:** `SDK_REF` a6276aa (Isonomic UI 2b8a583) and `CHAT_REF` 60b8fbd move together. Chat's composers now focus quietly, with no blue, and are 96 high when empty. Search reads "Esc", and the four-point star sits by the greeting.
+- **The quiet focus look:** Isonomic UI offers it on the prompt composer only (`set_quiet_focus`). The window draws no composer or text input of its own; all of them are Chat's. So nothing in the window takes it.
+
 ## 2026-11-16 · Chat d413d78
 
 - **Pins:** `CHAT_REF` d413d78 (each reply keeps its own text state; deletes hold across reloads; `loads_finished()`). `SDK_REF` stays at 8f21cb6. See verification's step 13.
