@@ -134,3 +134,57 @@ fn a_draft_and_enter_start_a_chat(cx: &mut TestAppContext) {
     let route = chat_shell.read_with(cx, |s, _| s.route().clone());
     eprintln!("route after enter: {route:?}");
 }
+
+/// With no chat model installed, Chat's Install asks the window for it
+/// through the SDK's window request, and the window shows its download.
+#[ui::test]
+fn chat_asks_the_window_to_install_a_missing_model(cx: &mut TestAppContext) {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .enable_all()
+        .build()
+        .unwrap();
+    let engine = runtime.block_on(async { TestEngine::new() });
+    for model in ["chat-small", "embed-small"] {
+        engine.models().uninstall(model);
+    }
+    let client = engine.client_on(runtime.handle());
+    let (requests, queued) = shell::install::requests();
+    let host =
+        AppHost::new(client.clone(), Arc::new(MemorySettings::default())).with_requests(requests);
+    let (_, live) = watch::channel(Live::default());
+    let (window, shell) = cx.update(|cx| {
+        ui::init(cx);
+        ui::open_window(WindowOptions::default(), cx, |_, cx| {
+            cx.new(|cx| {
+                let mut shell = Shell::new(live, Arc::new(NoLogs), cx);
+                shell.serve_requests(queued, Arc::new(client), cx);
+                shell.mount(register::<isonomic_chat::Chat>(), host, cx);
+                shell
+            })
+        })
+        .expect("open test window")
+    });
+    cx.update_window(window, |_, window, cx| {
+        window.render_frame(cx);
+        window.click("rail-com.isonomic.chat", cx);
+    })
+    .unwrap();
+    let tab = shell
+        .read_with(cx, |s, _| s.app("com.isonomic.chat").cloned())
+        .unwrap();
+    wait_until(cx, &tab, |tab| matches!(tab.state(), AppState::Open(_)));
+    let chat = tab.read_with(cx, |tab, _| match tab.state() {
+        AppState::Open(app) => app.view().downcast::<isonomic_chat::Chat>().ok(),
+        _ => None,
+    });
+    let chat_shell = chat.unwrap().read_with(cx, |chat, _| chat.shell().clone());
+    // Home's "Install" button, as the person would press it.
+    let taken = chat_shell.update(cx, |s, _| s.install_model("chat-small"));
+    assert!(taken, "the window took the request");
+    wait_until(cx, &shell, |shell| shell.model_install().is_some());
+    let model = shell.read_with(cx, |s, cx| {
+        s.model_install().map(|i| i.read(cx).model().to_string())
+    });
+    assert_eq!(model.as_deref(), Some("chat-small"));
+}
