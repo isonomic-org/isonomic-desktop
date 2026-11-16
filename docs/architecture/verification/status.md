@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-11-16 · Step 13: the stopped thread's first reply is drawn whole; Chat d413d78
+
+- **The Mac's answer to screenshot 05:** at the stop the thread held turn 1 whole (1223 characters), while the screenshot drew only "Here". The model was whole; Chat's drawing was wrong.
+- **Chat d413d78** keeps each reply's own text state, so an earlier reply is drawn from its whole text. `CHAT_REF` moves to it; `SDK_REF` stays at 8f21cb6.
+- **Step 13, `stopped-thread-drawn`:** right after the second prompt is stopped, the pass draws a frame and reads the text painted inside the first reply's element. It compares its letters and digits with the reply the thread holds, and fails when fewer than three quarters are drawn. Markup draws as styling, so it is not counted. The check is taken at the stop and reported with the later steps. It needs the check build, like the other id-based steps.
+  - Only painted text counts, so a first reply scrolled out of the list's view fails with "has no drawn text". In the pass it is in view.
+  - The headless stop test runs the same check. On the SDK's test engine the old drawing fault did not show, so this check has not yet seen it fail. The Mac run is its first real test.
+- **Step 6** waits for the reload by Chat's `loads_finished()`, not by the list changing, and so does the headless reload count. Chat d413d78 also keeps a deleted chat deleted when a reload's answer lands after the delete.
+
 ## 2026-11-16 · The full pass: the stopped thread explained, the notice centred, first run in progress
 
 - **Screenshot 05 (the stopped state) showed "Here" under both prompts.**

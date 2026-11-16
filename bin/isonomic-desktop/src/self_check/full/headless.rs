@@ -179,14 +179,14 @@ fn chat_steps_pass_against_the_test_engine(cx: &mut TestAppContext) {
         ));
         // What a relaunch reads: the list from Chat's store, as in memory.
         let kept = cx.update(|cx| chat_for.read(cx).sessions().len());
-        let before = cx.update(|cx| chat_for.read(cx).sessions().as_ptr() as usize);
+        let before = cx.update(|cx| chat_for.read(cx).loads_finished());
         cx.update(|cx| chat_for.update(cx, |s, cx| s.reload(cx)));
         let reread = super::super::until_within(
             cx,
             &chat_for,
             "the list read again",
             super::UI_STEP,
-            |s, _| s.sessions().as_ptr() as usize != before,
+            |s, _| s.loads_finished() > before,
         )
         .await
         .map(|_| cx.update(|cx| chat_for.read(cx).sessions().len()));

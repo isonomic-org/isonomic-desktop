@@ -2,6 +2,10 @@
 
 Newest first.
 
+## 2026-11-16 · Chat d413d78
+
+- **Pins:** `CHAT_REF` d413d78 (each reply keeps its own text state; deletes hold across reloads; `loads_finished()`). `SDK_REF` stays at 8f21cb6. See verification's step 13.
+
 ## 2026-11-16 · The window opens at 1440 × 900 and remembers its size; the model named as Chat names it
 
 - **Opening size:** the design's 1440 × 900 (`tokens::window_size`), fitted to the screen's visible area when that is smaller. On the 13-inch Mac that's about 1440 × 875. At 1100 × 720, Chat's 720-wide column nearly filled the content area.

@@ -7,6 +7,7 @@
 //! Steps here: 4 Try again, 5 edit a prompt, 6 the chat list, 7 search.
 //! The rest are in [`more`].
 
+pub mod drawn;
 pub mod flow;
 #[cfg(test)]
 mod headless;
@@ -363,10 +364,9 @@ pub async fn chat_list(
                 .any(|x| x.id == second && x.title.as_ref() == RENAMED)
     })
     .await?;
-    // Chat replaces its whole list when a reload's answer lands, and its
-    // `is_loaded` stays true throughout: wait for the new list itself, so
-    // the answer can't land after the delete and bring the chat back.
-    let before = cx.update(|cx| chat.read(cx).sessions().as_ptr() as usize);
+    // `is_loaded` stays true after the first load: wait for this reload to
+    // finish by Chat's count of finished loads.
+    let before = cx.update(|cx| chat.read(cx).loads_finished());
     let _ = window.update(cx, |_, _, cx| chat.update(cx, |s, cx| s.reload(cx)));
     until_within(
         cx,
@@ -374,7 +374,7 @@ pub async fn chat_list(
         "the list read again with the name",
         MODEL_STEP,
         |s, _| {
-            s.sessions().as_ptr() as usize != before
+            s.loads_finished() > before
                 && s.sessions()
                     .iter()
                     .any(|x| x.id == second && x.title.as_ref() == RENAMED)
