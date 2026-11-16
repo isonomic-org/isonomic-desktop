@@ -1,5 +1,6 @@
 //! An app that panics in a call the window makes is contained: its tab
-//! says it stopped working, and the window and its other tabs go on.
+//! says it stopped working, the window and its other tabs go on, and the
+//! report the panic hook wrote is asked about straight away.
 
 extern crate ui as gpui;
 
@@ -9,10 +10,13 @@ use futures::future::BoxFuture;
 use isonomic_app::{register, App, AppContext, Capabilities, Manifest, MemorySettings};
 use isonomic_client::Live;
 use isonomic_testkit::TestEngine;
+use reports::kept::Kept;
+use reports::store::Store;
 use shell::apps::{AppHost, AppState};
 use shell::logs::LogSource;
 use shell::Shell;
 use tokio::sync::watch;
+use ui::component::WindowExt as _;
 use ui::test::TestWindowExt as _;
 use ui::{AnyView, AppContext as _, TestAppContext, Window, WindowOptions};
 
@@ -60,17 +64,28 @@ fn an_app_that_panics_while_building_is_contained(cx: &mut TestAppContext) {
         Arc::new(MemorySettings::default()),
     );
     let (_, live) = watch::channel(Live::default());
+    let capsule = tempfile::tempdir().unwrap();
+    let kept = Arc::new(Kept::in_capsule(capsule.path()));
     let (window, shell) = cx.update(|cx| {
         ui::init(cx);
         ui::open_window(WindowOptions::default(), cx, |_, cx| {
             cx.new(|cx| {
                 let mut shell = Shell::new(live, Arc::new(NoLogs), cx);
                 shell.mount(register::<Broken>(), host, cx);
+                shell.watch_reports(kept, cx);
                 shell
             })
         })
         .expect("open test window")
     });
+    cx.run_until_parked();
+    // What the panic hook writes; this test doesn't install the hook.
+    let failure = serde_json::json!({
+        "format": 1,
+        "kind": "app_failed",
+        "component": { "id": "com.isonomic.test-broken", "version": "0.1.0" },
+    });
+    Store::in_capsule(capsule.path()).save(&failure, 1).unwrap();
     cx.update_window(window, |_, window, cx| {
         window.render_frame(cx);
         window.click("rail-com.isonomic.test-broken", cx);
@@ -85,6 +100,19 @@ fn an_app_that_panics_while_building_is_contained(cx: &mut TestAppContext) {
         _ => String::new(),
     });
     assert!(failed.contains("could not build its view"), "{failed}");
+    cx.update_window(window, |_, window, cx| window.render_frame(cx))
+        .unwrap();
+    cx.run_until_parked();
+    let reports = shell.read_with(cx, |s, _| s.reports().cloned()).unwrap();
+    assert!(cx
+        .update_window(window, |_, window, cx| window.has_active_dialog(cx))
+        .unwrap());
+    assert_eq!(
+        reports.read_with(cx, |r, _| r.title()),
+        "Broken stopped working"
+    );
+    cx.update_window(window, |_, window, cx| window.close_dialog(cx))
+        .unwrap();
     // The window is still there: its rail draws and Home still opens.
     cx.update_window(window, |_, window, cx| {
         window.render_frame(cx);

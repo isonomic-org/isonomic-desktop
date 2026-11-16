@@ -28,6 +28,11 @@ pub mod tokens {
         px(640.)
     }
 
+    /// Height of the scrolling block that shows a problem report's bytes.
+    pub fn report_bytes_height() -> Pixels {
+        px(360.)
+    }
+
     /// Width of the left rail of app icons.
     pub fn rail_width() -> Pixels {
         px(56.)

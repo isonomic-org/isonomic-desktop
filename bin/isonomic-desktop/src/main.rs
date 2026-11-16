@@ -182,6 +182,10 @@ fn main() {
         std::process::exit(1);
     });
     let settings: Arc<dyn SettingsStore> = Arc::new(CapsuleSettings(settings));
+    // A self-check clicks through the window; no notice may cover it.
+    let kept = check
+        .is_none()
+        .then(|| Arc::new(reports::kept::Kept::in_capsule(&config.root)));
     let link = EngineLink::start(config, agent.clone()).unwrap_or_else(|error| {
         eprintln!("[isonomic-desktop] fatal: {error}");
         std::process::exit(1);
@@ -285,6 +289,9 @@ fn main() {
                     for app in first_party() {
                         shell.mount(app, host.clone(), cx);
                     }
+                }
+                if let Some(kept) = kept.clone() {
+                    shell.watch_reports(kept, cx);
                 }
                 let tab_context = Arc::clone(&report_context);
                 shell.on_tab_change(move |id| {
