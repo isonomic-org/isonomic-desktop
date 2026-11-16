@@ -30,6 +30,8 @@ pub fn run() -> Result<(), String> {
         host_only: false,
         example_app: false,
         sign_dry_run: true,
+        // A release is never the check build.
+        check_build: false,
     })?;
     let desktop = util::desktop_root();
     let version = env!("CARGO_PKG_VERSION");

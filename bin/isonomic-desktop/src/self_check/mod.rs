@@ -19,13 +19,17 @@
 //! It waits on notifications from the views it watches, never on a timer,
 //! except for each step's time limit.
 
+mod full;
 mod keys;
+mod link;
+pub mod screens;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use futures::{FutureExt as _, StreamExt as _};
 use isonomic_client::Client;
-use shell::apps::{link_segment, link_target, AppState};
+use shell::apps::AppState;
 use shell::first_run::{IdStep, Memory, ModelStep};
 use shell::Shell;
 use ui::{AnyWindowHandle, App, AsyncApp, Entity, Keystroke};
@@ -47,6 +51,14 @@ const STEP: Duration = Duration::from_secs(180);
 const DOWNLOAD_LIMIT: Duration = Duration::from_secs(1800);
 
 const CHAT: &str = "com.isonomic.chat";
+
+/// Whether this run showed first run: the relaunch must not.
+static FIRST_RUN_SHOWN: AtomicBool = AtomicBool::new(false);
+
+/// The scratch Capsule the check runs in.
+fn capsule() -> Option<std::path::PathBuf> {
+    std::env::var_os("ISONOMIC_CAPSULE_DIR").map(Into::into)
+}
 
 pub enum Mode {
     Prompt(String),
@@ -73,12 +85,24 @@ pub fn start(
 ) {
     let started = Instant::now();
     say(started, "window up");
+    if full::asked() {
+        match capsule() {
+            Some(capsule) if screens::available() => {
+                let dir = screens::start(&capsule);
+                say(
+                    started,
+                    &format!("full pass; screenshots in {}", dir.display()),
+                );
+            }
+            _ => say(started, &format!("full pass; {}", screens::NOT_THIS_BUILD)),
+        }
+    }
     cx.spawn(async move |cx| {
         let outcome = match mode {
             Mode::Prompt(prompt) => {
                 prompt_check(&prompt, window, &shell, &client, started, cx).await
             }
-            Mode::Link => link_check(links, window, &shell, &client, started, cx).await,
+            Mode::Link => link::check(links, window, &shell, &client, started, cx).await,
         };
         let code = match outcome {
             Ok(()) => {
@@ -137,7 +161,7 @@ pub(super) async fn until_within<T: 'static>(
         if left.is_zero() {
             return Err(format!(
                 "timed out after {}s waiting for {what}",
-                STEP.as_secs()
+                limit.as_secs()
             ));
         }
         let timer = cx.background_executor().timer(left).fuse();
@@ -171,6 +195,7 @@ async fn ready(
         say(started, "first run already done");
         return Ok(());
     };
+    FIRST_RUN_SHOWN.store(true, Ordering::Relaxed);
     until(
         cx,
         &first_run,
@@ -236,6 +261,9 @@ async fn ready(
             return Err(format!("first run: the model isn't installed ({step:?}); put it in the Capsule's models directory, or set {DOWNLOAD}=1"));
         }
         (memory, _) => return Err(format!("first run: {memory:?}")),
+    }
+    if full::asked() {
+        full::shot(window, "first-run", true, started, cx);
     }
     let _ = window.update(cx, |_, _, cx| {
         first_run.update(cx, |run, cx| run.continue_if_ready(cx))
@@ -334,6 +362,9 @@ async fn prompt_check(
     })
     .await?;
     let first = sent.elapsed();
+    if full::asked() {
+        full::shot(window, "thread-mid-answer", true, started, cx);
+    }
     until(cx, &view, "the end of the turn", |v, _| {
         v.thread()
             .turns()
@@ -378,6 +409,7 @@ async fn prompt_check(
     .await?;
     let first = sent.elapsed();
     let _ = window.update(cx, |_, _, cx| view.update(cx, |v, cx| v.stop(cx)));
+    let stopped_shot = full::asked();
     until(cx, &view, "the stop", |v, _| {
         v.thread()
             .turns()
@@ -396,6 +428,9 @@ async fn prompt_check(
         first.as_secs_f64(),
         sent.elapsed().as_secs_f64()
     );
+    if stopped_shot {
+        full::shot(window, "status-stopped", true, started, cx);
+    }
     let could = cx.update(|cx| {
         view.read(cx)
             .thread()
@@ -406,7 +441,8 @@ async fn prompt_check(
     if !could {
         // The reply finished before the stop landed: nothing to continue.
         eprintln!("[self-check] turn 2 finished before the stop; continue not exercised");
-        return Ok(());
+        return full::flow::after_prompt(window, shell, &chat_shell, &view, client, started, cx)
+            .await;
     }
     // Continue is a request: the turn changes only when the engine answers,
     // so wait for it to move on from the stop before reading it.
@@ -467,72 +503,10 @@ async fn prompt_check(
             reply.len()
         ));
     }
-    keys::check(window, &chat_shell, started, cx)
-        .await
-        .map(|_| ())
-}
-
-async fn link_check(
-    links: Vec<String>,
-    window: AnyWindowHandle,
-    shell: &Entity<Shell>,
-    client: &Client,
-    started: Instant,
-    cx: &mut AsyncApp,
-) -> Result<(), String> {
-    let link = links
-        .into_iter()
-        .next()
-        .ok_or("no isonomic:// link was given as a launch argument")?;
-    let target = link_target(&link)
-        .ok_or("not an isonomic:// link")?
-        .to_string();
-    ready(window, shell, client, started, cx).await?;
-    let handled = window
-        .update(cx, |_, window, cx| {
-            shell.update(cx, |s, cx| s.open_link(&link, window, cx))
-        })
-        .map_err(|e| e.to_string())?;
-    if !handled {
-        return Err(format!("no mounted app is named {target:?}"));
+    if full::asked() {
+        full::shot(window, "status-done", true, started, cx);
     }
-    say(started, &format!("opened {link}"));
-    let id = cx.update(|cx| shell.read(cx).selected_tab().to_string());
-    if link_segment(&id) != target {
-        return Err(format!("the tab on screen is {id}, not the link's app"));
-    }
-    let tab = cx
-        .update(|cx| shell.read(cx).app(&id).cloned())
-        .ok_or("no tab")?;
-    // Open, or failed with the engine's reason: a failure says why at
-    // once instead of waiting out the step.
-    until(cx, &tab, "the app to open", |tab, _| {
-        matches!(tab.state(), AppState::Open(_) | AppState::Failed(_))
-    })
-    .await?;
-    let failed = cx.update(|cx| match tab.read(cx).state() {
-        AppState::Failed(error) => Some(error.clone()),
-        _ => None,
-    });
-    if let Some(error) = failed {
-        return Err(format!("{id} could not open: {error}"));
-    }
-    say(started, &format!("{id} on screen"));
-    if id == CHAT {
-        let got = cx.update(|cx| match tab.read(cx).state() {
-            AppState::Open(app) => app
-                .view()
-                .downcast::<isonomic_chat::Chat>()
-                .ok()
-                .map(|chat| chat.read(cx).opened().to_vec()),
-            _ => None,
-        });
-        if !got.unwrap_or_default().contains(&link) {
-            return Err("Chat didn't receive the link".into());
-        }
-        say(started, "Chat received the link");
-    }
-    Ok(())
+    full::flow::after_prompt(window, shell, &chat_shell, &view, client, started, cx).await
 }
 
 /// The turn changed after the person pressed Continue.

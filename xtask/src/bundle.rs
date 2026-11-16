@@ -41,6 +41,9 @@ pub struct Options {
     pub example_app: bool,
     /// Print what Developer ID signing would run (or that it is skipped).
     pub sign_dry_run: bool,
+    /// The check build for `self-check --full`: Isonomic UI's test support,
+    /// marked `Contents/Resources/check-build`. Never for a release.
+    pub check_build: bool,
 }
 
 /// What `bundle` produced.
@@ -160,10 +163,11 @@ pub fn run(options: &Options) -> Result<Built, String> {
     };
 
     for target in &targets {
-        let window_features: &[&str] = if options.example_app {
-            &["--features", "example-app"]
-        } else {
-            &[]
+        let window_features: &[&str] = match (options.example_app, options.check_build) {
+            (true, true) => &["--features", "example-app,check-build"],
+            (true, false) => &["--features", "example-app"],
+            (false, true) => &["--features", "check-build"],
+            (false, false) => &[],
         };
         // A problem report names the same build as the app's Info.plist,
         // from the window and from the engine.
@@ -189,6 +193,9 @@ pub fn run(options: &Options) -> Result<Built, String> {
     let app = app_path();
     same_version(&capsule)?;
     assemble(&app, &targets, &desktop, &capsule)?;
+    if options.check_build {
+        crate::selfcheck::mark_check_build(&app)?;
+    }
     check_minimum(&app)?;
     crate::sidecars::check_notices(&app)?;
     crate::release::report_destination();

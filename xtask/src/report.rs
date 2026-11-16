@@ -82,6 +82,7 @@ fn prepare(options: &Options) -> Result<(Engine, Option<Built>), String> {
                 host_only: options.host_only,
                 example_app: false,
                 sign_dry_run: false,
+                check_build: false,
             })?
         } else {
             Built::existing(bundle::app_path())?
