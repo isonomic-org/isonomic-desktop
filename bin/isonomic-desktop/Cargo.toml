@@ -14,6 +14,7 @@ example-app = ["dep:hello-app"]
 hello-app = { workspace = true, optional = true }
 futures.workspace = true
 isonomic-app.workspace = true
+reports.workspace = true
 isonomic-chat.workspace = true
 isonomic-client.workspace = true
 isonomic-proto.workspace = true

@@ -1,0 +1,12 @@
+[package]
+name = "reports"
+description = "Problem and crash reports: what is captured, scrubbed and kept on this Mac"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

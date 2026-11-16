@@ -161,18 +161,33 @@ impl AppTab {
     pub fn open_link(&mut self, url: &str, cx: &mut Context<Self>) {
         match &self.state {
             AppState::Open(app) => {
-                app.open_link(url, cx);
+                if let Err(error) = reports::panic::contain(|| app.open_link(url, cx)) {
+                    self.stopped(error, cx);
+                }
             }
             _ => self.pending_links.push(url.to_string()),
         }
     }
 
+    /// The app panicked in a call the window made: its tab says so, the
+    /// panic hook has written an `app_failed` report, and the next open
+    /// builds it again.
+    fn stopped(&mut self, error: String, cx: &mut Context<Self>) {
+        self.state = AppState::Failed(format!("It stopped working ({error})"));
+        self.attention = Attention::None;
+        cx.notify();
+    }
+
     /// Ask the app for search hits. An app that isn't built has none.
-    pub fn search(&self, q: &str, cx: &mut Context<Self>) -> Vec<SearchHit> {
-        match &self.state {
-            AppState::Open(app) => app.search(q, cx),
-            _ => Vec::new(),
-        }
+    pub fn search(&mut self, q: &str, cx: &mut Context<Self>) -> Vec<SearchHit> {
+        let found = match &self.state {
+            AppState::Open(app) => reports::panic::contain(|| app.search(q, cx)),
+            _ => Ok(Vec::new()),
+        };
+        found.unwrap_or_else(|error| {
+            self.stopped(error, cx);
+            Vec::new()
+        })
     }
 
     /// Built, or being built: it counts against the cap.
@@ -187,7 +202,8 @@ impl AppTab {
             return;
         }
         if let AppState::Open(app) = std::mem::replace(&mut self.state, AppState::Closed) {
-            app.unload(cx);
+            // A panic while unloading is reported; the tab is closed either way.
+            let _ = reports::panic::contain(|| app.unload(cx));
         }
         // An unloaded app can't ask for attention.
         self.attention = Attention::None;
@@ -202,9 +218,15 @@ impl AppTab {
         if let Some(requests) = &self.host.requests {
             context = context.with_window(Arc::clone(requests));
         }
-        let app = self.registration.open(context, window, cx);
+        let registration = &self.registration;
+        let app = match reports::panic::contain(|| registration.open(context, window, cx)) {
+            Ok(app) => app,
+            Err(error) => return self.stopped(error, cx),
+        };
         for url in std::mem::take(&mut self.pending_links) {
-            app.open_link(&url, cx);
+            if let Err(error) = reports::panic::contain(|| app.open_link(&url, cx)) {
+                return self.stopped(error, cx);
+            }
         }
         self.state = AppState::Open(app);
         self.follow(attention, cx);

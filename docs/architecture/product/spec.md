@@ -5,7 +5,7 @@ Spec sections 2 and 3.
 ## The window
 
 - **Rail.** Home at the top, installed apps in user order, system tabs at the bottom. Icons only, labels on hover, a status dot when an app needs attention.
-- **System tabs.** Home (launcher, recents, search), Store, Activity (what each app did), Settings (Models, Connections, Backups, Identity and devices, Storage, General).
+- **System tabs.** Home (launcher, recents, search), App catalog, Activity (what each app did), Settings (Models, Connections, Backups, Identity and devices, Storage, General).
 - **Tabs keep their state.** An app is built on first open and stays alive. On small machines the hardware profile caps how many stay loaded; the least recently used is unloaded and restores from the engine when reopened.
 - **Any tab can pop out** into its own window in the same process.
 - **Menu bar icon.** Status light, open, snapshot now, AI web access toggle, quit.

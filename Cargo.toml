@@ -4,6 +4,7 @@ members = [
     "crates/ui",
     "crates/engine-link",
     "crates/shell",
+    "crates/reports",
     "bin/isonomic-desktop",
     "xtask",
 ]
@@ -17,6 +18,7 @@ publish = false
 ui = { path = "crates/ui", package = "desktop-ui" }
 engine-link = { path = "crates/engine-link" }
 shell = { path = "crates/shell" }
+reports = { path = "crates/reports" }
 # The SDK is a sibling checkout (../isonomic-sdk). CI checks it out at the
 # commit in SDK_REF.
 isonomic-client = { path = "../isonomic-sdk/crates/client" }

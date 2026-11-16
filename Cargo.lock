@@ -3846,6 +3846,7 @@ dependencies = [
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
+ "reports",
  "serde_json",
  "shell",
  "tokio",
@@ -6172,6 +6173,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
+name = "reports"
+version = "0.9.0"
+dependencies = [
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "resvg"
 version = "0.45.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6762,6 +6771,7 @@ dependencies = [
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
+ "reports",
  "tokio",
  "tray-icon",
 ]

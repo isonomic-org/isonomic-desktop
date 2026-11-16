@@ -2,6 +2,31 @@
 
 Newest first.
 
+## 2026-11-16 · Problem reports, part 1: capture (design agreed 02:56 UTC)
+
+- **New crate `reports`**, with no UI dependency:
+  - **Report:** a JSON document, format 1, of kind `panic`, `hang`, `app_failed` or `app_error`. It records the component (the window, or an app's id and version); version, build and architecture; the SDK, Chat and engine pins; macOS version, hardware profile, memory and the Capsule's format; time and uptime; the message; the backtrace; the window log's last 50 lines; and the tab on screen.
+  - **Scrubbing:** home paths become `~`, quoted text longer than 40 characters becomes `[text removed]`, and messages are cut at 300 characters. Backtraces keep function names and crate-relative places only (`shell/src/home.rs:212`).
+  - **Storage:** `reports/pending/` in the Capsule. A report is deleted on Don't send, after 30 days, or beyond 20 kept.
+  - **Window log:** `logs/window.log`, rotated at 1 MB, recording state and errors, never content.
+- **Panics:** the panic hook writes the report before the process ends. A panic inside an app's own code is blamed on the app whose crate comes first in the backtrace; the window lists its app crates at startup.
+- **Contained app failures:** the calls the window makes into an app (build, deep links, search, unload) run inside `reports::panic::contain`. A panic there is written as `app_failed`, the app's tab says it stopped working, and the window and the other tabs go on. Opening it again from the rail builds it again.
+- **Hangs:** a watchdog writes a `hang` report after 5 s with no beat from the foreground thread, and adds `stuck_secs` when it recovers. There is no backtrace, as agreed.
+- **Crash-loop guard:** each launch is counted; 30 s up or a clean Quit resets the count. After three early ends in a row, the window starts with no app mounted and Home says why. A self-check never starts safe.
+- **Pins in a report:** `bin/isonomic-desktop/build.rs` embeds `SDK_REF`, `CHAT_REF`, the engine checkout's commit and the bundle's build number.
+- **Tested:**
+  - scrubbing, with a prompt planted in a panic message, home paths and long text;
+  - store, retention and pruning;
+  - the crash-loop guard;
+  - log rotation and its tail;
+  - backtrace cleaning and blaming an app's crate;
+  - the hook writing a report, and a contained panic being `app_failed`;
+  - one hang report per hang, with its length;
+  - an app whose build panics is contained in the real shell.
+- **Not yet:** the notice, the review sheet and the setting (part 2). The sender is held: nothing leaves the Mac.
+- **Chat ed43f66:** `CHAT_REF` moves on the same SDK and harness. Chat's rail icon is now `chat` from the catalog, and a picked model carries to every new chat.
+- **Vocabulary:** "app catalog", never "app store". The four spec lines and the window's crate list are fixed.
+
 ## 2026-11-16 · Version 0.9.0: final screens on Isonomic UI 2e3116b (SDK 439a069, Chat 9b58161)
 
 - **Pins:** `SDK_REF` 439a069 brings Isonomic UI 2e3116b, the components through QA, and harness ae4f1a7. `CHAT_REF` 9b58161 is on the same SDK. They move together. The workspace version is 0.9.0.

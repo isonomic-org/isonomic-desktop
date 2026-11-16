@@ -24,7 +24,7 @@ A first-party app is a crate that exposes:
 - a constructor that receives a Capsule client scoped to its token and returns its root view
 - optional hooks: open a deep link, handle a search query, respond to unload
 
-The window links the app crates and registers them at build time. Installing an app from the Store enables it, shows its manifest, creates its schemas and issues its token.
+The window links the app crates and registers them at build time. Installing an app from the app catalog enables it, shows its manifest, creates its schemas and issues its token.
 
 ## Milestone 0 scope
 

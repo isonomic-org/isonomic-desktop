@@ -53,10 +53,15 @@ struct Tab {
     app: Option<Entity<AppTab>>,
 }
 
+/// Told the id of the tab on screen.
+type TabListener = Box<dyn Fn(&str)>;
+
 pub struct Shell {
     home: Entity<HomeTab>,
     tabs: Vec<Tab>,
     selected: usize,
+    /// Told the id of the tab on screen whenever it changes.
+    on_tab: Option<TabListener>,
     /// The rail scrolls when it holds more apps than the window is tall.
     rail_scroll: ScrollHandle,
     /// The rail button last scrolled into view because it had focus.
@@ -92,6 +97,7 @@ impl Shell {
                 app: None,
             }],
             selected: 0,
+            on_tab: None,
             rail_scroll: ScrollHandle::new(),
             rail_followed: None,
             first_run: None,
@@ -258,6 +264,12 @@ impl Shell {
         }
     }
 
+    /// Be told the id of the tab on screen when it changes, as problem
+    /// reports record it.
+    pub fn on_tab_change(&mut self, tell: impl Fn(&str) + 'static) {
+        self.on_tab = Some(Box::new(tell));
+    }
+
     /// The rail button of the tab with `id`, for following keyboard focus.
     pub fn rail_focus(&self, id: &str) -> Option<&FocusHandle> {
         Some(&self.tabs.iter().find(|tab| tab.id == id)?.focus)
@@ -362,6 +374,9 @@ impl Shell {
             return;
         }
         self.selected = index;
+        if let Some(tell) = &self.on_tab {
+            tell(&self.tabs[index].id);
+        }
         if let Some(app) = &self.tabs[index].app {
             app.update(cx, |app, cx| app.activate(window, cx));
             self.recent.retain(|&i| i != index);
