@@ -5,6 +5,7 @@
 use ui::base::{h_flex, v_flex};
 use ui::component::alert::Alert;
 use ui::component::button::{Button, ButtonVariants as _};
+use ui::component::clipboard::Clipboard;
 use ui::component::group_box::GroupBox;
 use ui::component::label::Label;
 use ui::component::progress::Progress;
@@ -17,7 +18,7 @@ use ui::{
     SharedString, StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
 };
 
-use super::{FirstRun, Memory, ModelStep};
+use super::{FirstRun, IdStep, Memory, ModelStep};
 
 /// A line tests can find by `id`.
 fn line(id: &'static str, text: impl Into<SharedString>) -> impl IntoElement {
@@ -28,9 +29,10 @@ impl FirstRun {
     /// Which step the person is on: the memory check until it passes, then
     /// the model.
     fn current_step(&self) -> usize {
-        match (&self.memory, &self.model) {
-            (Memory::Enough(_), ModelStep::Installed(_)) => 3,
-            (Memory::Enough(_), _) => 2,
+        match (&self.memory, &self.id, &self.model) {
+            (Memory::Enough(_), IdStep::Ready(_), ModelStep::Installed(_)) => 4,
+            (Memory::Enough(_), IdStep::Ready(_), _) => 3,
+            (Memory::Enough(_), _, _) => 2,
             _ => 1,
         }
     }
@@ -89,6 +91,62 @@ impl Render for FirstRun {
             _ => {}
         }
 
+        let mut id = GroupBox::new()
+            .id("first-run-id")
+            .title(Label::new("Your Isonomic ID").font_semibold())
+            .child(div().text_color(muted).child(
+                "Your ID is how your apps, and later your other devices, know it's you. \
+                 It's made on this Mac and its key stays here.",
+            ));
+        match &self.id {
+            IdStep::Waiting => {
+                id = id.child(line("id-waiting", "Made once the memory check passes."));
+            }
+            IdStep::Creating => {
+                id = id.child(
+                    h_flex()
+                        .gap_2()
+                        .child(Spinner::new().small())
+                        .child(line("id-creating", "Creating your ID")),
+                );
+            }
+            IdStep::Ready(value) => {
+                id = id.child(
+                    h_flex()
+                        .gap_2()
+                        .child(
+                            div()
+                                .id("id-ready")
+                                .test_support()
+                                .font_family(theme.mono_font_family.clone())
+                                .child(SharedString::from(value.clone())),
+                        )
+                        .child(
+                            Clipboard::new("id-copy")
+                                .value(value.clone())
+                                .tooltip("Copy your ID")
+                                .accessibility_label("Copy your Isonomic ID"),
+                        ),
+                );
+            }
+            IdStep::Failed(error) => {
+                id = id
+                    .child(
+                        div().id("id-failed").test_support().child(
+                            Alert::error("id-failed-alert", error.clone())
+                                .title("Isonomic couldn't create your ID"),
+                        ),
+                    )
+                    .child(
+                        h_flex().child(
+                            Button::new("id-retry")
+                                .label("Try again")
+                                .on_click(cx.listener(|view, _, _, cx| view.retry_identity(cx))),
+                        ),
+                    );
+            }
+        }
+
         let mut model = GroupBox::new()
             .id("first-run-model")
             .title(Label::new("Local model").font_semibold());
@@ -105,7 +163,7 @@ impl Render for FirstRun {
             model = model.child(
                 div()
                     .text_color(muted)
-                    .child("Chosen once the memory check passes."),
+                    .child("Chosen once your ID is made."),
             );
         }
         match &self.model {
@@ -157,53 +215,69 @@ impl Render for FirstRun {
                     .text_color(muted)
                     .child("A few checks before your first chat. Everything runs on this Mac."),
             )
+            .child(line("capsule-ready", capsule))
             .child(
                 Stepper::new("first-run-steps")
                     .w_full()
                     .disabled(true)
-                    .selected_index(self.current_step().min(2))
+                    .selected_index(self.current_step().min(3))
                     .items([
                         StepperItem::new().child("Capsule"),
                         StepperItem::new().child("Memory"),
+                        StepperItem::new().child("Isonomic ID"),
                         StepperItem::new().child("Local model"),
                     ]),
             )
-            .child(
-                GroupBox::new()
-                    .id("first-run-capsule")
-                    .title(Label::new("Capsule").font_semibold())
-                    .child(line("capsule-ready", capsule)),
-            )
             .child(memory)
+            .child(id)
             .child(model);
         if let Some(error) = &self.error {
             page = page.child(div().id("first-run-failed").test_support().child(
                 Alert::error("first-run-failed-alert", error.clone()).title("Couldn't finish"),
             ));
         }
-        page = page.child(
-            h_flex().justify_end().child(
-                Button::new("first-run-continue")
-                    .primary()
-                    .label(if self.finishing {
-                        "Finishing"
-                    } else {
-                        "Continue"
-                    })
-                    .disabled(!ready || self.finishing)
-                    .on_click(cx.listener(|view, _, _, cx| view.finish(cx))),
-            ),
-        );
+        let footer = h_flex()
+            .id("first-run-footer")
+            .w_full()
+            .justify_center()
+            .p_4()
+            .border_t_1()
+            .border_color(theme.border)
+            .child(
+                h_flex()
+                    .w_full()
+                    .max_w(tokens::content_width())
+                    .justify_end()
+                    .child(
+                        Button::new("first-run-continue")
+                            .primary()
+                            .label(if self.finishing {
+                                "Finishing"
+                            } else {
+                                "Continue"
+                            })
+                            .disabled(!ready || self.finishing)
+                            .on_click(cx.listener(|view, _, _, cx| view.finish(cx))),
+                    ),
+            );
+        // The steps scroll; Continue stays in view at the foot.
         v_flex()
             .id("first-run")
             .test_support()
             .track_focus(&self.focus)
             .size_full()
-            .items_center()
-            .p_6()
-            .overflow_y_scroll()
             .bg(theme.background)
             .text_color(theme.foreground)
-            .child(page)
+            .child(
+                v_flex()
+                    .id("first-run-steps-body")
+                    .flex_1()
+                    .w_full()
+                    .items_center()
+                    .p_6()
+                    .overflow_y_scroll()
+                    .child(page),
+            )
+            .child(footer)
     }
 }

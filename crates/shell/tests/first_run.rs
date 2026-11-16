@@ -21,8 +21,8 @@ use shell::Shell;
 use tokio::sync::watch;
 use ui::test::TestWindowExt as _;
 use ui::{
-    px, size, AnyWindowHandle, AppContext as _, Bounds, Entity, Point, TestAppContext,
-    WindowBounds, WindowOptions,
+    AnyWindowHandle, AppContext as _, Bounds, Entity, Point, TestAppContext, WindowBounds,
+    WindowOptions,
 };
 
 struct NoLogs;
@@ -45,6 +45,8 @@ struct Scripted {
     /// Each download plays what the test sends on its channel.
     downloads: Mutex<Vec<mpsc::UnboundedReceiver<Result<DownloadProgress, String>>>>,
     cancelled: AtomicUsize,
+    /// Each ID request takes the next answer; the last one repeats.
+    identities: Mutex<Vec<Result<String, String>>>,
 }
 
 const MODEL: &str = "chat-small";
@@ -76,9 +78,12 @@ impl Scripted {
             installed,
             downloads: Mutex::new(downloads),
             cancelled: AtomicUsize::new(0),
+            identities: Mutex::new(vec![Ok(ID.into())]),
         })
     }
 }
+
+const ID: &str = "iso1-7kq2-m9xd-4tfa";
 
 impl Setup for Scripted {
     fn profile(&self) -> BoxFuture<'static, Result<HardwareProfile, String>> {
@@ -116,6 +121,16 @@ impl Setup for Scripted {
         Box::pin(async { Ok(()) })
     }
 
+    fn identity(&self) -> BoxFuture<'static, Result<String, String>> {
+        let mut answers = self.identities.lock().unwrap();
+        let answer = if answers.len() > 1 {
+            answers.remove(0)
+        } else {
+            answers[0].clone()
+        };
+        Box::pin(async move { answer })
+    }
+
     fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
         self.finished.fetch_add(1, Ordering::SeqCst);
         Box::pin(async { Ok(()) })
@@ -129,7 +144,7 @@ fn open(cx: &mut TestAppContext, setup: Arc<dyn Setup>) -> (AnyWindowHandle, Ent
         let options = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(Bounds {
                 origin: Point::default(),
-                size: size(px(900.), px(600.)),
+                size: ui::tokens::window_size(),
             })),
             ..Default::default()
         };
@@ -374,8 +389,8 @@ fn first_run_can_be_finished_by_keyboard(cx: &mut TestAppContext) {
         focus.update(cx, |s, cx| s.focus_rail(window, cx));
         window.draw(cx).clear(cx);
     });
-    // Continue is the one button once the model is installed.
-    for key in ["tab", "enter"] {
+    // Copy the ID, then Continue: the two buttons once the model is installed.
+    for key in ["tab", "tab", "enter"] {
         let keystroke = ui::Keystroke::parse(key).unwrap();
         visual.simulate_event(ui::KeyDownEvent {
             keystroke: keystroke.clone(),
@@ -388,4 +403,65 @@ fn first_run_can_be_finished_by_keyboard(cx: &mut TestAppContext) {
     visual.run_until_parked();
     assert_eq!(setup.finished.load(Ordering::SeqCst), 1);
     assert!(shell.read_with(&visual, |s, _| s.first_run().is_none()));
+}
+
+#[ui::test]
+fn the_isonomic_id_is_shown_to_read_and_copy(cx: &mut TestAppContext) {
+    let setup = Scripted::new(vec![Ok(MEMORY_FLOOR_BYTES)]);
+    let (window, shell) = open(cx, setup);
+    cx.run_until_parked();
+    let first_run = shell.read_with(cx, |s, _| s.first_run().cloned()).unwrap();
+    assert_eq!(
+        first_run.read_with(cx, |f, _| f.identity().clone()),
+        shell::first_run::IdStep::Ready(ID.into())
+    );
+    assert!(shown(cx, window, "id-ready"));
+    assert!(shown(cx, window, "id-copy"));
+}
+
+#[ui::test]
+fn a_refused_key_store_says_why_and_can_be_tried_again(cx: &mut TestAppContext) {
+    let refused = "The key store is locked. Unlock it and try again.";
+    let setup = Scripted::new(vec![Ok(MEMORY_FLOOR_BYTES)]);
+    *setup.identities.lock().unwrap() = vec![Err(refused.into()), Ok(ID.into())];
+    let (window, shell) = open(cx, setup.clone());
+    cx.run_until_parked();
+    let first_run = shell.read_with(cx, |s, _| s.first_run().cloned()).unwrap();
+    assert_eq!(
+        first_run.read_with(cx, |f, _| f.identity().clone()),
+        shell::first_run::IdStep::Failed(refused.into())
+    );
+    assert!(shown(cx, window, "id-failed"));
+    // No ID: the model waits and Continue does nothing.
+    assert!(matches!(
+        first_run.read_with(cx, |f, _| f.model().clone()),
+        ModelStep::Waiting
+    ));
+    click(cx, window, "first-run-continue");
+    assert_eq!(setup.finished.load(Ordering::SeqCst), 0);
+
+    click(cx, window, "id-retry");
+    assert!(shown(cx, window, "id-ready"));
+    assert!(shown(cx, window, "model-installed"));
+}
+
+/// The adapter over the real client, against the testkit's identity: the
+/// ID as the engine gives it, and a refusal's words as written.
+#[test]
+fn the_client_adapter_reads_the_id_and_a_refusal() {
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let engine = runtime.block_on(async { TestEngine::new() });
+    let client = engine.client_on(runtime.handle());
+    runtime.block_on(async {
+        let id = shell::first_run::identity_from(&client).await.unwrap();
+        assert_eq!(id, isonomic_testkit::DEFAULT_IDENTITY);
+        let refused = "The key store did not let Isonomic save your ID. Unlock it and try again.";
+        engine.identity().refuse(refused);
+        assert_eq!(
+            shell::first_run::identity_from(&client).await,
+            Err(refused.to_string())
+        );
+        engine.identity().recover();
+        assert_eq!(shell::first_run::identity_from(&client).await.unwrap(), id);
+    });
 }

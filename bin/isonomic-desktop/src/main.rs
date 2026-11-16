@@ -56,6 +56,10 @@ impl Setup for FirstRunSetup {
         downloads::cancel(&self.client, model)
     }
 
+    fn identity(&self) -> BoxFuture<'static, Result<String, String>> {
+        first_run::identity_from(&self.client)
+    }
+
     fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
         let capsule = self.capsule.clone();
         Box::pin(async move { capsule.mark_set_up().map_err(|e| e.to_string()) })
@@ -292,6 +296,15 @@ fn main() {
                 }
                 if let Some(kept) = kept.clone() {
                     shell.watch_reports(kept, cx);
+                    let id_client = profile_client.clone();
+                    shell.report_identity(
+                        Box::pin(async move {
+                            let mut live = id_client.live();
+                            let _ = live.wait_for(|live| live.connected).await;
+                            shell::first_run::identity_from(&id_client).await
+                        }),
+                        cx,
+                    );
                 }
                 let tab_context = Arc::clone(&report_context);
                 shell.on_tab_change(move |id| {

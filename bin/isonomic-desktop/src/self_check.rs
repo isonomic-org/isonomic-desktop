@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use futures::{FutureExt as _, StreamExt as _};
 use isonomic_client::Client;
 use shell::apps::{link_segment, link_target, AppState};
-use shell::first_run::{Memory, ModelStep};
+use shell::first_run::{IdStep, Memory, ModelStep};
 use shell::Shell;
 use ui::{AnyWindowHandle, App, AsyncApp, Entity, Keystroke};
 
@@ -173,6 +173,7 @@ async fn ready(
             !matches!(run.memory(), Memory::Checking)
                 && !matches!(run.model(), ModelStep::Waiting | ModelStep::Choosing)
                 || matches!(run.memory(), Memory::TooLittle(_) | Memory::Failed(_))
+                || matches!(run.identity(), IdStep::Failed(_))
         },
     )
     .await?;
@@ -180,6 +181,12 @@ async fn ready(
         let run = first_run.read(cx);
         (run.memory().clone(), run.model().clone())
     });
+    let id = cx.update(|cx| first_run.read(cx).identity().clone());
+    match &id {
+        IdStep::Ready(value) => say(started, &format!("first run: Isonomic ID {value}")),
+        IdStep::Failed(error) => return Err(format!("first run: no Isonomic ID: {error}")),
+        _ => {}
+    }
     match (&memory, &model) {
         (Memory::Enough(_), ModelStep::Installed(m)) => {
             say(

@@ -39,7 +39,7 @@ fn keep_report(capsule: &std::path::Path, kind: &str, at: u128) {
 fn open(
     cx: &mut TestAppContext,
     capsule: &std::path::Path,
-) -> (AnyWindowHandle, Entity<ProblemReports>) {
+) -> (AnyWindowHandle, Entity<ProblemReports>, Entity<Shell>) {
     let (_, live) = watch::channel(Live::default());
     let kept = Arc::new(Kept::in_capsule(capsule));
     let (window, shell) = cx.update(|cx| {
@@ -55,7 +55,7 @@ fn open(
     });
     draw(cx, window);
     let reports = shell.read_with(cx, |s, _| s.reports().cloned()).unwrap();
-    (window, reports)
+    (window, reports, shell)
 }
 
 fn draw(cx: &mut TestAppContext, window: AnyWindowHandle) {
@@ -97,7 +97,7 @@ fn a_kept_crash_is_asked_about_and_dont_send_deletes_it(cx: &mut TestAppContext)
     let capsule = tempfile::tempdir().unwrap();
     keep_report(capsule.path(), "panic", 1);
     keep_report(capsule.path(), "hang", 2);
-    let (window, reports) = open(cx, capsule.path());
+    let (window, reports, _) = open(cx, capsule.path());
 
     assert!(dialog_open(cx, window));
     assert_eq!(title(cx, &reports), "Isonomic quit unexpectedly");
@@ -141,7 +141,7 @@ fn never_send_deletes_quietly_and_the_choice_is_kept(cx: &mut TestAppContext) {
     };
     settings::save(capsule.path(), &never).unwrap();
     keep_report(capsule.path(), "panic", 1);
-    let (window, reports) = open(cx, capsule.path());
+    let (window, reports, _) = open(cx, capsule.path());
     // The setting is read before the first review.
     cx.update_window(window, |_, window, cx| {
         reports.update(cx, |r, cx| r.review(window, cx))
@@ -169,8 +169,11 @@ fn never_send_deletes_quietly_and_the_choice_is_kept(cx: &mut TestAppContext) {
 fn the_isonomic_id_is_off_until_ticked(cx: &mut TestAppContext) {
     let capsule = tempfile::tempdir().unwrap();
     keep_report(capsule.path(), "panic", 1);
-    let (window, reports) = open(cx, capsule.path());
-    reports.update(cx, |r, cx| r.set_identity(Some("ISO-TEST".into()), cx));
+    let (window, reports, shell) = open(cx, capsule.path());
+    shell.update(cx, |shell, cx| {
+        shell.report_identity(Box::pin(async { Ok("ISO-TEST".to_string()) }), cx)
+    });
+    cx.run_until_parked();
     draw(cx, window);
     assert!(shown(cx, window, "report-include-id"));
     assert!(!reports.read_with(cx, |r, _| r.includes_id()));
