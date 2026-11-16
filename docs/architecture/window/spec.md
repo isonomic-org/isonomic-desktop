@@ -6,7 +6,7 @@ Spec section 6.
 crates/
   ui           the single re-export of the component library
   shell        window, rail, tab host, menu bar icon, deep links, single instance
-  home  store  activity  settings
+  home  catalog  activity  settings
   engine-link  finds, starts and reconnects to the engine
 bin/isonomic-desktop
 packaging/macos

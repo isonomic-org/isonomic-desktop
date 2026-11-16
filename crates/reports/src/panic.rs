@@ -63,6 +63,26 @@ impl Context {
     }
 }
 
+thread_local! {
+    static CONTAINED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Run a call into an app, catching its panic: the window survives, and the
+/// hook writes the report as `app_failed` rather than a crash. `Err`
+/// carries the panic's message (the report itself is scrubbed).
+pub fn contain<R>(call: impl FnOnce() -> R) -> Result<R, String> {
+    let before = CONTAINED.with(|c| c.replace(true));
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(call));
+    CONTAINED.with(|c| c.set(before));
+    outcome.map_err(|payload| {
+        payload
+            .downcast_ref::<&str>()
+            .map(|s| s.to_string())
+            .or_else(|| payload.downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "a panic with no message".into())
+    })
+}
+
 /// Install the hook. The default hook still runs after it.
 pub fn install(context: Arc<Context>) {
     let previous = std::panic::take_hook();
@@ -84,11 +104,12 @@ fn from_panic(info: &PanicHookInfo<'_>, apps: &[AppCrate]) -> Report {
         .map(|l| format!(" at {}", short_path(&format!("{}:{}", l.file(), l.line()))))
         .unwrap_or_default();
     let backtrace = frames(&std::backtrace::Backtrace::force_capture().to_string());
-    let mut report = Report::new(
-        Kind::Panic,
-        blame(&backtrace, apps),
-        format!("{message}{at}"),
-    );
+    let kind = if CONTAINED.with(|c| c.get()) {
+        Kind::AppFailed
+    } else {
+        Kind::Panic
+    };
+    let mut report = Report::new(kind, blame(&backtrace, apps), format!("{message}{at}"));
     report.backtrace = backtrace;
     report
 }
@@ -162,6 +183,9 @@ mod tests {
    3: shell::Shell::render
              at /Users/omar/Code/isonomic-desktop/crates/shell/src/lib.rs:400:5";
 
+    /// The panic hook is one per process: tests that set it take turns.
+    static HOOK: Mutex<()> = Mutex::new(());
+
     fn chat() -> Vec<AppCrate> {
         vec![AppCrate {
             prefix: "isonomic_chat".into(),
@@ -201,6 +225,7 @@ mod tests {
 
     #[test]
     fn the_hook_writes_a_report_before_the_process_ends() {
+        let _turn = HOOK.lock().unwrap_or_else(|e| e.into_inner());
         let capsule = tempfile::tempdir().unwrap();
         let context = Arc::new(Context {
             store: Store::in_capsule(capsule.path()),
@@ -225,6 +250,30 @@ mod tests {
             .starts_with("the window fell over at reports/src/panic.rs:"));
         assert_eq!(doc["tab"], "home");
         assert!(doc["backtrace"].as_array().is_some_and(|b| !b.is_empty()));
+    }
+
+    #[test]
+    fn a_contained_panic_is_an_app_failure_and_the_caller_goes_on() {
+        let _turn = HOOK.lock().unwrap_or_else(|e| e.into_inner());
+        let capsule = tempfile::tempdir().unwrap();
+        let context = Arc::new(Context {
+            store: Store::in_capsule(capsule.path()),
+            build: Build::default(),
+            system: Mutex::new(System::default()),
+            home: None,
+            apps: vec![],
+            tab: Mutex::new(None),
+            started: Instant::now(),
+        });
+        install(Arc::clone(&context));
+        let failed = contain(|| -> u32 { panic!("the app broke") });
+        let fine = contain(|| 7);
+        let _ = std::panic::take_hook();
+        assert_eq!(failed, Err("the app broke".to_string()));
+        assert_eq!(fine, Ok(7));
+        let pending = context.store.pending();
+        assert_eq!(pending.len(), 1);
+        assert_eq!(pending[0].document["kind"], "app_failed");
     }
 
     #[test]

@@ -3846,6 +3846,7 @@ dependencies = [
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
+ "reports",
  "serde_json",
  "shell",
  "tokio",
@@ -6770,6 +6771,7 @@ dependencies = [
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
+ "reports",
  "tokio",
  "tray-icon",
 ]

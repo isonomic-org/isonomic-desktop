@@ -10,11 +10,11 @@ Spec sections 13 to 15.
 | M1 Stack | Remaining services, lazy tier, profiles applied through config, RAM gate wired, logs view, start at login | All core services healthy in under 10 seconds on the Intel test machine; login leaves the engine up with no window |
 | M2 Models and Chat | Model gateway, local provider, model library, Models settings, the Chat app as the first tab | Local-only provably never leaves the machine; the toggle cuts a remote stream mid-flight |
 | M3 Keys and backups | Vault, master key, passkey wrap, recovery kit, archive, Backups settings | Wipe and restore onto a second machine from a synced folder |
-| M4 App model | Manifests, Store tab, per-app tokens and schemas, second app (Docs) | A second app cannot read the first app's data |
+| M4 App model | Manifests, App catalog tab, per-app tokens and schemas, second app (Docs) | A second app cannot read the first app's data |
 | M5 Connections | Accounts, MCP, egress gateway, Activity tab | Two accounts of one provider; per-tool rules enforced |
 | M6 Agents | Cell supervisor, Agents app | Per the Cells record |
 
-Signing, updates and the Store's on-chain checks follow M6. No milestone starts until the previous gate passes.
+Signing, updates and the app catalog's on-chain checks follow M6. No milestone starts until the previous gate passes.
 
 ## The Milestone 0 gate, on Omar's Mac
 

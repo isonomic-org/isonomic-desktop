@@ -4,6 +4,7 @@
 
 extern crate ui as gpui;
 
+mod problems;
 mod self_check;
 
 use std::sync::Arc;
@@ -78,6 +79,29 @@ impl SettingsStore for CapsuleSettings {
     }
 }
 
+/// The app crates compiled into the window, so a crash can be blamed on
+/// the app whose code it was in.
+fn app_crates() -> Vec<reports::panic::AppCrate> {
+    use isonomic_app::App as _;
+    let chat = isonomic_chat::Chat::manifest();
+    #[allow(unused_mut)]
+    let mut crates = vec![reports::panic::AppCrate {
+        prefix: reports::panic::crate_of::<isonomic_chat::Chat>(),
+        id: chat.id,
+        version: chat.version,
+    }];
+    #[cfg(feature = "example-app")]
+    {
+        let hello = hello_app::Hello::manifest();
+        crates.push(reports::panic::AppCrate {
+            prefix: reports::panic::crate_of::<hello_app::Hello>(),
+            id: hello.id,
+            version: hello.version,
+        });
+    }
+    crates
+}
+
 /// The first-party app crates compiled into the window, in rail order.
 fn first_party() -> Vec<Registration> {
     vec![
@@ -120,6 +144,15 @@ fn main() {
     // A self-check runs in a scratch Capsule: it must never install or
     // change the person's own login agent, so it runs without one.
     let check = self_check::mode();
+    // Problem reports: the window log, the panic hook, the hang watchdog
+    // and the crash-loop guard, before anything else can fail.
+    let problems = problems::start(&config.root, app_crates(), check.is_some());
+    let (report_context, beat, safe) = (
+        Arc::clone(&problems.context),
+        problems.beat.clone(),
+        problems.safe,
+    );
+    let guard = Arc::new(problems.guard);
     // Opened from the disk image or Downloads without being moved: macOS
     // runs it from a path that changes every launch, so no login agent may
     // point at it, and the person is asked to move it.
@@ -139,8 +172,8 @@ fn main() {
         .collect();
     if let Some(agent) = &agent {
         match agent.sync() {
-            Ok(change) => eprintln!("[isonomic-desktop] start at login: {change:?}"),
-            Err(error) => eprintln!("[isonomic-desktop] start at login not set up: {error}"),
+            Ok(change) => reports::log::line(&format!("start at login: {change:?}")),
+            Err(error) => reports::log::line(&format!("start at login not set up: {error}")),
         }
     }
     // Read before the event loop; later writes run on their own thread.
@@ -181,7 +214,31 @@ fn main() {
             KeyBinding::new("cmd-w", Hide, None),
         ]);
         let quit_client = client.clone();
-        cx.on_action(move |_: &Quit, cx| lifecycle::quit(quit_client.clone(), cx));
+        let quit_guard = Arc::clone(&guard);
+        cx.on_action(move |_: &Quit, cx| {
+            // A clean quit is a good launch.
+            quit_guard.survived();
+            lifecycle::quit(quit_client.clone(), cx)
+        });
+        // The watchdog's beat comes from this thread, so a stuck frame shows.
+        cx.spawn(async move |cx| loop {
+            cx.background_executor()
+                .timer(std::time::Duration::from_secs(1))
+                .await;
+            beat.beat();
+        })
+        .detach();
+        // A launch that lasts this long resets the crash-loop guard.
+        let survived = Arc::clone(&guard);
+        cx.spawn(async move |cx| {
+            cx.background_executor()
+                .timer(std::time::Duration::from_secs(
+                    reports::guard::SURVIVED_SECS,
+                ))
+                .await;
+            survived.survived();
+        })
+        .detach();
         cx.on_action(|_: &Hide, cx| cx.hide());
         cx.set_menus([Menu::new("Isonomic").items([
             MenuItem::action("Hide Isonomic", Hide),
@@ -219,17 +276,38 @@ fn main() {
                         )
                     });
                 }
-                for app in first_party() {
-                    shell.mount(app, host.clone(), cx);
+                if safe {
+                    // The crash-loop guard: no app this time, and Home says why.
+                    shell.home().update(cx, |home, cx| {
+                        home.set_notice(problems::SAFE_NOTICE.into(), cx)
+                    });
+                } else {
+                    for app in first_party() {
+                        shell.mount(app, host.clone(), cx);
+                    }
                 }
+                let tab_context = Arc::clone(&report_context);
+                shell.on_tab_change(move |id| {
+                    if let Ok(mut tab) = tab_context.tab.lock() {
+                        *tab = Some(id.to_string());
+                    }
+                });
                 // The hardware profile caps how many apps stay loaded.
                 let profile_client = profile_client.clone();
+                let profile_context = Arc::clone(&report_context);
                 shell.follow_profile(
                     Box::pin(async move {
                         // Ask once the engine is connected.
                         let mut live = profile_client.live();
                         let _ = live.wait_for(|live| live.connected).await;
                         let profile = profile_client.profile().await;
+                        if let Ok(p) = &profile {
+                            problems::profile_known(
+                                &profile_context,
+                                &p.profile,
+                                p.total_memory_bytes,
+                            );
+                        }
                         profile.map(|p| p.profile).map_err(|e| e.to_string())
                     }),
                     cx,
@@ -257,7 +335,7 @@ fn main() {
                     let handled =
                         link_shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
                     if !handled {
-                        eprintln!("[isonomic-desktop] no app opens {url}");
+                        reports::log::line(&format!("no app opens {url}"));
                     }
                 });
             }

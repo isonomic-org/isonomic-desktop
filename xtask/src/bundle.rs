@@ -164,6 +164,11 @@ pub fn run(options: &Options) -> Result<Built, String> {
         } else {
             &[]
         };
+        // A problem report names the same build as the app's Info.plist.
+        std::env::set_var(
+            crate::release::ENV_BUILD_NUMBER,
+            crate::release::build_number(&desktop),
+        );
         build(&desktop, WINDOW_BIN, target, window_features)?;
         build(&capsule, ENGINE_BIN, target, &[])?;
     }
