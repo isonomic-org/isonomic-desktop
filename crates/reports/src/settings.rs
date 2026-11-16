@@ -1,7 +1,8 @@
 //! The "Problem reports" setting: Ask each time (the default), Send
 //! automatically, or Never send. Kept in the Capsule's
-//! `settings/reports.json`, with the destination, which is unset: until
-//! one is chosen nothing is sent, whatever the setting says.
+//! `settings/reports.json`. Where reports go is not a setting: it is the
+//! build's configuration ([`crate::send::Destination`]). With none, nothing
+//! is sent, whatever the setting says.
 
 use std::path::{Path, PathBuf};
 
@@ -37,9 +38,6 @@ impl Mode {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ReportSettings {
     pub mode: Mode,
-    /// Where reports would go. `None` in every build until Omar chooses a
-    /// receiving service: then nothing leaves the Mac.
-    pub destination: Option<String>,
 }
 
 fn file(capsule: &Path) -> PathBuf {
@@ -59,7 +57,6 @@ pub fn load(capsule: &Path) -> ReportSettings {
             .as_str()
             .and_then(Mode::parse)
             .unwrap_or_default(),
-        destination: value["destination"].as_str().map(str::to_string),
     }
 }
 
@@ -68,7 +65,7 @@ pub fn save(capsule: &Path, settings: &ReportSettings) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    let value = json!({ "mode": settings.mode.as_str(), "destination": settings.destination });
+    let value = json!({ "mode": settings.mode.as_str() });
     std::fs::write(
         path,
         serde_json::to_string_pretty(&value).map_err(std::io::Error::other)?,
@@ -84,10 +81,7 @@ mod tests {
         let capsule = tempfile::tempdir().unwrap();
         assert_eq!(load(capsule.path()), ReportSettings::default());
         assert_eq!(load(capsule.path()).mode, Mode::Ask);
-        let never = ReportSettings {
-            mode: Mode::Never,
-            destination: None,
-        };
+        let never = ReportSettings { mode: Mode::Never };
         save(capsule.path(), &never).unwrap();
         assert_eq!(load(capsule.path()), never);
         std::fs::write(file(capsule.path()), "not json").unwrap();

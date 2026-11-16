@@ -14,6 +14,15 @@ pub struct Kept {
     store: Store,
 }
 
+/// The Capsule's id from its `capsule.json`, or empty when unreadable.
+fn capsule_id(capsule: &Path) -> String {
+    std::fs::read_to_string(capsule.join("capsule.json"))
+        .ok()
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .and_then(|v| v["capsule_id"].as_str().map(str::to_string))
+        .unwrap_or_default()
+}
+
 impl Kept {
     pub fn in_capsule(capsule: &Path) -> Self {
         Self {
@@ -37,18 +46,34 @@ impl Kept {
     pub fn save_settings(&self, settings: &ReportSettings) -> std::io::Result<()> {
         settings::save(&self.capsule, settings)
     }
+
+    /// `report`'s id ([`crate::send::report_id`]).
+    pub fn report_id(&self, report: &Pending) -> String {
+        let name = report
+            .path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("");
+        crate::send::report_id(&capsule_id(&self.capsule), name)
+    }
 }
 
-/// Exactly the bytes that would be sent for `report`: the file as kept, or,
-/// when the person ticked the box, the same document with their Isonomic
-/// ID added. The ID is never in a kept file.
-pub fn outgoing(report: &Pending, isonomic_id: Option<&str>) -> String {
-    let Some(id) = isonomic_id else {
+/// Exactly the bytes that would be sent for `report`: the kept document
+/// with its `id` (when there is one to send), and, only when the person
+/// ticked the box, their Isonomic ID as `isonomic_id`. Neither is ever in a
+/// kept file, and neither is scrubbed: both are added after.
+pub fn outgoing(report: &Pending, report_id: Option<&str>, isonomic_id: Option<&str>) -> String {
+    if report_id.is_none() && isonomic_id.is_none() {
         return report.bytes.clone();
-    };
+    }
     let mut document = report.document.clone();
     if let Value::Object(fields) = &mut document {
-        fields.insert("isonomic_id".into(), Value::String(id.to_string()));
+        if let Some(id) = report_id {
+            fields.insert("id".into(), Value::String(id.to_string()));
+        }
+        if let Some(id) = isonomic_id {
+            fields.insert("isonomic_id".into(), Value::String(id.to_string()));
+        }
     }
     serde_json::to_string_pretty(&document).unwrap_or_else(|_| report.bytes.clone())
 }
@@ -67,11 +92,15 @@ mod tests {
             .save(&json!({ "format": 1, "kind": "panic" }), 1)
             .unwrap();
         let report = kept.pending().remove(0);
-        assert_eq!(outgoing(&report, None), report.bytes);
+        assert_eq!(outgoing(&report, None, None), report.bytes);
         assert!(!report.bytes.contains("isonomic_id"));
-        let with_id: Value = serde_json::from_str(&outgoing(&report, Some("ISO-1"))).unwrap();
+        let with_id: Value =
+            serde_json::from_str(&outgoing(&report, Some("r1"), Some("ISO-1"))).unwrap();
         assert_eq!(with_id["isonomic_id"], "ISO-1");
+        assert_eq!(with_id["id"], "r1");
         assert_eq!(with_id["kind"], "panic");
+        let plain: Value = serde_json::from_str(&outgoing(&report, Some("r1"), None)).unwrap();
+        assert!(plain.get("isonomic_id").is_none());
         kept.discard(&report).unwrap();
         assert!(kept.pending().is_empty());
     }

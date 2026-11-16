@@ -135,10 +135,7 @@ fn a_kept_crash_is_asked_about_and_dont_send_deletes_it(cx: &mut TestAppContext)
 #[ui::test]
 fn never_send_deletes_quietly_and_the_choice_is_kept(cx: &mut TestAppContext) {
     let capsule = tempfile::tempdir().unwrap();
-    let never = ReportSettings {
-        mode: Mode::Never,
-        destination: None,
-    };
+    let never = ReportSettings { mode: Mode::Never };
     settings::save(capsule.path(), &never).unwrap();
     keep_report(capsule.path(), "panic", 1);
     let (window, reports, _) = open(cx, capsule.path());
@@ -306,4 +303,145 @@ fn a_problem_an_app_reports_is_written_and_asked_about(cx: &mut TestAppContext) 
         message.contains("[key removed]") && !message.contains("iso_tok"),
         "{message}"
     );
+}
+
+/// A sender that answers from a script and records what it was given.
+struct Scripted {
+    answers: std::sync::Mutex<Vec<reports::send::Attempt>>,
+    sent: std::sync::Mutex<Vec<(String, String)>>,
+}
+
+impl Scripted {
+    fn new(answers: Vec<reports::send::Attempt>) -> Arc<Self> {
+        Arc::new(Self {
+            answers: std::sync::Mutex::new(answers),
+            sent: std::sync::Mutex::new(Vec::new()),
+        })
+    }
+
+    fn sent(&self) -> Vec<(String, String)> {
+        self.sent.lock().unwrap().clone()
+    }
+}
+
+impl reports::send::Sender for Scripted {
+    fn send(
+        &self,
+        body: String,
+        id: String,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = reports::send::Attempt> + Send>> {
+        self.sent.lock().unwrap().push((body, id));
+        let mut answers = self.answers.lock().unwrap();
+        let answer = if answers.len() > 1 {
+            answers.remove(0)
+        } else {
+            answers[0].clone()
+        };
+        Box::pin(async move { answer })
+    }
+}
+
+fn with_sender(
+    cx: &mut TestAppContext,
+    capsule: &std::path::Path,
+    sender: Arc<Scripted>,
+) -> (AnyWindowHandle, Entity<ProblemReports>) {
+    std::fs::write(
+        capsule.join("capsule.json"),
+        r#"{ "format": 1, "capsule_id": "cap-test" }"#,
+    )
+    .unwrap();
+    let (window, reports, _) = open(cx, capsule);
+    reports.update(cx, |r, cx| {
+        r.send_with(sender, "reports.example.test".into(), cx)
+    });
+    draw(cx, window);
+    (window, reports)
+}
+
+#[ui::test]
+fn send_posts_exactly_what_show_report_shows_and_deletes_it(cx: &mut TestAppContext) {
+    use reports::send::Attempt;
+    let capsule = tempfile::tempdir().unwrap();
+    keep_report(capsule.path(), "panic", 1);
+    let sender = Scripted::new(vec![Attempt::Sent]);
+    let (window, reports) = with_sender(cx, capsule.path(), sender.clone());
+    assert!(dialog_open(cx, window));
+    assert!(shown(cx, window, "report-send"));
+    assert!(shown(cx, window, "report-setting"));
+    let shown_bytes = reports.read_with(cx, |r, _| r.outgoing()).unwrap();
+    let file = Kept::in_capsule(capsule.path()).pending().remove(0);
+    let id = Kept::in_capsule(capsule.path()).report_id(&file);
+    assert!(
+        shown_bytes.contains(&format!("\"id\": \"{id}\"")),
+        "{shown_bytes}"
+    );
+    assert!(!shown_bytes.contains("isonomic_id"));
+
+    click(cx, window, "report-send");
+    assert_eq!(sender.sent(), vec![(shown_bytes, id)]);
+    assert_eq!(
+        reports.read_with(cx, |r, _| r.last_outcome()),
+        Some(shell::problems::SENT)
+    );
+    assert!(!file.path.exists(), "a 2xx deletes the kept file");
+}
+
+#[ui::test]
+fn a_network_error_is_tried_again_and_a_4xx_never_is(cx: &mut TestAppContext) {
+    use reports::send::{Attempt, FIRST_WAIT};
+    let capsule = tempfile::tempdir().unwrap();
+    keep_report(capsule.path(), "panic", 1);
+    let sender = Scripted::new(vec![
+        Attempt::Failed("could not connect".into()),
+        Attempt::Sent,
+    ]);
+    let (window, reports) = with_sender(cx, capsule.path(), sender.clone());
+    let file = Kept::in_capsule(capsule.path()).pending().remove(0);
+    click(cx, window, "report-send");
+    assert_eq!(
+        reports.read_with(cx, |r, _| r.last_outcome()),
+        Some(shell::problems::NOT_SENT)
+    );
+    assert!(file.path.exists(), "kept until it goes");
+    cx.executor().advance_clock(FIRST_WAIT);
+    draw(cx, window);
+    assert_eq!(sender.sent().len(), 2);
+    assert!(!file.path.exists());
+
+    // A 4xx: kept, and never tried again.
+    keep_report(capsule.path(), "hang", 2);
+    let refusing = Scripted::new(vec![Attempt::Refused(400)]);
+    reports.update(cx, |r, cx| r.send_with(refusing.clone(), "x".into(), cx));
+    cx.update_window(window, |_, window, cx| {
+        reports.update(cx, |r, cx| r.review(window, cx))
+    })
+    .unwrap();
+    draw(cx, window);
+    click(cx, window, "report-send");
+    cx.executor().advance_clock(FIRST_WAIT * 4);
+    draw(cx, window);
+    assert_eq!(refusing.sent().len(), 1);
+    assert_eq!(Kept::in_capsule(capsule.path()).pending().len(), 1);
+}
+
+#[ui::test]
+fn send_automatically_sends_quietly_and_never_the_persons_id(cx: &mut TestAppContext) {
+    use reports::send::Attempt;
+    let capsule = tempfile::tempdir().unwrap();
+    settings::save(capsule.path(), &ReportSettings { mode: Mode::Always }).unwrap();
+    let sender = Scripted::new(vec![Attempt::Sent]);
+    let (window, reports) = with_sender(cx, capsule.path(), sender.clone());
+    reports.update(cx, |r, cx| r.set_identity(Some("ISO-TEST".into()), cx));
+    keep_report(capsule.path(), "panic", 1);
+    cx.update_window(window, |_, window, cx| {
+        reports.update(cx, |r, cx| r.review(window, cx))
+    })
+    .unwrap();
+    draw(cx, window);
+    assert!(!dialog_open(cx, window));
+    let sent = sender.sent();
+    assert_eq!(sent.len(), 1);
+    assert!(sent[0].0.contains("\"id\"") && !sent[0].0.contains("ISO-TEST"));
+    assert!(Kept::in_capsule(capsule.path()).pending().is_empty());
 }

@@ -7,12 +7,13 @@ use ui::component::checkbox::Checkbox;
 use ui::component::dialog::DialogFooter;
 use ui::component::theme::ActiveTheme as _;
 use ui::component::WindowExt as _;
+use ui::prelude::FluentBuilder as _;
 use ui::{
     div, tokens, App, Entity, InteractiveElement as _, ParentElement as _, SharedString,
     StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
 };
 
-use super::{ProblemReports, ID_LABEL, KEPT_HERE, PURPOSE};
+use super::{ProblemReports, ID_LABEL, KEPT_HERE, PURPOSE, SEND_OR_KEEP};
 
 /// Open the notice for the report `reports` is on.
 pub(super) fn open(reports: Entity<ProblemReports>, window: &mut Window, cx: &mut App) {
@@ -30,6 +31,18 @@ pub(super) fn open(reports: Entity<ProblemReports>, window: &mut Window, cx: &mu
                 .on_click(move |_, _, cx| reports.update(cx, |r, cx| r.toggle_id(cx)))
         });
         let (keep, gone, show) = (reports.clone(), reports.clone(), reports.clone());
+        let offers_send = state.offers_send();
+        let where_it_goes = if offers_send { SEND_OR_KEEP } else { KEPT_HERE };
+        let send = offers_send.then(|| {
+            let send = reports.clone();
+            Button::new("report-send")
+                .primary()
+                .label("Send report")
+                .on_click(move |_, window, cx| {
+                    window.close_dialog(cx);
+                    send.update(cx, |r, cx| r.send_current(window, cx));
+                })
+        });
         let on_close = reports.clone();
         dialog
             .title(state.title())
@@ -39,7 +52,7 @@ pub(super) fn open(reports: Entity<ProblemReports>, window: &mut Window, cx: &mu
                     .test_support()
                     .gap_3()
                     .child(PURPOSE)
-                    .child(div().text_color(muted).child(KEPT_HERE))
+                    .child(div().text_color(muted).child(where_it_goes))
                     .children(checkbox),
             )
             .footer(
@@ -60,13 +73,14 @@ pub(super) fn open(reports: Entity<ProblemReports>, window: &mut Window, cx: &mu
                     )
                     .child(
                         Button::new("report-keep")
-                            .primary()
+                            .when(!offers_send, |b| b.primary())
                             .label("Keep on this Mac")
                             .on_click(move |_, window, cx| {
                                 window.close_dialog(cx);
                                 keep.update(cx, |r, cx| r.keep(window, cx));
                             }),
-                    ),
+                    )
+                    .children(send),
             )
             // Closing it any other way keeps the report; after a button
             // has already acted, there is nothing left to keep.

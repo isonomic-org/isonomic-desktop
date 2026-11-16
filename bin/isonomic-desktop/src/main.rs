@@ -301,6 +301,11 @@ fn main() {
                     if let Some(reports) = shell.reports() {
                         let writer = Arc::clone(&report_context);
                         reports.update(cx, |r, _| r.write_with(writer));
+                        // Send is offered only when the build has a destination.
+                        if let Some(sender) = report_sender() {
+                            let host = sender.destination().host().to_string();
+                            reports.update(cx, |r, cx| r.send_with(Arc::new(sender), host, cx));
+                        }
                     }
                     shell.review_on_status(profile_client.live(), cx);
                     let id_client = profile_client.clone();
@@ -394,4 +399,16 @@ fn notices() -> Option<String> {
     let exe = std::env::current_exe().ok()?;
     let contents = exe.parent()?.parent()?;
     std::fs::read_to_string(contents.join("Resources").join("NOTICES.txt")).ok()
+}
+
+/// The problem-report sender, when this build has a destination.
+fn report_sender() -> Option<reports::send::HttpSender> {
+    let to = reports::send::Destination::configured()?;
+    match reports::send::HttpSender::new(to) {
+        Ok(sender) => Some(sender),
+        Err(error) => {
+            reports::log::line(&format!("no report sender: {}", error.kind()));
+            None
+        }
+    }
 }
