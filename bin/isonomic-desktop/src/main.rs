@@ -27,7 +27,7 @@ use shell::menubar::LoginToggle;
 use shell::{lifecycle, menubar, Shell};
 use ui::{AppContext as _, KeyBinding, Menu, MenuItem};
 
-ui::actions!(isonomic, [Quit, Hide]);
+ui::actions!(isonomic, [Quit, Hide, Acknowledgements]);
 
 /// First run through the engine client and the Capsule's marker.
 struct FirstRunSetup {
@@ -249,6 +249,8 @@ fn main() {
         .detach();
         cx.on_action(|_: &Hide, cx| cx.hide());
         cx.set_menus([Menu::new("Isonomic").items([
+            MenuItem::action("Acknowledgements", Acknowledgements),
+            MenuItem::separator(),
             MenuItem::action("Hide Isonomic", Hide),
             MenuItem::separator(),
             MenuItem::action("Quit Isonomic", Quit),
@@ -347,6 +349,16 @@ fn main() {
         let _ = window.update(cx, |_, window, cx| {
             shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
         });
+        cx.on_action(move |_: &Acknowledgements, cx| {
+            lifecycle::show(cx);
+            cx.spawn(async move |cx| {
+                let notices = cx.background_spawn(async { notices() }).await;
+                let _ = cx.update_window(window, |_, window, cx| {
+                    shell::acknowledgements::open(notices, window, cx)
+                });
+            })
+            .detach();
+        });
         let link_shell = shell.clone();
         cx.spawn(async move |cx| {
             while let Some(url) = opened_links.next().await {
@@ -369,4 +381,12 @@ fn main() {
         let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
         menubar::install(client, link.client().live(), login, cx);
     });
+}
+
+/// The licence notices the app carries: `Contents/Resources/NOTICES.txt`,
+/// beside `Contents/MacOS/` where the window runs. None outside a bundle.
+fn notices() -> Option<String> {
+    let exe = std::env::current_exe().ok()?;
+    let contents = exe.parent()?.parent()?;
+    std::fs::read_to_string(contents.join("Resources").join("NOTICES.txt")).ok()
 }

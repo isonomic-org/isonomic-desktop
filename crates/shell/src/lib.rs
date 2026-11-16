@@ -6,6 +6,7 @@
 //! it hands to the Home tab; it never touches a process, a socket or a path.
 //! First-party apps are mounted as further tabs through [`apps`].
 
+pub mod acknowledgements;
 pub mod apps;
 pub mod downloads;
 pub mod first_run;

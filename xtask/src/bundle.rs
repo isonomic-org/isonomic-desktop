@@ -10,6 +10,7 @@
 //!   Resources/sidecars/postgres-x86_64-apple-darwin/{bin,lib,share,...}
 //!   Resources/sidecars/postgres-aarch64-apple-darwin/{bin,lib,share,...}
 //!   Resources/sidecars/<name>/<program>        single programs, both architectures fused
+//!   Resources/NOTICES.txt                      licences of what is bundled, from the engine
 //! ```
 //!
 //! Directory trees ship once per architecture; the running engine picks the
@@ -186,6 +187,7 @@ pub fn run(options: &Options) -> Result<Built, String> {
     same_version(&capsule)?;
     assemble(&app, &targets, &desktop, &capsule)?;
     check_minimum(&app)?;
+    crate::sidecars::check_notices(&app)?;
     sign(&app)?;
     if options.sign_dry_run {
         crate::release::sign_dry_run(&app);
@@ -302,6 +304,7 @@ fn assemble(app: &Path, targets: &[String], desktop: &Path, capsule: &Path) -> R
     }
 
     crate::sidecars::ship(capsule, targets, &sidecars)?;
+    crate::sidecars::ship_notices(capsule, &contents.join("Resources"))?;
 
     let icon = crate::release::icon(desktop, &contents.join("Resources"))?;
     let build = crate::release::build_number(desktop);
