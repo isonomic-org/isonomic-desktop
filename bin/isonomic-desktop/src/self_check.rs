@@ -26,9 +26,19 @@ use ui::{AnyWindowHandle, App, AsyncApp, Entity, Keystroke};
 
 /// The environment variable that turns the check on.
 pub const ENV: &str = "ISONOMIC_SELF_CHECK";
+/// Set to `1` to let the check download first run's model when it isn't
+/// installed, as on a machine that has only the disk image.
+pub const DOWNLOAD: &str = "ISONOMIC_SELF_CHECK_DOWNLOAD";
+
+fn download_allowed() -> bool {
+    std::env::var(DOWNLOAD).is_ok_and(|v| v == "1")
+}
+
 /// How long one step may take: the engine's first start creates its
 /// database, and a model on the Intel Mac loads in about ten seconds.
 const STEP: Duration = Duration::from_secs(180);
+/// How long the model download may take, when the check downloads it.
+const DOWNLOAD_LIMIT: Duration = Duration::from_secs(1800);
 
 const CHAT: &str = "com.isonomic.chat";
 
@@ -93,6 +103,17 @@ async fn until<T: 'static>(
     cx: &mut AsyncApp,
     entity: &Entity<T>,
     what: &str,
+    done: impl FnMut(&T, &App) -> bool,
+) -> Result<(), String> {
+    until_within(cx, entity, what, STEP, done).await
+}
+
+/// [`until`] with its own time limit.
+async fn until_within<T: 'static>(
+    cx: &mut AsyncApp,
+    entity: &Entity<T>,
+    what: &str,
+    limit: Duration,
     mut done: impl FnMut(&T, &App) -> bool,
 ) -> Result<(), String> {
     let (wake, mut woken) = futures::channel::mpsc::unbounded::<()>();
@@ -101,7 +122,7 @@ async fn until<T: 'static>(
             let _ = wake.unbounded_send(());
         })
     });
-    let deadline = Instant::now() + STEP;
+    let deadline = Instant::now() + limit;
     loop {
         if cx.update(|cx| done(entity.read(cx), cx)) {
             return Ok(());
@@ -166,8 +187,40 @@ async fn ready(
                 &format!("first run: memory enough, {} installed", m.model),
             );
         }
+        (Memory::Enough(_), ModelStep::Ready(m)) if download_allowed() => {
+            let name = m.model.clone();
+            say(started, &format!("first run: downloading {name}"));
+            let downloading = Instant::now();
+            let _ = window.update(cx, |_, _, cx| {
+                first_run.update(cx, |run, cx| run.download_now(cx))
+            });
+            until_within(
+                cx,
+                &first_run,
+                "the model download",
+                DOWNLOAD_LIMIT,
+                |run, _| {
+                    matches!(
+                        run.model(),
+                        ModelStep::Installed(_) | ModelStep::Failed { .. }
+                    )
+                },
+            )
+            .await?;
+            let step = cx.update(|cx| first_run.read(cx).model().clone());
+            if let ModelStep::Failed { error, .. } = step {
+                return Err(format!("first run: the download of {name} failed: {error}"));
+            }
+            say(
+                started,
+                &format!(
+                    "first run: {name} downloaded in {:.0}s",
+                    downloading.elapsed().as_secs_f64()
+                ),
+            );
+        }
         (Memory::Enough(_), step) => {
-            return Err(format!("first run: the model isn't installed ({step:?}); put it in the Capsule's models directory first"));
+            return Err(format!("first run: the model isn't installed ({step:?}); put it in the Capsule's models directory, or set {DOWNLOAD}=1"));
         }
         (memory, _) => return Err(format!("first run: {memory:?}")),
     }

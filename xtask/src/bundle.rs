@@ -26,9 +26,10 @@ pub const APP_NAME: &str = "Isonomic";
 pub const BUNDLE_ID: &str = "com.isonomic.desktop";
 pub const WINDOW_BIN: &str = "isonomic-desktop";
 pub const ENGINE_BIN: &str = "isonomic-capsule";
-/// The oldest macOS the app declares: 11, the first release that runs on
-/// Apple Silicon. Nothing older has been tried.
-pub const MINIMUM_MACOS: &str = "11.0";
+/// The oldest macOS the app declares: 13.3, the minimum the bundled model
+/// server is built for (every one of its programs and libraries names
+/// it). The bundle step checks that no part of the app needs more.
+pub const MINIMUM_MACOS: &str = "13.3";
 const APPLE_SLICES: [&str; 2] = ["x86_64-apple-darwin", "aarch64-apple-darwin"];
 
 pub struct Options {
@@ -178,6 +179,7 @@ pub fn run(options: &Options) -> Result<Built, String> {
 
     let app = app_path();
     assemble(&app, &targets, &desktop, &capsule)?;
+    check_minimum(&app)?;
     sign(&app)?;
     if options.sign_dry_run {
         crate::release::sign_dry_run(&app);
@@ -197,9 +199,27 @@ fn build(repo: &Path, package: &str, target: &str, extra: &[&str]) -> Result<(),
                 "--target",
                 target,
             ])
-            .args(extra),
+            .args(extra)
+            // Our own programs declare the same minimum as the app.
+            .env("MACOSX_DEPLOYMENT_TARGET", MINIMUM_MACOS),
         &format!("building {package} for {target}"),
     )
+}
+
+/// Refuse a bundle that holds a part needing a newer macOS than it declares.
+fn check_minimum(app: &Path) -> Result<(), String> {
+    let declared = crate::macho::parse_version(MINIMUM_MACOS).expect("a version");
+    let above = crate::macho::above(app, declared);
+    if above.is_empty() {
+        println!("minimum macOS: {MINIMUM_MACOS}, met by every program and library in the app");
+        return Ok(());
+    }
+    let mut message = format!("parts of the app need a newer macOS than {MINIMUM_MACOS}:");
+    for (path, (major, minor)) in above.iter().take(10) {
+        let shown = path.strip_prefix(app).unwrap_or(path);
+        message.push_str(&format!("\n  {}.{} {}", major, minor, shown.display()));
+    }
+    Err(message)
 }
 
 fn release_binary(repo: &Path, target: &str, name: &str) -> PathBuf {

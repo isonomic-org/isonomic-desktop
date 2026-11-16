@@ -13,4 +13,4 @@ To check the download before opening it, compare its SHA-256 with the `.sha256` 
 shasum -a 256 Isonomic-*.dmg
 ```
 
-Isonomic runs on a Mac with macOS 11 or later and at least 16 GB of memory, Intel or Apple Silicon.
+Isonomic runs on a Mac with macOS 13.3 or later and at least 16 GB of memory, Intel or Apple Silicon.

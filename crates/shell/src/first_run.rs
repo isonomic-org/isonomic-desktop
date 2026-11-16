@@ -153,6 +153,11 @@ impl FirstRun {
         .detach();
     }
 
+    /// Press Download (or Try again), as the person would.
+    pub fn download_now(&mut self, cx: &mut Context<Self>) {
+        self.start_download(cx);
+    }
+
     fn start_download(&mut self, cx: &mut Context<Self>) {
         let model = match &self.model {
             ModelStep::Ready(model) => model.clone(),
