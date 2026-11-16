@@ -2,6 +2,15 @@
 
 Newest first.
 
+## 2026-11-16 · SDK 72aca92 and Chat 561e853: the design options
+
+- **Pins:**
+  - `SDK_REF` 72aca92 brings Isonomic UI 4f1207b, with the options Chat needs to match the design.
+  - `CHAT_REF` 561e853 applies them: focusable sidebar rows, the comfortable composer with round Send and Stop, the search palette and the model picker.
+  - They move together. One copy each of Isonomic UI, the harness and `isonomic-reports` is built.
+- **The library's three breaking changes don't reach the window.** It builds no `PaletteCommand`, matches no `PopupMenuItem::Item` by its fields, and has no impl of its own on `IconName`. Nothing in the window changed.
+- **Tested:** fmt, clippy and the full suite, including the Chat tab and the self-check's keys against Chat's shell.
+
 ## 2026-11-16 · The self-check presses Chat's shortcuts
 
 - **What it presses:** after the prompt check (turn, stop, continue), the self-check sends Chat's design 0.2 shortcuts through the window's own key dispatch (`dispatch_keystroke`), as a keyboard would:
