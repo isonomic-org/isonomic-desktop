@@ -2,6 +2,26 @@
 
 Newest first.
 
+## 2026-11-16 · The rail and first run after design 0.2
+
+Reference: isonomic-chat `docs/design/v0.2/screens/app-shell.md` (the collapsed rail) and `first-run-and-system-states.md` (onboarding).
+
+- **Rail:** the design's collapsed rail. It is 56 wide, with the sidebar fill and a 1 px right border, 12 above and below, 8 at the sides, and 4 between its buttons. Each button is a 28 px ghost icon button (`tokens::rail_button`). It was already 56 wide, filled and bordered; the buttons were the default size, 8 apart.
+- **First run:** the design's onboarding page.
+  - On the muted page fill (the sidebar colour): the "Isonomic" wordmark, then the stepper, then one card holding the steps, 16 apart and centred.
+  - The card is 600 wide (`tokens::card_width`) and white, with a 1 px border, a 16 radius, 28 padding, 14 between its children and a medium shadow.
+  - The Capsule line now carries the intro sentence.
+- **Deviations, recorded:**
+  - **One card, every step:** the design draws one step per card. Here all four stay in the one card, so the person keeps seeing their ID while the model downloads. The design has no screen for this window's steps.
+  - **No card title:** "Welcome to Isonomic" repeated the wordmark right above it. Dropping it keeps the tallest state (a download in progress) above the footer.
+  - **Continue stays in the pinned footer,** not the card's own button row as drawn. The steps can be taller than the window, and Continue must never scroll away (the build 96 fix).
+  - **The wordmark is the interface sans,** as Chat's is. Isonomic UI has no display serif token.
+  - **Home:** the design has no frame for the window's Home, so it is unchanged.
+- **Tested:**
+  - the wordmark and card are shown;
+  - at the window's opening size (1100 × 720), the tallest step's Cancel clears the pinned footer (at the opening size it ends 24 px above the footer);
+  - the rail's keyboard and scroll tests pass at the new size.
+
 ## 2026-11-16 · SDK 72aca92 and Chat 561e853: the design options
 
 - **Pins:**

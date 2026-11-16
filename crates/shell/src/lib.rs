@@ -27,7 +27,7 @@ use ui::base::{h_flex, v_flex};
 use ui::component::badge::Badge;
 use ui::component::button::{Button, ButtonVariants as _};
 use ui::component::theme::ActiveTheme as _;
-use ui::component::{Icon, Selectable as _};
+use ui::component::{Icon, Selectable as _, Sizable as _};
 use ui::{
     div, tokens, AnyView, AppContext as _, Context, Entity, FocusHandle, InteractiveElement as _,
     IntoElement, ParentElement as _, Render, ScrollHandle, SharedString,
@@ -455,8 +455,11 @@ impl Render for Shell {
                     .map_or(Attention::None, |app| app.read(cx).attention());
                 // An icon-only button, named by its tooltip; the tab order
                 // follows the rail.
+                // The design's collapsed rail: 28 px ghost icon buttons.
                 let mut button = Button::new(SharedString::from(format!("rail-button-{}", tab.id)))
                     .ghost()
+                    .small()
+                    .size(tokens::rail_button())
                     .selected(selected)
                     .tooltip(tab.title.clone())
                     .accessibility_label(tab.title.clone())
@@ -502,8 +505,9 @@ impl Render for Shell {
                     .h_full()
                     .flex_shrink_0()
                     .items_center()
-                    .gap_2()
+                    .gap_1()
                     .py_3()
+                    .px_2()
                     .overflow_y_scroll()
                     .track_scroll(&self.rail_scroll)
                     .bg(theme.sidebar)
