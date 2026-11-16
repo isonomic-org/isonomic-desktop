@@ -190,3 +190,36 @@ fn the_isonomic_id_is_off_until_ticked(cx: &mut TestAppContext) {
     let file = Kept::in_capsule(capsule.path()).pending().remove(0);
     assert!(!file.bytes.contains("ISO-TEST"));
 }
+
+#[ui::test]
+fn a_service_failing_while_open_is_asked_about(cx: &mut TestAppContext) {
+    use isonomic_proto::{ServiceState, ServiceStatus, SystemStatus};
+    let capsule = tempfile::tempdir().unwrap();
+    let (publish, live) = watch::channel(Live::default());
+    let (window, reports, shell) = open(cx, capsule.path());
+    shell.update(cx, |shell, cx| shell.review_on_degraded(live, cx));
+    assert!(!dialog_open(cx, window));
+    // The engine writes its report, then the service shows as degraded.
+    let failed = json!({ "format": 1, "kind": "service_failed",
+        "component": { "id": "engine/postgres" }, "service": { "name": "postgres" } });
+    Store::in_capsule(capsule.path()).save(&failed, 1).unwrap();
+    let system = SystemStatus {
+        aggregate: ServiceState::Degraded,
+        services: vec![ServiceStatus {
+            name: "postgres".into(),
+            tier: 1,
+            state: ServiceState::Degraded,
+            restart_count: 5,
+            last_healthy_unix: None,
+        }],
+        cold_start_ms: None,
+    };
+    publish.send_modify(|l| {
+        l.connected = true;
+        l.system = Some(system);
+    });
+    draw(cx, window);
+    draw(cx, window);
+    assert!(dialog_open(cx, window));
+    assert_eq!(title(cx, &reports), "The database stopped working");
+}

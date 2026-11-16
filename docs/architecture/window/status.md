@@ -2,6 +2,19 @@
 
 Newest first.
 
+## 2026-11-16 · The engine's problem reports, and the key rule
+
+- **The engine's reports reach the same notice.** The engine writes format 1 into the same `reports/pending/` (isonomic-capsule #61). Its titles:
+  - `panic` from `engine`: "The Isonomic engine quit unexpectedly";
+  - `service_failed`: "The database stopped working", "The cache stopped working", or "The <name> service stopped working";
+  - `model_server_failed`: "The local model stopped working".
+- **When they're asked about:**
+  - at launch, like the window's own reports;
+  - while the window is open, on every engine status change that has a degraded service (`Shell::review_on_degraded`). A review is one directory read and never asks about a report twice.
+- **Gap:** the engine writes `service_failed` after its own watch sees the breaker trip, so the window may see the status before the file exists. The next status change, or the next launch, picks it up. A `model_server_failed` from a restart that doesn't degrade anything waits for the next look. Closing this needs a signal from the engine; asked of the shared report crate.
+- **Scrubber rule from the engine:** a run of 24 or more key characters with at least 6 digits becomes `[key removed]`, covering tokens, digests and the person's ID. The rule and its test cases are the engine's, word for word, so the two scrubbers match until both move to the SDK's shared crate.
+- **Tested:** the titles, the scrubber's key cases, and a `service_failed` kept while open being asked about when the service turns degraded.
+
 ## 2026-11-16 · Chat 292b12d: design 0.2
 
 - **`CHAT_REF`** moves to 292b12d. It brings Chat's shell and sidebar, home and composer, and thread to design 0.2 (Chat #25 to #27).

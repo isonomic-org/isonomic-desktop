@@ -165,13 +165,16 @@ pub fn run(options: &Options) -> Result<Built, String> {
         } else {
             &[]
         };
-        // A problem report names the same build as the app's Info.plist.
-        std::env::set_var(
-            crate::release::ENV_BUILD_NUMBER,
-            crate::release::build_number(&desktop),
-        );
-        build(&desktop, WINDOW_BIN, target, window_features)?;
-        build(&capsule, ENGINE_BIN, target, &[])?;
+        // A problem report names the same build as the app's Info.plist,
+        // from the window and from the engine.
+        let number = crate::release::build_number(&desktop);
+        std::env::set_var(crate::release::ENV_BUILD_NUMBER, &number);
+        build(&desktop, WINDOW_BIN, target, window_features, &[])?;
+        let engine_env = [
+            (ENV_ENGINE_BUILD, number),
+            (ENV_ENGINE_COMMIT, engine_commit(&capsule)?),
+        ];
+        build(&capsule, ENGINE_BIN, target, &[], &engine_env)?;
     }
     let mut fetch = util::cargo(&capsule);
     fetch.args(["xtask", "fetch-sidecars"]);
@@ -195,10 +198,30 @@ pub fn run(options: &Options) -> Result<Built, String> {
     Ok(Built::measure(app, targets))
 }
 
-fn build(repo: &Path, package: &str, target: &str, extra: &[&str]) -> Result<(), String> {
+/// What the engine's problem reports carry: the bundle's build number and
+/// the engine checkout's commit, read when the engine is compiled.
+pub const ENV_ENGINE_BUILD: &str = "ISONOMIC_BUILD";
+pub const ENV_ENGINE_COMMIT: &str = "ISONOMIC_ENGINE_COMMIT";
+
+/// The engine checkout's full commit: a release must say what it ships.
+fn engine_commit(capsule: &Path) -> Result<String, String> {
+    util::output("git", &["rev-parse", "HEAD"], Some(capsule))
+        .map(|rev| rev.trim().to_string())
+        .filter(|rev| !rev.is_empty())
+        .ok_or_else(|| format!("{} is not a git checkout", capsule.display()))
+}
+
+fn build(
+    repo: &Path,
+    package: &str,
+    target: &str,
+    extra: &[&str],
+    env: &[(&str, String)],
+) -> Result<(), String> {
     println!("building {package} for {target}");
     util::run(
         util::cargo(repo)
+            .envs(env.iter().map(|(k, v)| (*k, v.as_str())))
             .args([
                 "build",
                 "--release",
