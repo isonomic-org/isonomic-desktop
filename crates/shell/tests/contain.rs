@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! An app that panics in a call the window makes is contained: its tab
 //! says it stopped working, the window and its other tabs go on, and the
 //! report the panic hook wrote is asked about straight away.

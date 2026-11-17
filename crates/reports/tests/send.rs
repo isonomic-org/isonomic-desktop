@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The sender against a local server on this machine's loopback: what it
 //! sends, and how each status reads.
 

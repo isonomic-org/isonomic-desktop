@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Headless tests of the logs view, in the real shell, against the SDK's
 //! in-memory engine over the real client.
 //!

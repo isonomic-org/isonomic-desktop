@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! `cargo xtask report`: build, run the Milestone 1 gate against a scratch
 //! Capsule, and print one block to paste back.
 //!

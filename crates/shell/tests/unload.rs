@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Unloading app tabs past the hardware profile's cap, in a headless window
 //! against the SDK testkit. Three tiny apps stand in for first-party ones:
 //! each draws its name and counts its unloads.

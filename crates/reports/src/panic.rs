@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The panic hook: before the process ends, it writes a report.
 //!
 //! A panic inside a compiled-in app's own drawing or events unwinds

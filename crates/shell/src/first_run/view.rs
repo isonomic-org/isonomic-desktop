@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! First run's layout, after the design's onboarding page (design 0.2,
 //! "First run and system states"): on the muted page fill, the wordmark,
 //! the stepper, then one card holding the steps, one group per step.

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The full pass's flow: the steps after the prompt run's own, and the
 //! relaunch step in the link run.
 

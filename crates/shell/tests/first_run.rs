@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! First run in a headless window, in the real shell. The view's setup is
 //! scripted, because GPUI's test scheduler refuses wakeups from the
 //! client's runtime thread. The adapter over the real client is tested

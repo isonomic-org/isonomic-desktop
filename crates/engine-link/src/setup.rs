@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The Capsule on first launch: create it if it is missing, and remember
 //! when the first-run flow has finished.
 //!

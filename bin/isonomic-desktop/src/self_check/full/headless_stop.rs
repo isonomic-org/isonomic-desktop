@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! What a thread holds after the self-check's stop: turn 1 finished in
 //! full, then the same prompt again, stopped. Turn 1's reply must still be
 //! its whole reply, not the second turn's text. (A real render of the same

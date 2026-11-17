@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! App settings kept in the Capsule until the engine stores settings.
 //!
 //! One JSON object per app, at `settings/apps/<app id>.json`. Everything is

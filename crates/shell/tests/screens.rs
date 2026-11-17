@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's screens with Isonomic UI's QA-passed components: reachable
 //! by keyboard, drawn in both themes, and the checks QA could not cover
 //! (scrolling a focused control into view).

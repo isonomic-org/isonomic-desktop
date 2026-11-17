@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Problem and crash reports (design agreed in the Worker reports, 02:56 UTC).
 //!
 //! A report is one small JSON document, format 1, written to the Capsule's

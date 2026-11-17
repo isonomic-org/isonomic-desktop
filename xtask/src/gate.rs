@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The Milestone 1 gate, driven through the SDK client exactly as the window
 //! drives the engine: start until every core service is healthy, force-kill
 //! each one and watch it come back, stop in order with nothing left, then

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Isonomic Chat mounted in the real shell, headless, against the SDK
 //! testkit: it is on the rail and opens into its own view.
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! An app's request to install a model, in the real shell, headless. The
 //! source is scripted event by event, as in first run's tests.
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! `cargo xtask self-check --models <dir> [--capsule <dir>] [--prompt <text>]`:
 //! the acceptance check for a release build, on a Mac.
 //!

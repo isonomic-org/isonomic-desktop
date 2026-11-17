@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Headless window tests: the real shell in a real (off-screen) window. The
 //! engine link is replaced by the watch it would publish on, so each step is
 //! deterministic.

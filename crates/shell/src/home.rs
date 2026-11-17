@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The Home tab: every service's live state. Clicking a service opens its
 //! logs; Back returns to the list.
 //!

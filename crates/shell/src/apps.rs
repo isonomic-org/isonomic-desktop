@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The app host: first-party apps are crates compiled into the window.
 //!
 //! An app crate implements the SDK's `isonomic_app::App` and the window

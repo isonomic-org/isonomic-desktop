@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! `cargo xtask release`: the release folder, handed to whoever publishes
 //! the download.
 //!

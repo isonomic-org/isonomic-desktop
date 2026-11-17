@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's link to the engine (architecture spec, sections 3 and 6.1).
 //!
 //! One connection per process. This crate works out where the engine's

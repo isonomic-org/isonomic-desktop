@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's own log: `logs/window.log` in the Capsule, also written to
 //! standard error. It records state changes and errors, never what the
 //! person types or what a model says. It rotates at [`ROTATE_AT`], keeping

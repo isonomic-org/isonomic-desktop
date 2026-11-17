@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The single re-export of the component library.
 //!
 //! The library is Isonomic UI, reached through the SDK (`isonomic_app::ui`)

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Isonomic Desktop: the window. Finds or starts the engine, opens the
 //! shell, and owns the menu bar icon. Closing the window hides it; Quit
 //! stops the engine in order, then the window.

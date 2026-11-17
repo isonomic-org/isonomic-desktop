@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! First run's model calls over the shell's client: the recommended local
 //! model, whether it is installed, and its download with progress.
 //!

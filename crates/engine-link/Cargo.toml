@@ -3,6 +3,7 @@ name = "engine-link"
 description = "Finds the engine's socket, starts the engine when it is not running, and keeps one reconnecting client"
 version.workspace = true
 edition.workspace = true
+license = "GPL-3.0-or-later"
 publish.workspace = true
 
 [dependencies]

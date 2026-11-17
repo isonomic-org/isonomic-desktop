@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Hangs: the window's foreground thread beats every second; a thread here
 //! writes a `hang` report when no beat has come for [`LIMIT_SECS`], and adds
 //! how long it was stuck once beats resume. Rust cannot read another

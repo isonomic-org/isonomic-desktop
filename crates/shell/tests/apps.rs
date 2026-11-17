@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The app host in a headless window: the SDK's smallest app crate mounted
 //! as a tab, against the in-memory engine. Nothing here waits on a real
 //! engine.

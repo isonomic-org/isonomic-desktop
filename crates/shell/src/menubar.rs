@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The menu bar icon (architecture spec, section 2): a status light, Open,
 //! Start at Login and Quit.
 //!

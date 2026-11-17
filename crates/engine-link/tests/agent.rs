@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The login agent against a recording stand-in for `launchctl`.
 
 use std::io;

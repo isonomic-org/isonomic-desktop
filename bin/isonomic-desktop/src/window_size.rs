@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's last size, kept in the Capsule's `settings/window.json`, so
 //! it opens as the person left it. Read once before the window opens;
 //! written off the foreground thread whenever the size changes.

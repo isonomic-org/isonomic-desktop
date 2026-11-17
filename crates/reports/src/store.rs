@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Reports waiting on this Mac: `reports/pending/` in the Capsule, one file
 //! each. Deleted when the person says Don't send, after [`KEEP_DAYS`], or
 //! beyond [`KEEP_MOST`], oldest first. Nothing here sends.

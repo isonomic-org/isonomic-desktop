@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The link against the in-memory engine: it starts an engine that is not
 //! running, does not start it twice, and finds the socket where the engine
 //! binds it.

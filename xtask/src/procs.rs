@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Process facts the gate checks from outside the engine: which pid runs a
 //! service, its workers, and whether they are gone.
 

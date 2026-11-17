@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The check build's icon check, rendered for real: GPUI's headless
 //! renderer (Metal on macOS; on Linux a software Vulkan driver such as
 //! Mesa lavapipe) draws the real shell through first run, and the pixels

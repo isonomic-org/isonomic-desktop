@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Problem-report notices in a headless window: what is asked, what Don't
 //! send and Keep do, the setting, and the Isonomic ID checkbox.
 

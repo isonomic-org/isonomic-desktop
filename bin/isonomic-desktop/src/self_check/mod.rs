@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window checking itself, for a machine nobody can click on.
 //!
 //! `ISONOMIC_SELF_CHECK=<prompt>`: the real window, engine and model, in the

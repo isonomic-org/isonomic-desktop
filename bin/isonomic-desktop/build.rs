@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Embed what a problem report says about this build: its number and the
 //! SDK, Chat and engine commits it carries.
 
