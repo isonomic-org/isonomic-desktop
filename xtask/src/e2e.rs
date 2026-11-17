@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! `cargo xtask e2e`: the window's engine link against the real engine.
 //!
 //! Builds the engine from `../isonomic-capsule`, fetches its bundled

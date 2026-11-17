@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Why the window can't reach the engine, in plain words.
 //!
 //! The link publishes the latest problem on a watch: the engine binary

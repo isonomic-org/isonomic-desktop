@@ -3,6 +3,7 @@ name = "xtask"
 description = "Build tasks for the window repo: cargo xtask bundle, cargo xtask report"
 version.workspace = true
 edition.workspace = true
+license = "GPL-3.0-or-later"
 publish.workspace = true
 
 [dependencies]

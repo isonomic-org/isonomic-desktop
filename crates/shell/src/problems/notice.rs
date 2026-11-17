@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The notice and its review, as Isonomic UI dialogs. The builders run
 //! again whenever the dialog layer redraws, so they only read the entity.
 

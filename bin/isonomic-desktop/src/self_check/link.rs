@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! `ISONOMIC_SELF_CHECK=link`: the `isonomic://` link given at launch opens
 //! its app, and Chat receives it. In the full pass this is also the
 //! relaunch on the prompt run's Capsule (step 9).

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's engine link against the real engine binary, not the
 //! testkit: a scratch Capsule, the engine started by the link because
 //! nothing is listening, the database healthy, first run's calls answered,

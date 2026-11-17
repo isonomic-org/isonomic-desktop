@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! A service's logs: the last lines the supervisor kept for it, from
 //! `system.logs`.
 //!

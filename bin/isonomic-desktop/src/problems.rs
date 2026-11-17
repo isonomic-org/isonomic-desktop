@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's side of problem reports at startup: its log, the panic
 //! hook, the hang watchdog and the crash-loop guard. Reports are kept in
 //! the Capsule; nothing is sent from this build.

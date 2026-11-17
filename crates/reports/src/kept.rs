@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! What the window's notice works with: the kept reports and the setting,
 //! behind one handle, so the shell never holds a path. Every call touches
 //! the disk; call them off the foreground thread.

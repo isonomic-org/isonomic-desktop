@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! What closing, reopening and quitting do (architecture spec, section 2):
 //!
 //! - Closing the window hides it. The process stays resident for the menu

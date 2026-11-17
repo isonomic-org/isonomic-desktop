@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The window's shell (architecture spec, sections 2 and 6): a rail of tabs
 //! down the left and a host that shows the selected one.
 //!

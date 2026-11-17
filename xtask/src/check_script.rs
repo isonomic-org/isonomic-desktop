@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The acceptance check a person runs from the app
 //! (`packaging/macos/acceptance-check.sh`), against a stand-in window: a
 //! scratch Capsule in the temporary folder, keys in memory, the relaunch

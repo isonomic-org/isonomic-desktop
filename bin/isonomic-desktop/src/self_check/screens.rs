@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The full self-check's screenshots: the window's own rendering of its
 //! last frame (`Window::render_to_image`), never a capture of the screen,
 //! so nothing else on the Mac is ever in them. Saved as

@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The "Problem reports" row on Home, until the window has a Settings tab.
 
 use reports::settings::Mode;

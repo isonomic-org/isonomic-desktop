@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Sending reports, once the build has a destination: Send on the notice,
 //! or every kept report under Send automatically.
 //!

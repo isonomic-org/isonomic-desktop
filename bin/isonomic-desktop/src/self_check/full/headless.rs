@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The full pass's Chat steps (4 to 7), headless: real Chat in the real
 //! shell, against the SDK's test engine, which answers every prompt "OK."
 //! and forks sessions as the engine does. The steps are the same functions

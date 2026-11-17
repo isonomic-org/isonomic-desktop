@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The full self-check's later steps: 9 the relaunch (in the link run),
 //! 10 the model picker, 11 Acknowledgements, and the problem-report
 //! notice's screenshot; and the state the prompt run hands the relaunch.

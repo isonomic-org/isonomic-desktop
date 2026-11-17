@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The engine's bundled services, as the app ships them.
 //!
 //! The engine repo's `sidecars.json` says which services are bundled (not

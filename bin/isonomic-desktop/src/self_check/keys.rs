@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Chat's keyboard shortcuts, through the window's own key dispatch, after
 //! the prompt check: both sidebar toggles, and the next chat. Each result is
 //! printed as `yes` or `no`; neither changes PASS or FAIL.

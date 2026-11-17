@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The Acknowledgements dialog shows the notices it is given, or says the
 //! build has none.
 

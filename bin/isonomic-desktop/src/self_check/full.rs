@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The full self-check (`ISONOMIC_SELF_CHECK_FULL=1`): after the prompt,
 //! stop and continue steps, everything Omar would otherwise try by hand,
 //! driven through the window's own dispatch and Chat's own entry points,

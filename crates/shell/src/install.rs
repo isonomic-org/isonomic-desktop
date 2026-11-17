@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Installing one model an app asked for: the window's side of an app's
 //! "this model isn't installed" (the SDK's window request, isonomic-sdk #31).
 //!

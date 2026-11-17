@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Release details for the bundle: the build number, the app icon, and a
 //! dry run of Developer ID signing.
 //!

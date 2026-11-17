@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Step 13: After the second prompt is stopped, the first reply is drawn
 //! whole. Its drawn text is read from the last painted frame, inside the
 //! reply's element, and compared with the reply the thread holds.

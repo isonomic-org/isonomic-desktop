@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! What the engine says once at start that the person should see: today,
 //! that a damaged list of apps and chats was set aside and what could
 //! still be read was recovered (isonomic-capsule `registry::check`, with

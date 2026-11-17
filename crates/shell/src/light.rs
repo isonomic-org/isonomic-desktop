@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The menu bar status light: which color for which state, the icon drawn
 //! for it, and the line of text beside it. Pure functions, tested on every
 //! platform; only `menubar` touches the native status item.

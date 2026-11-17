@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The crash-loop guard. Each launch counts itself in the Capsule's
 //! `reports/launches` before the window opens; surviving [`SURVIVED_SECS`]
 //! or quitting cleanly resets the count. A window that has failed to get

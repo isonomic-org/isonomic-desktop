@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Sending a kept report (problem-report design, part 3): one HTTPS POST
 //! of the report's bytes, exactly as Show report displays them, to one
 //! configured URL. The receiver's side is `docs/architecture/window/report-receiver.md`.

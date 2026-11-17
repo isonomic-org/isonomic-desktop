@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Small helpers shared by the tasks: where the repos are, running commands,
 //! measuring sizes.
 

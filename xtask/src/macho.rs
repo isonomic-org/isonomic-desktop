@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The oldest macOS each Mach-O file in the bundle runs on, read from its
 //! load commands (`LC_BUILD_VERSION`, or `LC_VERSION_MIN_MACOSX` in older
 //! files), so the app never declares a minimum its own parts don't meet.

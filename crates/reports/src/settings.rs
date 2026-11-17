@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The "Problem reports" setting: Ask each time (the default), Send
 //! automatically, or Never send. Kept in the Capsule's
 //! `settings/reports.json`. Where reports go is not a setting: it is the

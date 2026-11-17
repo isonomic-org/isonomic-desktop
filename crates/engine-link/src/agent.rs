@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Start at login (product spec, lifecycle): a per-user launch agent that
 //! starts the engine at login with no window, and again if it crashes.
 //!

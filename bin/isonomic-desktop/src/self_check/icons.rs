@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! The self-check's icon checks: the app's asset source serves Isonomic
 //! UI's icons (every run, at connect), and in the check build a known
 //! icon puts pixels on the screen (once first run is over).

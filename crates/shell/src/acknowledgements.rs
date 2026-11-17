@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Acknowledgements: the licence notices of what the app bundles, as the
 //! engine wrote them, in a dialog. The window reads the file; this only
 //! shows the text it is given.

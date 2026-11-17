@@ -1,3 +1,6 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Problem reports, as the person sees them (problem-report design,
 //! section 3): a notice for each kept report, the review of its exact
 //! bytes, and the "Problem reports" setting on Home.
