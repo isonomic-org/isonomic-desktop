@@ -77,27 +77,29 @@ pub fn button_glow() -> Vec<BoxShadow> {
 
 pub mod terms;
 
-/// The order of events, in seconds from the first frame.
+/// The order of events, in seconds from the first frame. One thing at a
+/// time: each step starts as the one before it lands.
 pub mod at {
     /// The mark's intro runs first (its own 1.5 s), then it rests a beat.
-    pub const MARK_LEAVES: f32 = 1.5 + 0.25;
+    pub const MARK_LEAVES: f32 = 1.5 + 0.3;
     /// How long the mark's sound takes to fade out. It is silent by the
     /// time the mark leaves the centre.
     pub const SOUND_FADE: f32 = 0.25;
     /// The mark turns and shrinks into its corner.
-    pub const MARK_TRAVEL: f32 = 0.7;
-    /// The laptop leaves the bottom edge just as the mark lands.
-    pub const LAPTOP_RISES: f32 = MARK_LEAVES + MARK_TRAVEL - 0.1;
-    pub const LAPTOP_FLIGHT: f32 = 1.3;
+    pub const MARK_TRAVEL: f32 = 0.8;
+    /// The laptop leaves the bottom edge once the mark has landed.
+    pub const LAPTOP_RISES: f32 = MARK_LEAVES + MARK_TRAVEL;
+    pub const LAPTOP_FLIGHT: f32 = 1.4;
     /// Its display lights over this share of the flight, ending with it.
     pub const LIGHT_SHARE: f32 = 0.6;
     /// The landed laptop gives way to its finished picture.
     pub const SETTLE: f32 = 0.3;
-    /// The title, then each button, comes up from the bottom edge.
-    pub const TITLE_RISES: f32 = LAPTOP_RISES + 0.55;
-    pub const BUTTONS_RISE: f32 = LAPTOP_RISES + 0.7;
-    pub const BUTTON_STAGGER: f32 = 0.12;
-    pub const RISE: f32 = 0.7;
+    /// Once it has landed the title comes up from the bottom edge, then
+    /// each button.
+    pub const TITLE_RISES: f32 = LAPTOP_RISES + LAPTOP_FLIGHT;
+    pub const BUTTONS_RISE: f32 = TITLE_RISES + 0.3;
+    pub const BUTTON_STAGGER: f32 = 0.2;
+    pub const RISE: f32 = 0.6;
     /// Nothing moves after this.
     pub const END: f32 = BUTTONS_RISE + BUTTON_STAGGER + RISE + 0.1;
 }

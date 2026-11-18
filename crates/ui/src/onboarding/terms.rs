@@ -98,34 +98,37 @@ pub fn action_shadow() -> Vec<BoxShadow> {
 }
 
 /// The order of events, in seconds from the press on "Start new account".
+/// One thing at a time: each step starts as the one before it lands.
 pub mod at {
-    /// The two buttons and the title leave.
-    pub const LEAVE: f32 = 0.35;
-    /// The laptop turns over on its way to the sidebar.
-    pub const LAPTOP_MOVES: f32 = 0.15;
-    pub const LAPTOP_MOVE: f32 = 1.;
-    /// The sidebar's colour comes in under it.
-    pub const SIDEBAR_SHOWS: f32 = 0.15;
-    pub const SIDEBAR_FADE: f32 = 0.5;
+    /// "Recover your account" and the title drop out, then "Start new
+    /// account" leaves to the right.
+    pub const LEAVE: f32 = 0.4;
+    pub const LEAVE_STAGGER: f32 = 0.1;
+    /// The laptop turns over on its way to the sidebar, whose colour
+    /// comes in under it.
+    pub const LAPTOP_MOVES: f32 = 0.45;
+    pub const LAPTOP_MOVE: f32 = 1.2;
+    pub const SIDEBAR_SHOWS: f32 = LAPTOP_MOVES;
+    pub const SIDEBAR_FADE: f32 = 0.8;
     /// The content slides in from the right.
-    pub const CONTENT_SLIDES: f32 = 0.3;
+    pub const CONTENT_SLIDES: f32 = LAPTOP_MOVES + LAPTOP_MOVE - 0.05;
     pub const SLIDE: f32 = 0.7;
     /// The stepper comes up from the bottom edge.
-    pub const STEPPER_RISES: f32 = 0.6;
-    pub const RISE: f32 = 0.7;
-    /// The clipboard, then the pen, turn over on their way in from the
-    /// right.
-    pub const CLIPBOARD_FLIES: f32 = 0.7;
-    pub const PEN_FLIES: f32 = 0.85;
+    pub const STEPPER_RISES: f32 = CONTENT_SLIDES + SLIDE - 0.1;
+    pub const RISE: f32 = 0.6;
+    /// The clipboard and the pen turn over on their way in from the
+    /// right, as a pair, the pen a step behind.
+    pub const CLIPBOARD_FLIES: f32 = STEPPER_RISES + RISE - 0.1;
+    pub const PEN_FLIES: f32 = CLIPBOARD_FLIES + 0.15;
     pub const FLIGHT: f32 = 1.;
     /// The landed laptop gives way to its finished picture.
     pub const SETTLE: f32 = 0.3;
     /// The dots come out one by one, then pulse toward the clipboard for
     /// as long as the screen is up.
-    pub const DOTS_START: f32 = PEN_FLIES + FLIGHT - 0.15;
+    pub const DOTS_START: f32 = PEN_FLIES + FLIGHT - 0.1;
     pub const DOT_STAGGER: f32 = 0.04;
     pub const DOT_SHOWS: f32 = 0.2;
-    pub const PULSE: f32 = 1.4;
+    pub const PULSE: f32 = 1.6;
     /// Nothing but the dots moves after this.
     pub const END: f32 = PEN_FLIES + FLIGHT + SETTLE + 0.1;
 }

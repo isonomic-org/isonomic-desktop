@@ -90,7 +90,7 @@ impl Onboarding {
     fn stepper(&self, t: f32) -> impl IntoElement {
         let (left, top, wide) = design::STEPPER;
         let risen = motion::ease(
-            motion::SWING,
+            motion::ARRIVE,
             motion::progress(t, at::STEPPER_RISES, at::RISE),
         );
         let (label, label_line) = design::STEP_LABEL;
@@ -203,7 +203,7 @@ impl Onboarding {
 
     fn content(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let slid = motion::ease(
-            motion::SWING,
+            motion::ARRIVE,
             motion::progress(t, at::CONTENT_SLIDES, at::SLIDE),
         );
         let (heading, heading_line) = design::HEADING;
@@ -315,9 +315,10 @@ impl Onboarding {
     pub(super) fn terms_front(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let (left, top, wide, tall) = design::CLIPBOARD;
         let margin = (design::PROP_CANVAS - 1.) / 2.;
-        let (arrived, _) = terms::flight(t, at::CLIPBOARD_FLIES);
-        let clipboard = self.clipboard.clone().map(|frame| {
-            img(frame)
+        // Each is placed by the time its frame was drawn for.
+        let clipboard = self.clipboard.as_ref().map(|frame| {
+            let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
+            img(frame.image.clone())
                 .absolute()
                 .left(px(left - wide * margin + beyond(left) * (1. - arrived)))
                 .top(px(top - tall * margin))
@@ -325,9 +326,9 @@ impl Onboarding {
                 .h(px(tall * design::PROP_CANVAS))
         });
         let (left, top, wide, tall) = design::PEN;
-        let (arrived, _) = terms::flight(t, at::PEN_FLIES);
-        let pen = self.pen.clone().map(|frame| {
-            img(frame)
+        let pen = self.pen.as_ref().map(|frame| {
+            let (arrived, _) = terms::flight(frame.at, at::PEN_FLIES);
+            img(frame.image.clone())
                 .absolute()
                 .left(px(left
                     + (wide - design::PEN_CANVAS) / 2.

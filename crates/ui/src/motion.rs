@@ -3,12 +3,13 @@
 
 //! Easing shared by the window's animations.
 
-/// Fast out of the gate, a long soft landing: the brand intro's own swing.
-pub const SWING: [f32; 4] = [0.16, 1., 0.3, 1.];
+/// Away gently, across evenly, and a long soft landing: for something
+/// crossing the window, whose whole path should be seen.
+pub const CARRY: [f32; 4] = [0.35, 0., 0.15, 1.];
 
-/// Out quickly, then a slower, even landing: for something large crossing
-/// the window, whose whole path should be seen.
-pub const GLIDE: [f32; 4] = [0.33, 1., 0.68, 1.];
+/// Already moving as it comes over the window's edge, then a long soft
+/// landing: for something arriving from outside.
+pub const ARRIVE: [f32; 4] = [0.2, 0.6, 0.2, 1.];
 
 /// Slow to start, then gone: for something leaving the window.
 pub const DEPART: [f32; 4] = [0.5, 0., 0.9, 0.5];
@@ -54,10 +55,11 @@ mod tests {
     }
 
     #[test]
-    fn the_swing_starts_fast_and_ends_slow() {
-        assert!(ease(SWING, 0.25) > 0.7);
-        assert!(close(ease(SWING, 0.), 0.));
-        assert!(close(ease(SWING, 1.), 1.));
+    fn a_carry_is_gentle_at_both_ends() {
+        assert!(ease(CARRY, 0.1) < 0.1 && ease(CARRY, 0.9) > 0.9);
+        assert!(ease(ARRIVE, 0.1) > 0.1);
+        assert!(close(ease(CARRY, 0.), 0.));
+        assert!(close(ease(CARRY, 1.), 1.));
         assert!(close(ease([0., 0., 1., 1.], 0.4), 0.4));
     }
 

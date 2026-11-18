@@ -32,13 +32,14 @@ use std::time::{Duration, Instant};
 
 use ui::onboarding::{self as design, at};
 use ui::{
-    App, AppContext as _, Bounds, Context, Entity, EventEmitter, Image, RenderImage,
-    WindowBackgroundAppearance, WindowBounds, WindowOptions,
+    App, AppContext as _, Bounds, Context, Entity, EventEmitter, Image, WindowBackgroundAppearance,
+    WindowBounds, WindowOptions,
 };
 
 use laptop::Scene;
 use props::Props;
 use sound::Sound;
+use stage::Drawn;
 
 /// The shortest time between two of the laptop's frames.
 const FRAME: Duration = Duration::from_millis(16);
@@ -59,7 +60,7 @@ pub struct Onboarding {
     /// The laptop's model, once read.
     scene: Option<Arc<Scene>>,
     /// The turning laptop's latest frame.
-    frame: Option<Arc<RenderImage>>,
+    frame: Option<Drawn>,
     /// The picture the laptop lands on.
     picture: Arc<Image>,
     /// The mark's sound, in the window a person sees; none in a test's.
@@ -69,8 +70,8 @@ pub struct Onboarding {
     /// The clipboard's and the pen's models, once read.
     props: Option<Arc<Props>>,
     /// Their latest frames. They rest as the last ones drawn.
-    clipboard: Option<Arc<RenderImage>>,
-    pen: Option<Arc<RenderImage>>,
+    clipboard: Option<Drawn>,
+    pen: Option<Drawn>,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -179,6 +180,8 @@ impl Onboarding {
                 .await;
             let flight_ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
             let mut drawn = 0;
+            // How long a frame takes to draw: it is drawn for that far ahead.
+            let mut lead = 1. / 60.;
             loop {
                 let Ok((now, scale, scene)) =
                     view.update(cx, |view, _| (view.now(), view.scale, view.scene.clone()))
@@ -191,14 +194,19 @@ impl Onboarding {
                 };
                 let began = Instant::now();
                 let last = now >= flight_ends;
-                // Drawn for when it will be on screen, about a frame on.
-                let shown_at = (now + 1. / 60.).min(flight_ends);
-                let frame = cx
+                // Drawn for when it will be on screen.
+                let shown_at = (now + lead).min(flight_ends);
+                let image = cx
                     .background_spawn(async move { laptop::draw(&scene, shown_at, scale) })
                     .await;
+                lead = began.elapsed().as_secs_f32().clamp(1. / 60., 0.1);
                 let kept = view.update(cx, |view, cx| {
+                    let frame = Drawn {
+                        image,
+                        at: shown_at,
+                    };
                     if let Some(old) = view.frame.replace(frame) {
-                        cx.drop_image(old, None);
+                        cx.drop_image(old.image, None);
                     }
                     cx.notify();
                 });
@@ -221,7 +229,7 @@ impl Onboarding {
                 .await;
             let _ = view.update(cx, |view, cx| {
                 if let Some(old) = view.frame.take() {
-                    cx.drop_image(old, None);
+                    cx.drop_image(old.image, None);
                 }
                 cx.notify();
             });

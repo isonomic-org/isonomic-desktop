@@ -4,6 +4,12 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · Onboarding moves one thing at a time
+
+- **Order:** on all three screens each step now starts as the one before it lands, where they used to overlap: the mark's intro, its turn into the corner, the laptop's flight, the title, each button; then the buttons leaving, the laptop's move to the sidebar, the content, the stepper, the clipboard with the pen, the dots. About 5 s to the two buttons and 4 s from the press to the dots. The mark's own intro is not re-timed.
+- **Easing:** things crossing the window start and land gently (`motion::CARRY`); things arriving from an edge are already moving and land softly (`motion::ARRIVE`). The brand intro's swing, which is most of the way there in a quarter of its time, is no longer used for anything but the intro.
+- **Steadier 3D frames:** a frame is drawn for the time it will reach the screen, measured from how long the last one took, and it is placed by that same time, so a model's place and its turn always agree. The laptop is in half detail for the whole of a move, full only at rest; the two small props are always in full.
+
 ## 2026-11-18 · Onboarding's third screen, "Before you continue"
 
 - **Design:** "Onboarding 0.4", "03 · Disclosures and acceptance" (Isonomic Desktop, node 372:1677). Its sizes and timings are `ui::onboarding::terms`; its logic is `shell::onboarding::terms`, its drawing `terms_view`.

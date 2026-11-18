@@ -61,7 +61,7 @@ impl Props {
         stage::frame(
             (model, camera),
             Transform::turn_about(camera.up, turn.to_radians(), model.centre()),
-            turn,
+            true,
             (wide * design::PROP_CANVAS, tall * design::PROP_CANVAS),
             wide,
             scale,
@@ -79,7 +79,7 @@ impl Props {
         stage::frame(
             (model, camera),
             lean.after(&tumble),
-            turn,
+            true,
             (design::PEN_CANVAS, design::PEN_CANVAS),
             design::PEN_CANVAS,
             scale,

@@ -29,6 +29,11 @@ fn departed(t: Option<f32>) -> f32 {
     })
 }
 
+/// The same for "Start new account", which leaves a step later.
+fn departed_after(t: Option<f32>) -> f32 {
+    departed(t.map(|t| t - third::LEAVE_STAGGER))
+}
+
 /// One of the two buttons, in the order they come up.
 #[derive(Clone, Copy)]
 struct Choice {
@@ -66,14 +71,14 @@ impl Onboarding {
         let (pad_left, pad_right) = design::BUTTON_PAD;
         let top = design::BUTTON_TOPS[index];
         let starts = at::BUTTONS_RISE + at::BUTTON_STAGGER * index as f32;
-        let risen = motion::ease(motion::SWING, motion::progress(now, starts, at::RISE));
+        let risen = motion::ease(motion::ARRIVE, motion::progress(now, starts, at::RISE));
         // When a new account is started, that button leaves to the right
         // and the other drops out of the window.
-        let gone = departed(self.terms_now());
         let (across, down) = if choice == Chosen::NewAccount {
+            let gone = departed_after(self.terms_now());
             ((design::WIDTH - design::BUTTON_LEFT + 8.) * gone, 0.)
         } else {
-            (0., below(top) * gone)
+            (0., below(top) * departed(self.terms_now()))
         };
         div()
             .id(id)
@@ -136,7 +141,7 @@ impl Render for Onboarding {
         // The mark: its intro, then the turn into the corner.
         let frame = logo::frame_at(std::time::Duration::from_secs_f32(now));
         let gone = motion::ease(
-            motion::SWING,
+            motion::CARRY,
             motion::progress(now, at::MARK_LEAVES, at::MARK_TRAVEL),
         );
         let mark = canvas(
@@ -166,7 +171,9 @@ impl Render for Onboarding {
         let margin = (design::LAPTOP_CANVAS - 1.) / 2.;
         let (place, drop, settled) = match third_now {
             None => {
-                let (landed, _, _) = laptop::flight(now);
+                // A drawn frame is placed by the time it was drawn for.
+                let drawn_for = self.frame.as_ref().map_or(now, |frame| frame.at);
+                let (landed, _, _) = laptop::flight(drawn_for);
                 let (_, top, _, tall) = design::LAPTOP;
                 let flight_ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
                 (
@@ -176,7 +183,8 @@ impl Render for Onboarding {
                 )
             }
             Some(t) => {
-                let (gone, _) = terms::laptop_move(t);
+                let drawn_for = self.frame.as_ref().map_or(t, |frame| frame.at);
+                let (gone, _) = terms::laptop_move(drawn_for);
                 let move_ends = third::LAPTOP_MOVES + third::LAPTOP_MOVE;
                 // Until its first frame is drawn the picture stays put.
                 let settled = if self.frame.is_none() {
@@ -188,8 +196,8 @@ impl Render for Onboarding {
             }
         };
         let (left, top, wide, tall) = place;
-        let turning = self.frame.clone().map(|frame| {
-            img(frame)
+        let turning = self.frame.as_ref().map(|frame| {
+            img(frame.image.clone())
                 .absolute()
                 .left(px(left - wide * margin))
                 .top(px(top - tall * margin + drop))
@@ -209,7 +217,7 @@ impl Render for Onboarding {
 
         let (title_left, title_top, title_wide, title_tall) = design::TITLE;
         let title_risen = motion::ease(
-            motion::SWING,
+            motion::ARRIVE,
             motion::progress(now, at::TITLE_RISES, at::RISE),
         );
         let title = div()

@@ -27,6 +27,9 @@ const DISPLAY: [[u8; 3]; 4] = [
     [207, 175, 148],
 ];
 
+/// Degrees left to turn below which the laptop counts as at rest.
+const AT_REST: f32 = 0.5;
+
 /// The model and the camera the finished picture was taken with.
 pub struct Scene {
     model: Model,
@@ -52,7 +55,7 @@ pub fn picture() -> Arc<Image> {
 /// 1 landed), the turn left to make in degrees, and the display's light.
 pub fn flight(now: f32) -> (f32, f32, f32) {
     let through = motion::progress(now, at::LAPTOP_RISES, at::LAPTOP_FLIGHT);
-    let landed = motion::ease(motion::GLIDE, through);
+    let landed = motion::ease(motion::CARRY, through);
     let lit = motion::progress(through, 1. - at::LIGHT_SHARE, at::LIGHT_SHARE);
     (
         landed,
@@ -83,7 +86,8 @@ pub fn posed(
         (&scene.model, &scene.camera),
         // A somersault: about the camera's level axis, through its middle.
         Transform::turn_about(scene.camera.right, -turn.to_radians(), scene.model.centre()),
-        turn,
+        // Half the detail while it moves; full at rest, at either end.
+        !(AT_REST..=360. - AT_REST).contains(&turn),
         (wide * design::LAPTOP_CANVAS, tall * design::LAPTOP_CANVAS),
         wide,
         scale,

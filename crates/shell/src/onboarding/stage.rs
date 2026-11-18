@@ -10,10 +10,16 @@ use device3d::{Camera, Model, Shot, Transform};
 use image::{Frame, RgbaImage};
 use ui::RenderImage;
 
+/// A drawn frame and the time on its screen's clock it was drawn for.
+/// It is placed by that time, so where it is and how far it has turned
+/// always agree.
+pub struct Drawn {
+    pub image: Arc<RenderImage>,
+    pub at: f32,
+}
+
 /// Samples along each side of a pixel.
 const SAMPLES: usize = 2;
-/// Degrees left to turn below which a model is drawn in full detail.
-const FULL_DETAIL_WITHIN: f32 = 20.;
 
 /// A display's light and the linear colours of its picture's corners.
 pub struct Display {
@@ -30,22 +36,18 @@ impl Display {
 
 /// Draw `model` posed by `pose` on a canvas of `canvas` points, in which
 /// the camera's frame is `frame` points wide, for a screen with `scale`
-/// pixels to a point. With `turn` degrees still to make it moves fast, so
-/// half the detail is enough and keeps the frames coming.
+/// pixels to a point, in full detail or, to keep a large model's frames
+/// coming while it moves, in half.
 pub fn frame(
     (model, camera): (&Model, &Camera),
     pose: Transform,
-    turn: f32,
+    full: bool,
     canvas: (f32, f32),
     frame: f32,
     scale: f32,
     display: Display,
 ) -> Arc<RenderImage> {
-    let scale = if turn.abs() > FULL_DETAIL_WITHIN {
-        scale * 0.5
-    } else {
-        scale
-    };
+    let scale = if full { scale } else { scale * 0.5 };
     let shot = Shot {
         model,
         camera,

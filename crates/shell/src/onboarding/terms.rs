@@ -20,13 +20,14 @@ use ui::{motion, AppContext as _, Context, RenderImage};
 
 use super::laptop::{self, Scene};
 use super::props::Props;
+use super::stage::Drawn;
 use super::{Chosen, Onboarding, FRAME};
 
 /// How far the laptop is on its way to the sidebar at `t` (0 to 1), and
 /// the turn it has left to make, in degrees.
 pub fn laptop_move(t: f32) -> (f32, f32) {
     let through = motion::progress(t, at::LAPTOP_MOVES, at::LAPTOP_MOVE);
-    let gone = motion::ease(motion::GLIDE, through);
+    let gone = motion::ease(motion::CARRY, through);
     (gone, (1. - gone) * 360. * design::TURNS)
 }
 
@@ -44,7 +45,7 @@ pub fn laptop_box(gone: f32) -> (f32, f32, f32, f32) {
 /// A prop that sets off at `starts`: how far in it is at `t` (0 to 1) and
 /// the turn it has left to make, in degrees.
 pub fn flight(t: f32, starts: f32) -> (f32, f32) {
-    let arrived = motion::ease(motion::GLIDE, motion::progress(t, starts, at::FLIGHT));
+    let arrived = motion::ease(motion::CARRY, motion::progress(t, starts, at::FLIGHT));
     (arrived, (1. - arrived) * 360. * design::TURNS)
 }
 
@@ -127,7 +128,7 @@ impl Onboarding {
         self.terms = None;
         for frame in [&mut self.frame, &mut self.clipboard, &mut self.pen] {
             if let Some(old) = frame.take() {
-                cx.drop_image(old, None);
+                cx.drop_image(old.image, None);
             }
         }
         cx.notify();
@@ -143,6 +144,9 @@ impl Onboarding {
         cx.notify();
         cx.spawn(async move |view, cx| {
             let mut last = f32::MIN;
+            // How long a round of frames takes to draw: they are drawn for
+            // that far ahead.
+            let mut lead = 1. / 60.;
             loop {
                 let Ok(Some((t, scale, scene, props))) = view.update(cx, |view, _| {
                     // Declined, or pressed again since: this run is over.
@@ -154,14 +158,15 @@ impl Onboarding {
                     return;
                 };
                 let began = Instant::now();
-                // Drawn for when it will be on screen, about a frame on.
-                let shown_at = t + 1. / 60.;
+                // Drawn for when it will be on screen.
+                let shown_at = t + lead;
                 let frames = cx
                     .background_spawn(async move {
                         draw(scene.as_deref(), props.as_deref(), last, shown_at, scale)
                     })
                     .await;
                 last = shown_at;
+                lead = began.elapsed().as_secs_f32().clamp(1. / 60., 0.1);
                 let kept = view.update(cx, |view, cx| {
                     if view.terms != Some(pressed) {
                         return false;
@@ -171,9 +176,13 @@ impl Onboarding {
                         (&mut view.clipboard, frames.clipboard),
                         (&mut view.pen, frames.pen),
                     ] {
-                        if let Some(new) = new {
+                        if let Some(image) = new {
+                            let new = Drawn {
+                                image,
+                                at: shown_at,
+                            };
                             if let Some(old) = slot.replace(new) {
-                                cx.drop_image(old, None);
+                                cx.drop_image(old.image, None);
                             }
                         }
                     }
@@ -199,7 +208,7 @@ impl Onboarding {
             let _ = view.update(cx, |view, cx| {
                 if view.terms == Some(pressed) {
                     if let Some(old) = view.frame.take() {
-                        cx.drop_image(old, None);
+                        cx.drop_image(old.image, None);
                     }
                     cx.notify();
                 }
