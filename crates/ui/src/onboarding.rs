@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! Sizes, places, colours and timings of the onboarding window, from the
-//! design ("Onboarding 0.4": "01 · App launch" and "02 · Get started").
+//! design ("Onboarding 0.4": "01 · App launch" and "02 · Get started"; the
+//! third screen's are in `terms`).
 //! Places are in the window's own 1280 × 800, from its top left.
 
 use isonomic_app::ui::{point, px, rgb, rgba, size, BoxShadow, Hsla, Pixels, Point, Size};
@@ -73,6 +74,8 @@ pub fn button_glow() -> Vec<BoxShadow> {
         glow(0xe8501f0a, -10., 2.),
     ]
 }
+
+pub mod terms;
 
 /// The order of events, in seconds from the first frame.
 pub mod at {

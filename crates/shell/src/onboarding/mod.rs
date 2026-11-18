@@ -12,12 +12,19 @@
 //! the laptop somersaults up from the bottom edge as its display lights,
 //! and the title and the two buttons come up after it.
 //!
+//! Pressing "Start new account" brings the third screen, "Before you
+//! continue" (`terms`), which runs from its own clock.
+//!
 //! Everything is drawn from one clock that starts at the first frame. The
 //! laptop's frames are drawn off the foreground thread, each for the time
 //! it will be shown at.
 
 mod laptop;
+mod props;
 mod sound;
+mod stage;
+mod terms;
+mod terms_view;
 mod view;
 
 use std::sync::Arc;
@@ -30,12 +37,14 @@ use ui::{
 };
 
 use laptop::Scene;
+use props::Props;
 use sound::Sound;
 
 /// The shortest time between two of the laptop's frames.
 const FRAME: Duration = Duration::from_millis(16);
 
-/// What the person chose on "Get started".
+/// What the person chose: to recover an account, on "Get started", or a
+/// new one, once they have accepted the terms on the third screen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Chosen {
     NewAccount,
@@ -55,6 +64,13 @@ pub struct Onboarding {
     picture: Arc<Image>,
     /// The mark's sound, in the window a person sees; none in a test's.
     sound: Option<Sound>,
+    /// When "Start new account" was pressed: the third screen's clock.
+    terms: Option<Instant>,
+    /// The clipboard's and the pen's models, once read.
+    props: Option<Arc<Props>>,
+    /// Their latest frames. They rest as the last ones drawn.
+    clipboard: Option<Arc<RenderImage>>,
+    pen: Option<Arc<RenderImage>>,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -65,6 +81,8 @@ impl Onboarding {
         cx.spawn(async move |view, cx| {
             let scene = cx.background_spawn(async { Scene::load() }).await;
             let _ = view.update(cx, |view, _| view.scene = scene.ok().map(Arc::new));
+            let props = cx.background_spawn(async { Props::load() }).await;
+            let _ = view.update(cx, |view, _| view.props = props.ok().map(Arc::new));
         })
         .detach();
         Self {
@@ -74,6 +92,10 @@ impl Onboarding {
             frame: None,
             picture: laptop::picture(),
             sound: None,
+            terms: None,
+            props: None,
+            clipboard: None,
+            pen: None,
         }
     }
 
@@ -102,8 +124,13 @@ impl Onboarding {
         self.now() >= at::END
     }
 
+    /// A press on one of the two ways to start. A new account goes on to
+    /// the third screen; recovering one is left to whoever listens.
     pub fn choose(&mut self, choice: Chosen, cx: &mut Context<Self>) {
-        cx.emit(choice);
+        match choice {
+            Chosen::NewAccount => self.begin_terms(cx),
+            Chosen::Recover => cx.emit(choice),
+        }
     }
 
     /// The sound belongs to the mark's intro alone: fade it out so it is
@@ -221,8 +248,8 @@ pub fn window_options(cx: &App) -> WindowOptions {
     }
 }
 
-/// Open onboarding. When the person starts a new account the window goes
-/// and `next` runs, which opens the app's window.
+/// Open onboarding. When the person has accepted the terms for a new
+/// account the window goes and `next` runs, which opens the app's window.
 pub fn open(cx: &mut App, next: impl FnOnce(&mut App) + 'static) -> Option<Entity<Onboarding>> {
     let mut next = Some(next);
     let opened = ui::open_window(window_options(cx), cx, |window, cx| {

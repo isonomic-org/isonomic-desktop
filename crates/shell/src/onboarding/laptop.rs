@@ -7,10 +7,11 @@
 
 use std::sync::Arc;
 
-use device3d::{Camera, Framing, Model, Shot, Transform};
-use image::{Frame, RgbaImage};
+use device3d::{Camera, Framing, Model, Transform};
 use ui::onboarding::{self as design, at};
 use ui::{motion, Image, ImageFormat, RenderImage};
+
+use super::stage::{self, Display};
 
 static MODEL: &[u8] = include_bytes!("../../../../assets/onboarding/macbook-pro-13-2020.glb");
 static PICTURE: &[u8] = include_bytes!("../../../../assets/onboarding/macbook-pro-13-2020.png");
@@ -25,10 +26,6 @@ const DISPLAY: [[u8; 3]; 4] = [
     [190, 150, 205],
     [207, 175, 148],
 ];
-/// Samples along each side of a pixel while the laptop moves.
-const SAMPLES: usize = 2;
-/// Degrees left to turn below which the laptop is drawn in full detail.
-const FULL_DETAIL_WITHIN: f32 = 20.;
 
 /// The model and the camera the finished picture was taken with.
 pub struct Scene {
@@ -69,32 +66,32 @@ pub fn flight(now: f32) -> (f32, f32, f32) {
 pub fn draw(scene: &Scene, now: f32, scale: f32) -> Arc<RenderImage> {
     let (_, turn, light) = flight(now);
     let (_, _, wide, tall) = design::LAPTOP;
-    // While it turns fast, half the detail is enough and keeps the frames
-    // coming; it is drawn in full as it comes to rest.
-    let scale = if turn > FULL_DETAIL_WITHIN {
-        scale * 0.5
-    } else {
-        scale
-    };
-    let frame_width = wide * scale;
+    posed(scene, turn, light, (wide, tall), scale)
+}
+
+/// Draw the laptop with `turn` degrees of a somersault still to make, its
+/// display lit by `light`, for a picture of `size` points.
+pub fn posed(
+    scene: &Scene,
+    turn: f32,
+    light: f32,
+    (wide, tall): (f32, f32),
+    scale: f32,
+) -> Arc<RenderImage> {
     let linear = |c: [u8; 3]| c.map(|c| device3d::shade::to_linear(c as f32 / 255.));
-    let shot = Shot {
-        model: &scene.model,
-        camera: &scene.camera,
+    stage::frame(
+        (&scene.model, &scene.camera),
         // A somersault: about the camera's level axis, through its middle.
-        pose: Transform::turn_about(scene.camera.right, -turn.to_radians(), scene.model.centre()),
-        width: (frame_width * design::LAPTOP_CANVAS).round() as usize,
-        height: (tall * scale * design::LAPTOP_CANVAS).round() as usize,
-        frame_width,
-        samples: SAMPLES,
-        light,
-        picture: DISPLAY.map(linear),
-    };
-    let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
-    let frame = device3d::render(&shot, threads);
-    let pixels = RgbaImage::from_raw(frame.width as u32, frame.height as u32, frame.bgra)
-        .expect("a frame holds four bytes a pixel");
-    Arc::new(RenderImage::new(vec![Frame::new(pixels)]))
+        Transform::turn_about(scene.camera.right, -turn.to_radians(), scene.model.centre()),
+        turn,
+        (wide * design::LAPTOP_CANVAS, tall * design::LAPTOP_CANVAS),
+        wide,
+        scale,
+        Display {
+            light,
+            picture: DISPLAY.map(linear),
+        },
+    )
 }
 
 #[cfg(test)]

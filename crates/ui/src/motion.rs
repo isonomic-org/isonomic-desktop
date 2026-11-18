@@ -10,6 +10,9 @@ pub const SWING: [f32; 4] = [0.16, 1., 0.3, 1.];
 /// the window, whose whole path should be seen.
 pub const GLIDE: [f32; 4] = [0.33, 1., 0.68, 1.];
 
+/// Slow to start, then gone: for something leaving the window.
+pub const DEPART: [f32; 4] = [0.5, 0., 0.9, 0.5];
+
 /// A cubic easing curve through (0, 0) and (1, 1), given as its two
 /// control points: the eased value at `x`.
 pub fn ease([x1, y1, x2, y2]: [f32; 4], x: f32) -> f32 {

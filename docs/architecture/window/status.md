@@ -4,7 +4,15 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
-## 2026-11-18 · The menu bar icon is the mark
+## 2026-11-18 · Onboarding's third screen, "Before you continue"
+
+- **Design:** "Onboarding 0.4", "03 · Disclosures and acceptance" (Isonomic Desktop, node 372:1677). Its sizes and timings are `ui::onboarding::terms`; its logic is `shell::onboarding::terms`, its drawing `terms_view`.
+- **From "Start new account":** that button leaves to the right and "Recover your account" drops out of the window, with the title. The laptop turns over on its way to the sidebar and lands on its picture at 300 wide. The content slides in from the right, the stepper comes up from the bottom edge, and the clipboard and then the pen turn over on their way in from the right. Then the dotted line comes out dot by dot and a pulse runs down it from the laptop to the clipboard for as long as the screen is up.
+- **The clipboard and the pen are 3D** (`onboarding/props.rs`): the devices repository's models, drawn by `device3d` like the laptop, the clipboard from above and the pen from the side, leaning. They rest as their last drawn frame; there is no finished picture to land on. The pen is the Anud pen, so it differs from the pen drawn in the design.
+- **The content:** the header, the risk disclosure (scrolls; set in the bundled serif, whose heaviest weight is Medium, so the clause leads are Medium where the design has SemiBold) and the footer.
+- **The buttons:** "Decline" goes back to the two ways to start, without a motion of its own. "Accept and continue" hands over to the app's window, as "Start new account" did before; the later screens aren't built.
+- **Timings are ours:** the design has the still screen only.
+
 
 - **The icon:** the Isonomic mark, black on clear, as a template image (`assets/icon/menu-bar-mark.png`, 36 pixels for 18 points), so the system colours it for a light or dark bar. It replaces the coloured status dot.
 - **Status:** no longer shown by the icon. It stays as the first line of the icon's menu and as its tooltip.

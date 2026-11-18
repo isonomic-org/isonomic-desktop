@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! The onboarding window's view in a headless window: once its motion has
-//! ended, the title and both buttons are in place, and a button tells the
-//! window what was chosen.
+//! ended, the title and both buttons are in place; a new account goes
+//! through the third screen, whose buttons decline or accept.
 
 extern crate ui as gpui;
 
@@ -67,13 +67,31 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
         .detach();
     });
     view.update(cx, |view, cx| view.skip(cx));
-    for id in ["onboarding-new-account", "onboarding-recover"] {
+    let click = |cx: &mut TestAppContext, id: &'static str| {
         cx.update_window(window, |_, window, cx| {
             window.render_frame(cx);
             window.click(id, cx);
         })
         .unwrap();
+        cx.run_until_parked();
+    };
+    click(cx, "onboarding-recover");
+    assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+
+    // A new account goes to the third screen first, and is only chosen
+    // once its terms are accepted.
+    click(cx, "onboarding-new-account");
+    assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+    view.update(cx, |view, cx| view.skip_terms(cx));
+    for id in ["onboarding-terms", "onboarding-stepper"] {
+        assert!(shown(cx, window, id), "{id}");
     }
-    cx.run_until_parked();
-    assert_eq!(*chosen.borrow(), [Chosen::NewAccount, Chosen::Recover]);
+
+    // Declining goes back to the two ways to start.
+    click(cx, "onboarding-decline");
+    assert!(view.read_with(cx, |view, _| view.terms_now().is_none()));
+    click(cx, "onboarding-new-account");
+    view.update(cx, |view, cx| view.skip_terms(cx));
+    click(cx, "onboarding-accept");
+    assert_eq!(*chosen.borrow(), [Chosen::Recover, Chosen::NewAccount]);
 }

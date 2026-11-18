@@ -5,6 +5,7 @@
 //! places it in the 1280 × 800 page, moved by the one clock.
 
 use ui::component::Icon;
+use ui::onboarding::terms::at as third;
 use ui::onboarding::{self as design, at};
 use ui::{
     canvas, div, img, logo, motion, point, px, Context, FontWeight, InteractiveElement as _,
@@ -12,12 +13,20 @@ use ui::{
     StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
 };
 
-use super::{laptop, Chosen, Onboarding};
+use super::{laptop, terms, Chosen, Onboarding};
 
 /// How far below its place something starts so that it is under the
 /// window's bottom edge.
 fn below(top: f32) -> f32 {
     design::HEIGHT - top + 8.
+}
+
+/// How far something that is leaving has gone, `t` seconds after the
+/// press on "Start new account"; nothing before it.
+fn departed(t: Option<f32>) -> f32 {
+    t.map_or(0., |t| {
+        motion::ease(motion::DEPART, motion::progress(t, 0., third::LEAVE))
+    })
 }
 
 /// One of the two buttons, in the order they come up.
@@ -58,12 +67,20 @@ impl Onboarding {
         let top = design::BUTTON_TOPS[index];
         let starts = at::BUTTONS_RISE + at::BUTTON_STAGGER * index as f32;
         let risen = motion::ease(motion::SWING, motion::progress(now, starts, at::RISE));
+        // When a new account is started, that button leaves to the right
+        // and the other drops out of the window.
+        let gone = departed(self.terms_now());
+        let (across, down) = if choice == Chosen::NewAccount {
+            ((design::WIDTH - design::BUTTON_LEFT + 8.) * gone, 0.)
+        } else {
+            (0., below(top) * gone)
+        };
         div()
             .id(id)
             .test_support()
             .absolute()
-            .left(px(design::BUTTON_LEFT))
-            .top(px(top + below(top) * (1. - risen)))
+            .left(px(design::BUTTON_LEFT + across))
+            .top(px(top + below(top) * (1. - risen) + down))
             .w(px(wide))
             .h(px(tall))
             .pl(px(pad_left))
@@ -110,7 +127,9 @@ impl Render for Onboarding {
         }
         self.scale = window.scale_factor();
         let now = self.now();
-        if now < at::END {
+        let third_now = self.terms_now();
+        // The third screen's dotted line never stops pulsing.
+        if now < at::END || third_now.is_some() {
             window.request_animation_frame();
         }
 
@@ -142,21 +161,41 @@ impl Render for Onboarding {
         .size_full();
 
         // The laptop: the turning model on its larger canvas, then the
-        // finished picture over it.
-        let (left, top, wide, tall) = design::LAPTOP;
-        let (landed, _, _) = laptop::flight(now);
-        let drop = below(top) + tall * (design::LAPTOP_CANVAS - 1.) / 2.;
+        // finished picture over it. It flies up on the second screen, and
+        // across to the sidebar on the third.
         let margin = (design::LAPTOP_CANVAS - 1.) / 2.;
+        let (place, drop, settled) = match third_now {
+            None => {
+                let (landed, _, _) = laptop::flight(now);
+                let (_, top, _, tall) = design::LAPTOP;
+                let flight_ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
+                (
+                    design::LAPTOP,
+                    (below(top) + tall * margin) * (1. - landed),
+                    motion::progress(now, flight_ends, at::SETTLE),
+                )
+            }
+            Some(t) => {
+                let (gone, _) = terms::laptop_move(t);
+                let move_ends = third::LAPTOP_MOVES + third::LAPTOP_MOVE;
+                // Until its first frame is drawn the picture stays put.
+                let settled = if self.frame.is_none() {
+                    1.
+                } else {
+                    motion::progress(t, move_ends, third::SETTLE)
+                };
+                (terms::laptop_box(gone), 0., settled)
+            }
+        };
+        let (left, top, wide, tall) = place;
         let turning = self.frame.clone().map(|frame| {
             img(frame)
                 .absolute()
                 .left(px(left - wide * margin))
-                .top(px(top - tall * margin + drop * (1. - landed)))
+                .top(px(top - tall * margin + drop))
                 .w(px(wide * design::LAPTOP_CANVAS))
                 .h(px(tall * design::LAPTOP_CANVAS))
         });
-        let flight_ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
-        let settled = motion::progress(now, flight_ends, at::SETTLE);
         let picture = (settled > 0.).then(|| {
             img(self.picture.clone())
                 .id("onboarding-laptop")
@@ -178,7 +217,9 @@ impl Render for Onboarding {
             .test_support()
             .absolute()
             .left(px(title_left))
-            .top(px(title_top + below(title_top) * (1. - title_risen)))
+            .top(px(title_top
+                + below(title_top) * (1. - title_risen)
+                + below(title_top) * departed(third_now)))
             .w(px(title_wide))
             .h(px(title_tall))
             .flex()
@@ -203,11 +244,13 @@ impl Render for Onboarding {
             .bg(design::page())
             // With no title bar, the page itself moves the window.
             .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
+            .children(third_now.map(|t| self.terms_backdrop(t)))
             .child(mark)
             .children(turning)
             .children(picture)
             .child(title)
             .child(new_account)
             .child(recover)
+            .children(third_now.map(|t| self.terms_front(t, cx)))
     }
 }
