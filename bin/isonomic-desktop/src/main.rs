@@ -278,172 +278,178 @@ fn main() {
             MenuItem::action("Quit Isonomic", Quit),
         ])]);
 
-        let options = lifecycle::window_options(cx, remembered);
-        let live = client.live();
-        let logs = client.clone();
-        // Settings live in the Capsule until the engine stores them.
-        // Apps' window requests (installing a model) queue here until the
-        // shell exists to serve them.
-        let (requests, queued) = shell::install::requests();
-        let host = AppHost::new(client.clone(), settings).with_requests(requests);
-        let request_client = client.clone();
-        let host_client = client.clone();
-        let profile_client = client.clone();
-        let (window, shell) = ui::open_window(options, cx, |window, cx| {
-            lifecycle::hide_on_close(window, cx);
-            cx.new(|cx| {
-                // The size the person leaves the window at is the next one.
-                let size_root = size_root.clone();
-                cx.observe_window_bounds(window, move |_, window, cx| {
-                    let (root, now) = (size_root.clone(), window.bounds().size);
-                    cx.background_spawn(async move { window_size::save(&root, now) })
-                        .detach();
-                })
-                .detach();
-                let mut shell = Shell::new(live, Arc::new(logs), cx);
-                shell.serve_requests(queued, Arc::new(request_client), cx);
-                let problems = link.problems();
-                shell
-                    .home()
-                    .update(cx, |home, cx| home.follow_problems(problems, cx));
-                if translocated {
-                    shell.home().update(cx, |home, cx| {
-                        home.add_notice(
-                            "Move Isonomic to Applications",
-                            "Move Isonomic to the Applications folder and open it from there. \
+        // A new person meets the onboarding window first; the app's window
+        // opens when they start. A self-check drives the app's window by
+        // its ids, so it goes straight there.
+        let onboard = check.is_none() && !state.set_up;
+        let open_app = move |cx: &mut ui::App| {
+            let options = lifecycle::window_options(cx, remembered);
+            let live = client.live();
+            let logs = client.clone();
+            // Settings live in the Capsule until the engine stores them.
+            // Apps' window requests (installing a model) queue here until the
+            // shell exists to serve them.
+            let (requests, queued) = shell::install::requests();
+            let host = AppHost::new(client.clone(), settings).with_requests(requests);
+            let request_client = client.clone();
+            let host_client = client.clone();
+            let profile_client = client.clone();
+            let (window, shell) = ui::open_window(options, cx, |window, cx| {
+                lifecycle::hide_on_close(window, cx);
+                cx.new(|cx| {
+                    // The size the person leaves the window at is the next one.
+                    let size_root = size_root.clone();
+                    cx.observe_window_bounds(window, move |_, window, cx| {
+                        let (root, now) = (size_root.clone(), window.bounds().size);
+                        cx.background_spawn(async move { window_size::save(&root, now) })
+                            .detach();
+                    })
+                    .detach();
+                    let mut shell = Shell::new(live, Arc::new(logs), cx);
+                    shell.serve_requests(queued, Arc::new(request_client), cx);
+                    let problems = link.problems();
+                    shell
+                        .home()
+                        .update(cx, |home, cx| home.follow_problems(problems, cx));
+                    if translocated {
+                        shell.home().update(cx, |home, cx| {
+                            home.add_notice(
+                                "Move Isonomic to Applications",
+                                "Move Isonomic to the Applications folder and open it from there. \
                              Until then it can't start at login."
-                                .into(),
-                            cx,
-                        )
-                    });
-                }
-                if safe {
-                    // The crash-loop guard: no app this time, and Home says why.
-                    shell.home().update(cx, |home, cx| {
-                        home.add_notice(problems::SAFE_TITLE, problems::SAFE_NOTICE.into(), cx)
-                    });
-                } else {
-                    for app in first_party() {
-                        shell.mount(app, host.clone(), cx);
+                                    .into(),
+                                cx,
+                            )
+                        });
                     }
-                }
-                if let Some(kept) = kept.clone() {
-                    shell.watch_reports(kept, cx);
-                    if let Some(reports) = shell.reports() {
-                        let writer = Arc::clone(&report_context);
-                        reports.update(cx, |r, _| r.write_with(writer));
-                        // Send is offered only when the build has a destination.
-                        if let Some(sender) = report_sender() {
-                            let host = sender.destination().host().to_string();
-                            reports.update(cx, |r, cx| r.send_with(Arc::new(sender), host, cx));
+                    if safe {
+                        // The crash-loop guard: no app this time, and Home says why.
+                        shell.home().update(cx, |home, cx| {
+                            home.add_notice(problems::SAFE_TITLE, problems::SAFE_NOTICE.into(), cx)
+                        });
+                    } else {
+                        for app in first_party() {
+                            shell.mount(app, host.clone(), cx);
                         }
                     }
-                    shell.review_on_status(profile_client.live(), cx);
-                    let id_client = profile_client.clone();
-                    shell.report_identity(
+                    if let Some(kept) = kept.clone() {
+                        shell.watch_reports(kept, cx);
+                        if let Some(reports) = shell.reports() {
+                            let writer = Arc::clone(&report_context);
+                            reports.update(cx, |r, _| r.write_with(writer));
+                            // Send is offered only when the build has a destination.
+                            if let Some(sender) = report_sender() {
+                                let host = sender.destination().host().to_string();
+                                reports.update(cx, |r, cx| r.send_with(Arc::new(sender), host, cx));
+                            }
+                        }
+                        shell.review_on_status(profile_client.live(), cx);
+                        let id_client = profile_client.clone();
+                        shell.report_identity(
+                            Box::pin(async move {
+                                let mut live = id_client.live();
+                                let _ = live.wait_for(|live| live.connected).await;
+                                shell::first_run::identity_from(&id_client).await
+                            }),
+                            cx,
+                        );
+                    }
+                    let tab_context = Arc::clone(&report_context);
+                    shell.on_tab_change(move |id| {
+                        if let Ok(mut tab) = tab_context.tab.lock() {
+                            *tab = Some(id.to_string());
+                        }
+                    });
+                    // The hardware profile caps how many apps stay loaded.
+                    let profile_client = profile_client.clone();
+                    let profile_context = Arc::clone(&report_context);
+                    shell.follow_profile(
                         Box::pin(async move {
-                            let mut live = id_client.live();
+                            // Ask once the engine is connected.
+                            let mut live = profile_client.live();
                             let _ = live.wait_for(|live| live.connected).await;
-                            shell::first_run::identity_from(&id_client).await
+                            let profile = profile_client.profile().await;
+                            if let Ok(p) = &profile {
+                                problems::profile_known(
+                                    &profile_context,
+                                    &p.profile,
+                                    p.total_memory_bytes,
+                                );
+                            }
+                            profile.map(|p| p.profile).map_err(|e| e.to_string())
                         }),
                         cx,
                     );
-                }
-                let tab_context = Arc::clone(&report_context);
-                shell.on_tab_change(move |id| {
-                    if let Ok(mut tab) = tab_context.tab.lock() {
-                        *tab = Some(id.to_string());
+                    if !state.set_up {
+                        let setup = FirstRunSetup {
+                            client: host_client,
+                            capsule,
+                        };
+                        shell.start_first_run(Arc::new(setup), state.created, cx);
                     }
-                });
-                // The hardware profile caps how many apps stay loaded.
-                let profile_client = profile_client.clone();
-                let profile_context = Arc::clone(&report_context);
-                shell.follow_profile(
-                    Box::pin(async move {
-                        // Ask once the engine is connected.
-                        let mut live = profile_client.live();
-                        let _ = live.wait_for(|live| live.connected).await;
-                        let profile = profile_client.profile().await;
-                        if let Ok(p) = &profile {
-                            problems::profile_known(
-                                &profile_context,
-                                &p.profile,
-                                p.total_memory_bytes,
-                            );
-                        }
-                        profile.map(|p| p.profile).map_err(|e| e.to_string())
-                    }),
-                    cx,
-                );
-                // The window opens on the mark's intro. A self-check drives
-                // the window by its ids, so it starts past it.
-                if check.is_none() {
-                    shell.start_launch(cx);
-                }
-                if !state.set_up {
-                    let setup = FirstRunSetup {
-                        client: host_client,
-                        capsule,
-                    };
-                    shell.start_first_run(Arc::new(setup), state.created, cx);
-                }
-                shell
+                    shell
+                })
             })
-        })
-        .expect("failed to open the window");
-        // Keyboard focus starts on the rail (or first run).
-        let _ = window.update(cx, |_, window, cx| {
-            shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
-        });
-        cx.on_action(move |_: &Acknowledgements, cx| {
-            lifecycle::show(cx);
+            .expect("failed to open the window");
+            // Keyboard focus starts on the rail (or first run).
+            let _ = window.update(cx, |_, window, cx| {
+                shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
+            });
+            cx.on_action(move |_: &Acknowledgements, cx| {
+                lifecycle::show(cx);
+                cx.spawn(async move |cx| {
+                    let notices = cx.background_spawn(async { notices() }).await;
+                    let _ = cx.update_window(window, |_, window, cx| {
+                        shell::acknowledgements::open(notices, window, cx)
+                    });
+                })
+                .detach();
+            });
+            // What the engine said at start that the person should see.
+            let notice_shell = shell.clone();
+            let notice_client = client.clone();
             cx.spawn(async move |cx| {
-                let notices = cx.background_spawn(async { notices() }).await;
-                let _ = cx.update_window(window, |_, window, cx| {
-                    shell::acknowledgements::open(notices, window, cx)
-                });
+                let mut live = notice_client.live();
+                let _ = live.wait_for(|live| live.connected).await;
+                let found = cx
+                    .background_spawn(async move { engine_notices::unseen(&notices_root) })
+                    .await;
+                if let Some(message) = found {
+                    notice_shell.update(cx, |shell, cx| {
+                        shell.home().update(cx, |home, cx| {
+                            home.add_notice(engine_notices::SET_ASIDE_TITLE, message, cx)
+                        })
+                    });
+                }
             })
             .detach();
-        });
-        // What the engine said at start that the person should see.
-        let notice_shell = shell.clone();
-        let notice_client = client.clone();
-        cx.spawn(async move |cx| {
-            let mut live = notice_client.live();
-            let _ = live.wait_for(|live| live.connected).await;
-            let found = cx
-                .background_spawn(async move { engine_notices::unseen(&notices_root) })
-                .await;
-            if let Some(message) = found {
-                notice_shell.update(cx, |shell, cx| {
-                    shell.home().update(cx, |home, cx| {
-                        home.add_notice(engine_notices::SET_ASIDE_TITLE, message, cx)
-                    })
-                });
-            }
-        })
-        .detach();
-        let link_shell = shell.clone();
-        cx.spawn(async move |cx| {
-            while let Some(url) = opened_links.next().await {
-                let _ = cx.update_window(window, |_, window, cx| {
-                    lifecycle::show(cx);
-                    let handled =
-                        link_shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
-                    if !handled {
-                        reports::log::line(&format!("no app opens {url}"));
-                    }
-                });
-            }
-        })
-        .detach();
+            let link_shell = shell.clone();
+            cx.spawn(async move |cx| {
+                while let Some(url) = opened_links.next().await {
+                    let _ = cx.update_window(window, |_, window, cx| {
+                        lifecycle::show(cx);
+                        let handled =
+                            link_shell.update(cx, |shell, cx| shell.open_link(&url, window, cx));
+                        if !handled {
+                            reports::log::line(&format!("no app opens {url}"));
+                        }
+                    });
+                }
+            })
+            .detach();
 
-        if let Some(mode) = check {
-            self_check::start(mode, window, shell, client, launch_links, cx);
-            return;
+            if let Some(mode) = check {
+                self_check::start(mode, window, shell, client, launch_links, cx);
+                return;
+            }
+            let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
+            menubar::install(client, link.client().live(), login, cx);
+        };
+        if onboard {
+            shell::onboarding::open(cx, open_app);
+        } else {
+            open_app(cx);
         }
-        let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
-        menubar::install(client, link.client().live(), login, cx);
     });
 }
 

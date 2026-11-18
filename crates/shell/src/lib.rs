@@ -15,11 +15,11 @@ pub mod downloads;
 pub mod first_run;
 pub mod home;
 pub mod install;
-pub mod launch;
 pub mod lifecycle;
 pub mod light;
 pub mod logs;
 pub mod menubar;
+pub mod onboarding;
 pub mod problems;
 
 use std::sync::Arc;
@@ -42,7 +42,6 @@ use apps::{AppHost, AppTab};
 use first_run::{Finished, FirstRun, Setup};
 use home::HomeTab;
 use install::{InstallOutcome, ModelInstall, ModelSource};
-use launch::Launch;
 use logs::LogSource;
 use problems::ProblemReports;
 
@@ -74,8 +73,6 @@ pub struct Shell {
     rail_scroll: ScrollHandle,
     /// The rail button last scrolled into view because it had focus.
     rail_followed: Option<usize>,
-    /// The launch screen, shown before anything else until its intro ends.
-    launch: Option<Entity<Launch>>,
     /// Shown in place of the tabs until it finishes.
     first_run: Option<Entity<FirstRun>>,
     /// A model an app asked for, shown in place of the tab on screen.
@@ -114,7 +111,6 @@ impl Shell {
             on_tab: None,
             rail_scroll: ScrollHandle::new(),
             rail_followed: None,
-            launch: None,
             first_run: None,
             install: None,
             cap: None,
@@ -427,9 +423,6 @@ fn catalog_icon(name: &str) -> Option<ui::assets::IconName> {
 
 impl Render for Shell {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        if let Some(launch) = &self.launch {
-            return div().id("shell").size_full().child(launch.clone());
-        }
         if let Some(first_run) = &self.first_run {
             return div().id("shell").size_full().child(first_run.clone());
         }

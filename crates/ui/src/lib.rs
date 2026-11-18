@@ -18,6 +18,8 @@ pub use isonomic_app::extra;
 pub use isonomic_app::ui::*;
 
 pub mod logo;
+pub mod motion;
+pub mod onboarding;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
 /// colors come from the theme, sizes from here or from the spacing scale.
@@ -51,17 +53,6 @@ pub mod tokens {
     /// A rail button, square: the design's 28 px ghost icon button.
     pub fn rail_button() -> Pixels {
         px(28.)
-    }
-
-    /// The mark on the launch screen: the design's 116 px, centred.
-    pub fn logo_size() -> Pixels {
-        px(116.)
-    }
-
-    /// How long the launch screen holds the finished mark before the
-    /// window moves on.
-    pub fn launch_hold() -> std::time::Duration {
-        std::time::Duration::from_millis(400)
     }
 
     /// The wordmark's size on first run.

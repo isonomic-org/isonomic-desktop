@@ -14,6 +14,8 @@ use std::time::Duration;
 
 use isonomic_app::ui::{point, px, rgb, Bounds, Hsla, PathBuilder, Pixels, Point, Window};
 
+use crate::motion::ease;
+
 /// Frames a second, and the frame the intro ends on.
 const FPS: f32 = 60.;
 pub const LAST_FRAME: f32 = 90.;
@@ -83,26 +85,6 @@ pub struct Pose {
     pub lift: f32,
 }
 
-/// A cubic easing curve through (0, 0) and (1, 1): the eased value at `x`.
-fn ease([x1, y1, x2, y2]: [f32; 4], x: f32) -> f32 {
-    let x = x.clamp(0., 1.);
-    let at = |a: f32, b: f32, t: f32| {
-        let u = 1. - t;
-        3. * u * u * t * a + 3. * u * t * t * b + t * t * t
-    };
-    // The curve's x is monotonic, so bisect for the parameter.
-    let (mut low, mut high) = (0., 1.);
-    for _ in 0..24 {
-        let mid = (low + high) / 2.;
-        if at(x1, x2, mid) < x {
-            low = mid;
-        } else {
-            high = mid;
-        }
-    }
-    at(y1, y2, (low + high) / 2.)
-}
-
 /// Person `index` (0 to 3) at `frame`.
 pub fn pose(index: usize, frame: f32) -> Pose {
     let start = STAGGER * index as f32;
@@ -130,15 +112,27 @@ pub fn pull(frame: f32) -> f32 {
 /// Draw the mark at `frame`, centred in `bounds` and sized so the resting
 /// mark fills its width. While people swing in they reach outside it.
 pub fn paint(bounds: Bounds<Pixels>, frame: f32, color: Hsla, window: &mut Window) {
-    let center = bounds.center();
+    paint_at(bounds.center(), bounds.size.width, 0., frame, color, window);
+}
+
+/// Draw the mark at `frame` with its centre at `center`, its resting size
+/// `size` across, and the whole mark turned `spin` degrees clockwise.
+pub fn paint_at(
+    center: Point<Pixels>,
+    size: Pixels,
+    spin: f32,
+    frame: f32,
+    color: Hsla,
+    window: &mut Window,
+) {
     let (cx, cy) = (f32::from(center.x), f32::from(center.y));
-    let unit = f32::from(bounds.size.width) / (2. * HALF_EXTENT) * pull(frame);
+    let unit = f32::from(size) / (2. * HALF_EXTENT) * pull(frame);
     for index in 0..4 {
         let pose = pose(index, frame);
         if pose.opacity <= 0. {
             continue;
         }
-        let (sin, cos) = pose.rotation.to_radians().sin_cos();
+        let (sin, cos) = (pose.rotation + spin).to_radians().sin_cos();
         let place = |[x, y]: [f32; 2]| -> Point<Pixels> {
             let y = y + pose.lift;
             point(
@@ -246,13 +240,5 @@ mod tests {
         assert!(close(pull(67.68), 448.393 / 482.143));
         assert!(close(pull(81.), 489.375 / 482.143));
         assert!(pull(60.) < 1. && pull(75.) > pull(67.68));
-    }
-
-    #[test]
-    fn the_swing_starts_fast_and_ends_slow() {
-        assert!(ease(SWING_EASE, 0.25) > 0.7);
-        assert!(close(ease(SWING_EASE, 0.), 0.));
-        assert!(close(ease(SWING_EASE, 1.), 1.));
-        assert!(close(ease([0., 0., 1., 1.], 0.4), 0.4));
     }
 }

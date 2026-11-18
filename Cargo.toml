@@ -5,6 +5,7 @@ members = [
     "crates/engine-link",
     "crates/shell",
     "crates/reports",
+    "crates/device3d",
     "bin/isonomic-desktop",
     "xtask",
 ]
@@ -20,6 +21,7 @@ ui = { path = "crates/ui", package = "desktop-ui" }
 engine-link = { path = "crates/engine-link" }
 shell = { path = "crates/shell" }
 reports = { path = "crates/reports" }
+device3d = { path = "crates/device3d" }
 # The SDK is a sibling checkout (../isonomic-sdk). CI checks it out at the
 # commit in SDK_REF.
 isonomic-client = { path = "../isonomic-sdk/crates/client" }
@@ -70,3 +72,8 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 debug = false
+
+# The 3D drawing runs on the processor, a frame at a time: unoptimised it
+# can't keep up with the screen.
+[profile.dev.package.device3d]
+opt-level = 3

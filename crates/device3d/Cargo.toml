@@ -1,0 +1,10 @@
+[package]
+name = "device3d"
+description = "Draws a device's 3D model into pixels on the CPU: the model file, a camera, a turn, and one frame out. Nothing here knows the window"
+version.workspace = true
+edition.workspace = true
+license = "GPL-3.0-or-later"
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
