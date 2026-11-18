@@ -4,6 +4,11 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The menu bar icon is the mark
+
+- **The icon:** the Isonomic mark, black on clear, as a template image (`assets/icon/menu-bar-mark.png`, 36 pixels for 18 points), so the system colours it for a light or dark bar. It replaces the coloured status dot.
+- **Status:** no longer shown by the icon. It stays as the first line of the icon's menu and as its tooltip.
+
 ## 2026-11-18 · Onboarding is its own window; its first two screens
 
 - **Design:** "Onboarding 0.4", "01 · App launch" and "02 · Get started" (Isonomic Desktop, nodes 372:1247 and 448:4).
