@@ -78,6 +78,9 @@ pub fn button_glow() -> Vec<BoxShadow> {
 pub mod at {
     /// The mark's intro runs first (its own 1.5 s), then it rests a beat.
     pub const MARK_LEAVES: f32 = 1.5 + 0.25;
+    /// How long the mark's sound takes to fade out. It is silent by the
+    /// time the mark leaves the centre.
+    pub const SOUND_FADE: f32 = 0.25;
     /// The mark turns and shrinks into its corner.
     pub const MARK_TRAVEL: f32 = 0.7;
     /// The laptop leaves the bottom edge just as the mark lands.

@@ -7,7 +7,8 @@
 //! hands over when the person has chosen how to start.
 //!
 //! So far it holds the first two screens as one continuous motion: the
-//! mark plays its intro in the centre, turns and shrinks into its corner,
+//! mark plays its intro in the centre with its sound, turns and shrinks
+//! into its corner,
 //! the laptop somersaults up from the bottom edge as its display lights,
 //! and the title and the two buttons come up after it.
 //!
@@ -16,6 +17,7 @@
 //! it will be shown at.
 
 mod laptop;
+mod sound;
 mod view;
 
 use std::sync::Arc;
@@ -28,6 +30,7 @@ use ui::{
 };
 
 use laptop::Scene;
+use sound::Sound;
 
 /// The shortest time between two of the laptop's frames.
 const FRAME: Duration = Duration::from_millis(16);
@@ -50,6 +53,8 @@ pub struct Onboarding {
     frame: Option<Arc<RenderImage>>,
     /// The picture the laptop lands on.
     picture: Arc<Image>,
+    /// The mark's sound, in the window a person sees; none in a test's.
+    sound: Option<Sound>,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -68,7 +73,14 @@ impl Onboarding {
             scene: None,
             frame: None,
             picture: laptop::picture(),
+            sound: None,
         }
+    }
+
+    /// Play the mark's sound with its intro.
+    pub fn with_sound(mut self) -> Self {
+        self.sound = Sound::load();
+        self
     }
 
     /// Seconds since the first frame; zero before it.
@@ -94,9 +106,44 @@ impl Onboarding {
         cx.emit(choice);
     }
 
+    /// The sound belongs to the mark's intro alone: fade it out so it is
+    /// silent as the mark leaves the centre, then stop it.
+    fn fade_sound(&self, cx: &mut Context<Self>) {
+        cx.spawn(async move |view, cx| {
+            let fades_at = at::MARK_LEAVES - at::SOUND_FADE;
+            cx.background_executor()
+                .timer(Duration::from_secs_f32(fades_at))
+                .await;
+            loop {
+                let Ok(left) = view.update(cx, |view, _| {
+                    let left = 1. - (view.now() - fades_at) / at::SOUND_FADE;
+                    if let Some(sound) = &view.sound {
+                        if left > 0. {
+                            sound.set_level(left);
+                        } else {
+                            sound.stop();
+                        }
+                    }
+                    left
+                }) else {
+                    return;
+                };
+                if left <= 0. {
+                    return;
+                }
+                cx.background_executor().timer(FRAME).await;
+            }
+        })
+        .detach();
+    }
+
     /// Start the clock and the laptop's frames. Called at the first draw.
     fn start(&mut self, cx: &mut Context<Self>) {
         self.started = Some(Instant::now());
+        if let Some(sound) = &self.sound {
+            sound.play();
+            self.fade_sound(cx);
+        }
         cx.spawn(async move |view, cx| {
             // The first frame is drawn a little ahead of the flight.
             let lead = at::LAPTOP_RISES - 0.25;
@@ -179,7 +226,7 @@ pub fn window_options(cx: &App) -> WindowOptions {
 pub fn open(cx: &mut App, next: impl FnOnce(&mut App) + 'static) -> Option<Entity<Onboarding>> {
     let mut next = Some(next);
     let opened = ui::open_window(window_options(cx), cx, |window, cx| {
-        let view = cx.new(Onboarding::new);
+        let view = cx.new(|cx| Onboarding::new(cx).with_sound());
         let handle = window.window_handle();
         cx.subscribe(&view, move |_, choice: &Chosen, cx| {
             // Recovering an account has no screens yet.
