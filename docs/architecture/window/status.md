@@ -4,6 +4,10 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The sidebar's props come out from under the content
+
+- **Where they start:** the clipboard and the pen no longer cross the window from its right edge. They start hidden under the content, which is now opaque and drawn over them, and slide out to the left into the sidebar, turning over as before. Later steps' props should do the same.
+
 ## 2026-11-18 · Onboarding moves one thing at a time
 
 - **Order:** on all three screens each step now starts as the one before it lands, where they used to overlap: the mark's intro, its turn into the corner, the laptop's flight, the title, each button; then the buttons leaving, the laptop's move to the sidebar, the content, the stepper, the clipboard with the pen, the dots. About 5 s to the two buttons and 4 s from the press to the dots. The mark's own intro is not re-timed.

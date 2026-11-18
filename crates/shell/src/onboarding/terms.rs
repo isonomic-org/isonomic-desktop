@@ -6,7 +6,7 @@
 //!
 //! The two buttons leave, the laptop turns over into the sidebar, the
 //! content slides in from the right, the stepper comes up, the clipboard
-//! and the pen turn over on their way in from the right, and the dotted
+//! and the pen turn over as they come out from under the content, and the dotted
 //! line between the laptop and the clipboard starts to pulse. Like the
 //! first two screens, it runs from one clock, which starts at the press,
 //! and its 3D frames are drawn off the foreground thread.

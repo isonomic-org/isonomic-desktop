@@ -116,8 +116,8 @@ pub mod at {
     /// The stepper comes up from the bottom edge.
     pub const STEPPER_RISES: f32 = CONTENT_SLIDES + SLIDE - 0.1;
     pub const RISE: f32 = 0.6;
-    /// The clipboard and the pen turn over on their way in from the
-    /// right, as a pair, the pen a step behind.
+    /// The clipboard and the pen turn over as they come out from under
+    /// the content, as a pair, the pen a step behind.
     pub const CLIPBOARD_FLIES: f32 = STEPPER_RISES + RISE - 0.1;
     pub const PEN_FLIES: f32 = CLIPBOARD_FLIES + 0.15;
     pub const FLIGHT: f32 = 1.;

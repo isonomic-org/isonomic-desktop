@@ -231,6 +231,10 @@ impl Onboarding {
             .top_0()
             .w(px(page::WIDTH - design::SIDEBAR))
             .h_full()
+            // Opaque: the sidebar's props start hidden under it.
+            .rounded_tr(page::corner())
+            .rounded_br(page::corner())
+            .bg(page::page())
             .child(
                 div()
                     .absolute()
@@ -310,8 +314,8 @@ impl Onboarding {
             )
     }
 
-    /// In front of the mark and the laptop: the stepper, the content, and
-    /// the clipboard and the pen on their way in from the right.
+    /// In front of the mark and the laptop: the stepper, the clipboard and
+    /// the pen, and over them the content, which they come out from under.
     pub(super) fn terms_front(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let (left, top, wide, tall) = design::CLIPBOARD;
         let margin = (design::PROP_CANVAS - 1.) / 2.;
@@ -320,7 +324,11 @@ impl Onboarding {
             let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
             img(frame.image.clone())
                 .absolute()
-                .left(px(left - wide * margin + beyond(left) * (1. - arrived)))
+                .left(px(motion::between(
+                    design::SIDEBAR,
+                    left - wide * margin,
+                    arrived,
+                )))
                 .top(px(top - tall * margin))
                 .w(px(wide * design::PROP_CANVAS))
                 .h(px(tall * design::PROP_CANVAS))
@@ -330,9 +338,11 @@ impl Onboarding {
             let (arrived, _) = terms::flight(frame.at, at::PEN_FLIES);
             img(frame.image.clone())
                 .absolute()
-                .left(px(left
-                    + (wide - design::PEN_CANVAS) / 2.
-                    + beyond(left) * (1. - arrived)))
+                .left(px(motion::between(
+                    design::SIDEBAR,
+                    left + (wide - design::PEN_CANVAS) / 2.,
+                    arrived,
+                )))
                 .top(px(top + (tall - design::PEN_CANVAS) / 2.))
                 .size(px(design::PEN_CANVAS))
         });
@@ -340,8 +350,8 @@ impl Onboarding {
             .absolute()
             .size_full()
             .child(self.stepper(t))
-            .child(self.content(t, cx))
             .children(clipboard)
             .children(pen)
+            .child(self.content(t, cx))
     }
 }
