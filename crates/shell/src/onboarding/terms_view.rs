@@ -6,12 +6,12 @@
 //! the two props, each placed where the design places it.
 
 use ui::component::Icon;
-use ui::onboarding::terms::{self as design, at};
+use ui::onboarding::terms::{self as design, at, signs};
 use ui::onboarding::{self as page};
 use ui::{
-    div, img, motion, px, Context, FontWeight, HighlightStyle, InteractiveElement as _,
-    IntoElement, MouseButton, ParentElement as _, SharedString, StatefulInteractiveElement as _,
-    Styled as _, StyledText, TestSupportExt as _,
+    div, motion, px, Context, FontWeight, HighlightStyle, InteractiveElement as _, IntoElement,
+    MouseButton, ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _,
+    StyledText, TestSupportExt as _,
 };
 
 use super::{terms, Onboarding};
@@ -57,9 +57,14 @@ impl Onboarding {
                 .rounded(px(radius))
                 .bg(design::dot().opacity(solid))
         };
-        let port_shown = motion::progress(t, at::DOTS_START, at::DOT_SHOWS);
+        // The line goes as the clipboard leaves.
+        let fading = self.signing_at(t).map_or(1., |s| {
+            1. - motion::progress(s, signs::CLIPBOARD_LEAVES, signs::DOTS_FADE)
+        });
+        let port_shown = motion::progress(t, at::DOTS_START, at::DOT_SHOWS) * fading;
         let dots = (0..design::DOTS).map(|index| {
             let (solid, radius) = terms::dot(t, index);
+            let solid = solid * fading;
             circle(
                 design::DOTS_TOP + design::DOTS_STEP * index as f32,
                 radius,
@@ -317,41 +322,11 @@ impl Onboarding {
     /// In front of the mark and the laptop: the stepper, the clipboard and
     /// the pen, and over them the content, which they come out from under.
     pub(super) fn terms_front(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
-        let (left, top, wide, tall) = design::CLIPBOARD;
-        let margin = (design::PROP_CANVAS - 1.) / 2.;
-        // Each is placed by the time its frame was drawn for.
-        let clipboard = self.clipboard.as_ref().map(|frame| {
-            let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
-            img(frame.image.clone())
-                .absolute()
-                .left(px(motion::between(
-                    design::SIDEBAR,
-                    left - wide * margin,
-                    arrived,
-                )))
-                .top(px(top - tall * margin))
-                .w(px(wide * design::PROP_CANVAS))
-                .h(px(tall * design::PROP_CANVAS))
-        });
-        let (left, top, wide, tall) = design::PEN;
-        let pen = self.pen.as_ref().map(|frame| {
-            let (arrived, _) = terms::flight(frame.at, at::PEN_FLIES);
-            img(frame.image.clone())
-                .absolute()
-                .left(px(motion::between(
-                    design::SIDEBAR,
-                    left + (wide - design::PEN_CANVAS) / 2.,
-                    arrived,
-                )))
-                .top(px(top + (tall - design::PEN_CANVAS) / 2.))
-                .size(px(design::PEN_CANVAS))
-        });
         div()
             .absolute()
             .size_full()
             .child(self.stepper(t))
-            .children(clipboard)
-            .children(pen)
+            .child(self.props_layer(t))
             .child(self.content(t, cx))
     }
 }

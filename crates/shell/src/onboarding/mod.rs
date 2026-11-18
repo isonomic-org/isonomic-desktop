@@ -21,6 +21,9 @@
 
 mod laptop;
 mod props;
+mod signature;
+mod signing;
+mod signing_view;
 mod sound;
 mod stage;
 mod terms;
@@ -72,6 +75,10 @@ pub struct Onboarding {
     /// Their latest frames. They rest as the last ones drawn.
     clipboard: Option<Drawn>,
     pen: Option<Drawn>,
+    /// When "Accept and continue" was pressed, on the third screen's
+    /// clock, and whether onboarding has handed over since.
+    signed: Option<f32>,
+    handed_over: bool,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -97,6 +104,8 @@ impl Onboarding {
             props: None,
             clipboard: None,
             pen: None,
+            signed: None,
+            handed_over: false,
         }
     }
 

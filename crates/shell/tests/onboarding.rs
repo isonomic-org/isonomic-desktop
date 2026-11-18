@@ -92,6 +92,14 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
     assert!(view.read_with(cx, |view, _| view.terms_now().is_none()));
     click(cx, "onboarding-new-account");
     view.update(cx, |view, cx| view.skip_terms(cx));
+    // Accepting plays the signing first; the account is chosen at its end,
+    // once.
     click(cx, "onboarding-accept");
+    assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+    click(cx, "onboarding-decline");
+    assert!(view.read_with(cx, |view, _| view.terms_now().is_some()));
+    view.update(cx, |view, cx| view.skip_signing(cx));
+    view.update(cx, |view, cx| view.skip_signing(cx));
+    cx.run_until_parked();
     assert_eq!(*chosen.borrow(), [Chosen::Recover, Chosen::NewAccount]);
 }

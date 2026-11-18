@@ -4,6 +4,7 @@
 //! One drawn frame of a 3D model, as an image the window can show. Slow:
 //! everything here is called off the foreground thread.
 
+use std::ops::Range;
 use std::sync::Arc;
 
 use device3d::{Camera, Model, Shot, Transform};
@@ -34,12 +35,16 @@ impl Display {
     };
 }
 
+/// A model, the camera it is seen by, and any of its pieces moved on
+/// their own.
+pub type Subject<'a> = (&'a Model, &'a Camera, &'a [(Range<u32>, Transform)]);
+
 /// Draw `model` posed by `pose` on a canvas of `canvas` points, in which
 /// the camera's frame is `frame` points wide, for a screen with `scale`
 /// pixels to a point, in full detail or, to keep a large model's frames
 /// coming while it moves, in half.
 pub fn frame(
-    (model, camera): (&Model, &Camera),
+    (model, camera, parts): Subject<'_>,
     pose: Transform,
     full: bool,
     canvas: (f32, f32),
@@ -52,6 +57,7 @@ pub fn frame(
         model,
         camera,
         pose,
+        parts,
         width: (canvas.0 * scale).round().max(1.) as usize,
         height: (canvas.1 * scale).round().max(1.) as usize,
         frame_width: frame * scale,

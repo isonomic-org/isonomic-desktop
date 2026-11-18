@@ -4,6 +4,13 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · "Accept and continue" signs the last page
+
+- **What plays** (`shell::onboarding::signing`, timings in `ui::onboarding::terms::signs`): the clipboard's pages fold over its top one after another, down to the last; the pen goes to its signature line and writes "hello"; the pen goes back; the pages come down; the clipboard turns over and leaves by the left edge; the pen follows; the dotted line fades; then onboarding hands over to the app's window. About 6 s. "Decline" does nothing once it has started, and "Accept and continue" waits for the screen to come to rest.
+- **The pages are the model's own** (`onboarding/props.rs`): the devices repository's clipboard has nine sheets. Eight fold, each turned about the line under the clip (`device3d` now moves named pieces of a model on their own, `Shot::parts`); the first takes its printing with it. The last page gets a copy of the first page's signature line and label.
+- **The signature** (`onboarding/signature.rs`) is our own joined-up "hello", drawn by the window over the clipboard's frame as far as it is written, with the pen's picture moved so its tip is on the line's end. It is shown only while the last page is uncovered.
+- **The clipboard's canvas** is now three times its box, so a page folded over the top isn't cut off.
+
 ## 2026-11-18 · The sidebar's props come out from under the content
 
 - **Where they start:** the clipboard and the pen no longer cross the window from its right edge. They start hidden under the content, which is now opaque and drawn over them, and slide out to the left into the sidebar, turning over as before. Later steps' props should do the same.

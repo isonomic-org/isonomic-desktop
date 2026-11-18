@@ -5,6 +5,8 @@
 //! master: Y up, metres, plain materials, no textures), flattened into one
 //! list of triangles in the device's own space.
 
+use std::ops::Range;
+
 use serde_json::Value;
 
 use crate::math::{vec3, Transform, Vec3};
@@ -33,9 +35,19 @@ pub struct Triangle {
     pub material: u16,
 }
 
+/// A named piece of the model: the vertices one of the file's nodes
+/// brought.
+#[derive(Debug, Clone)]
+pub struct Part {
+    pub name: String,
+    pub vertices: Range<u32>,
+}
+
 #[derive(Debug, Clone)]
 pub struct Model {
     pub vertices: Vec<Vertex>,
+    /// The pieces the file names, in the order it holds them.
+    pub parts: Vec<Part>,
     pub triangles: Vec<Triangle>,
     pub materials: Vec<Material>,
     /// The display's four corners (top left, top right, bottom left, bottom
@@ -199,6 +211,7 @@ impl Model {
             .unwrap_or_default();
         let mut model = Model {
             vertices: Vec::new(),
+            parts: Vec::new(),
             triangles: Vec::new(),
             materials,
             screen: None,
@@ -233,10 +246,15 @@ impl Model {
         let place = parent.after(&node_transform(node));
         if let Some(mesh) = node["mesh"].as_u64() {
             let is_screen = node["name"].as_str() == Some("screen");
+            let first = self.vertices.len() as u32;
             let primitives = file.json["meshes"][mesh as usize]["primitives"].as_array();
             for primitive in primitives.into_iter().flatten() {
                 self.add_primitive(file, primitive, &place, is_screen)?;
             }
+            self.parts.push(Part {
+                name: node["name"].as_str().unwrap_or_default().to_owned(),
+                vertices: first..self.vertices.len() as u32,
+            });
         }
         for child in node["children"].as_array().into_iter().flatten() {
             if let Some(child) = child.as_u64() {
@@ -290,6 +308,43 @@ impl Model {
             self.screen = screen_of(&placed, place.direction(normals[0]).normalized(), material);
         }
         Ok(())
+    }
+
+    /// The vertices of the piece the file calls `name`.
+    pub fn part(&self, name: &str) -> Option<Range<u32>> {
+        let part = self.parts.iter().find(|part| part.name == name)?;
+        Some(part.vertices.clone())
+    }
+
+    /// A second copy of the piece called `name`, moved by `shift`: its
+    /// vertices. The model's bounding box is left as it was.
+    pub fn copy_part(&mut self, name: &str, shift: Vec3) -> Option<Range<u32>> {
+        let from = self.part(name)?;
+        let first = self.vertices.len() as u32;
+        let moved = first - from.start;
+        for index in from.clone() {
+            let vertex = self.vertices[index as usize];
+            self.vertices.push(Vertex {
+                position: vertex.position + shift,
+                normal: vertex.normal,
+            });
+        }
+        let copies: Vec<Triangle> = self
+            .triangles
+            .iter()
+            .filter(|triangle| from.contains(&triangle.vertices[0]))
+            .map(|triangle| Triangle {
+                vertices: triangle.vertices.map(|index| index + moved),
+                material: triangle.material,
+            })
+            .collect();
+        self.triangles.extend(copies);
+        let vertices = first..self.vertices.len() as u32;
+        self.parts.push(Part {
+            name: format!("{name}_copy"),
+            vertices: vertices.clone(),
+        });
+        Some(vertices)
     }
 
     /// The middle of the model's bounding box.

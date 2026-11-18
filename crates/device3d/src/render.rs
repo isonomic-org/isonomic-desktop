@@ -5,6 +5,8 @@
 //! depth test at several samples a pixel, shaded, and averaged down into
 //! pixels with soft edges. The picture is cut into bands, one a thread.
 
+use std::ops::Range;
+
 use crate::camera::Camera;
 use crate::math::{Transform, Vec3};
 use crate::model::Model;
@@ -16,6 +18,9 @@ pub struct Shot<'a> {
     pub camera: &'a Camera,
     /// Moves the model before the camera sees it.
     pub pose: Transform,
+    /// Pieces moved on their own first, each a run of the model's
+    /// vertices: a page turned over, say.
+    pub parts: &'a [(Range<u32>, Transform)],
     /// The picture's size in pixels.
     pub width: usize,
     pub height: usize,
@@ -86,11 +91,18 @@ fn corners(shot: &Shot<'_>) -> Vec<Corner> {
     shot.model
         .vertices
         .iter()
-        .map(|vertex| {
-            let (u, v, depth) = shot.camera.project(shot.pose.point(vertex.position));
-            let normal = shot
-                .camera
-                .view_direction(shot.pose.direction(vertex.normal));
+        .enumerate()
+        .map(|(index, vertex)| {
+            let own = shot
+                .parts
+                .iter()
+                .find(|(vertices, _)| vertices.contains(&(index as u32)));
+            let (position, normal) = match own {
+                Some((_, moved)) => (moved.point(vertex.position), moved.direction(vertex.normal)),
+                None => (vertex.position, vertex.normal),
+            };
+            let (u, v, depth) = shot.camera.project(shot.pose.point(position));
+            let normal = shot.camera.view_direction(shot.pose.direction(normal));
             // Where the vertex sits across the display, for its picture.
             let (su, sv) = screen.map_or((0., 0.), |screen| {
                 let from = vertex.position - screen.centre;

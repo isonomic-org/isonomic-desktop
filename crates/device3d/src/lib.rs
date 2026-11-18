@@ -16,5 +16,5 @@ pub mod shade;
 
 pub use camera::{Camera, Framing};
 pub use math::{vec3, Transform, Vec3};
-pub use model::{Model, ModelError};
+pub use model::{Model, ModelError, Part};
 pub use render::{render, Frame, Shot};

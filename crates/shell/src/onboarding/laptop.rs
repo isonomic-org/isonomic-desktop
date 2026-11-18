@@ -83,7 +83,7 @@ pub fn posed(
 ) -> Arc<RenderImage> {
     let linear = |c: [u8; 3]| c.map(|c| device3d::shade::to_linear(c as f32 / 255.));
     stage::frame(
-        (&scene.model, &scene.camera),
+        (&scene.model, &scene.camera, &[]),
         // A somersault: about the camera's level axis, through its middle.
         Transform::turn_about(scene.camera.right, -turn.to_radians(), scene.model.centre()),
         // Half the detail while it moves; full at rest, at either end.

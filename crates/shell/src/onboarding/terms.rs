@@ -21,7 +21,7 @@ use ui::{motion, AppContext as _, Context, RenderImage};
 use super::laptop::{self, Scene};
 use super::props::Props;
 use super::stage::Drawn;
-use super::{Chosen, Onboarding, FRAME};
+use super::{Onboarding, FRAME};
 
 /// How far the laptop is on its way to the sidebar at `t` (0 to 1), and
 /// the turn it has left to make, in degrees.
@@ -91,7 +91,10 @@ fn draw(scene: Option<&Scene>, props: Option<&Props>, last: f32, t: f32, scale: 
         });
     let clipboard = props
         .filter(|_| due(at::CLIPBOARD_FLIES, at::FLIGHT))
-        .map(|props| props.clipboard(flight(t, at::CLIPBOARD_FLIES).1, scale));
+        .map(|props| {
+            let (_, turn) = flight(t, at::CLIPBOARD_FLIES);
+            props.clipboard(turn, &[0.; design::PAGES], scale)
+        });
     let pen = props
         .filter(|_| due(at::PEN_FLIES, at::FLIGHT))
         .map(|props| props.pen(flight(t, at::PEN_FLIES).1, scale));
@@ -117,14 +120,12 @@ impl Onboarding {
         cx.notify();
     }
 
-    /// "Accept and continue": onboarding's later screens aren't built, so
-    /// the window hands over here.
-    pub fn accept(&mut self, cx: &mut Context<Self>) {
-        cx.emit(Chosen::NewAccount);
-    }
-
     /// "Decline": back to the two ways to start.
     pub fn decline(&mut self, cx: &mut Context<Self>) {
+        // Once accepted there is no going back.
+        if self.signed.is_some() {
+            return;
+        }
         self.terms = None;
         for frame in [&mut self.frame, &mut self.clipboard, &mut self.pen] {
             if let Some(old) = frame.take() {
@@ -192,7 +193,9 @@ impl Onboarding {
                 if !matches!(kept, Ok(true)) {
                     return;
                 }
-                if t >= at::PEN_FLIES + at::FLIGHT {
+                // The signing draws the props' frames from its press on.
+                let signing = view.update(cx, |view, _| view.signed.is_some());
+                if t >= at::PEN_FLIES + at::FLIGHT || signing.unwrap_or(true) {
                     break;
                 }
                 // No faster than the screen shows them.

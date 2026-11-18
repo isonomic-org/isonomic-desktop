@@ -40,8 +40,11 @@ pub const PEN: (f32, f32, f32, f32) = (273.8, 474.4, 55., 141.);
 pub const PEN_LENGTH: f32 = 143.;
 pub const PEN_LEAN: f32 = -15.;
 pub const PEN_CANVAS: f32 = 168.;
-/// A moving prop is drawn on a canvas this many times its box.
-pub const PROP_CANVAS: f32 = 1.5;
+/// The clipboard is drawn on a canvas this many times its box, so a page
+/// folded over its top isn't cut off.
+pub const CLIPBOARD_CANVAS: f32 = 3.;
+/// A prop starts with its box this far under the content's edge.
+pub const TUCK: f32 = 20.;
 /// Turns each makes on its way in.
 pub const TURNS: f32 = 1.;
 
@@ -131,4 +134,42 @@ pub mod at {
     pub const PULSE: f32 = 1.6;
     /// Nothing but the dots moves after this.
     pub const END: f32 = PEN_FLIES + FLIGHT + SETTLE + 0.1;
+}
+
+/// The signature the pen writes on the last page.
+pub fn signature() -> Hsla {
+    rgb(0x1a2238).into()
+}
+pub const SIGNATURE_LINE: f32 = 1.1;
+/// The pages folded over to reach the last one, and how far round each
+/// goes: over the top and flat behind the board.
+pub const PAGES: usize = 8;
+pub const FOLDED: f32 = 357.;
+/// The signature is in view while the last page to fold is this far over.
+pub const UNCOVERED: f32 = 40.;
+
+/// The order of events, in seconds from the press on "Accept and
+/// continue". One thing at a time.
+pub mod signs {
+    /// The pages fold over, one after another.
+    pub const PAGE: f32 = 0.5;
+    pub const PAGE_STAGGER: f32 = 0.06;
+    pub const FOLDED: f32 = PAGE + PAGE_STAGGER * (super::PAGES - 1) as f32;
+    /// The pen goes to the signature's start, writes it, and goes back.
+    pub const PEN_REACHES: f32 = FOLDED;
+    pub const REACH: f32 = 0.4;
+    pub const WRITES: f32 = PEN_REACHES + REACH;
+    pub const WRITE: f32 = 1.5;
+    pub const PEN_RETURNS: f32 = WRITES + WRITE + 0.1;
+    /// The pages come back down.
+    pub const UNFOLDS: f32 = PEN_RETURNS + REACH;
+    /// The clipboard turns over and leaves by the left edge; then the pen.
+    pub const CLIPBOARD_LEAVES: f32 = UNFOLDS + FOLDED;
+    pub const LEAVE: f32 = 0.9;
+    pub const PEN_LEAVES: f32 = CLIPBOARD_LEAVES + LEAVE - 0.25;
+    pub const PEN_LEAVE: f32 = 0.8;
+    /// The dotted line fades as the clipboard goes.
+    pub const DOTS_FADE: f32 = 0.3;
+    /// Onboarding hands over.
+    pub const DONE: f32 = PEN_LEAVES + PEN_LEAVE + 0.1;
 }
