@@ -375,6 +375,11 @@ fn main() {
                     }),
                     cx,
                 );
+                // The window opens on the mark's intro. A self-check drives
+                // the window by its ids, so it starts past it.
+                if check.is_none() {
+                    shell.start_launch(cx);
+                }
                 if !state.set_up {
                     let setup = FirstRunSetup {
                         client: host_client,

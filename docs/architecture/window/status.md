@@ -2,6 +2,20 @@
 
 Newest first.
 
+## 2026-11-18 · The launch screen: the mark plays its intro once
+
+- **Design:** "01 · App launch" (Isonomic Desktop, node 372:1247): the page, empty, with the 116 px mark in its centre.
+- **What opens:** the window now opens on that screen. The mark plays the brand intro once (four people swing in, lock together, then pull in tight; 1.5 s), holds for 0.4 s, then the window shows first run or its tabs.
+- **How it is drawn:** natively, from the brand animation file's own keyframes (shapes, stagger, easing, the final pull), in `ui::logo`. There is no player for the file's format here. A frame is asked for only while the mark moves. Tests pin the first and last frames, the stagger and the pull to the file's numbers.
+- **Where:** `shell::launch` (the screen), `Shell::start_launch`, `tokens::logo_size` and `tokens::launch_hold`.
+- **Self-checks start past it:** they drive the window by its ids.
+- **Deviations:**
+  - The 0.4 s hold is ours; the brand file ends on the static mark and says nothing about what follows.
+  - The design's frame has no title bar; the window still draws the system's. Not changed here, because it changes every screen.
+  - It plays at every launch, not only before first run.
+  - Light background only: the mark is the dark one. The white mark for dark backgrounds isn't wired.
+- **Checked:** on the Intel Mac, in a test build on a throwaway Capsule with no engine: the screen matches the design's frame, and the window moves on to first run.
+
 ## 2026-11-16 · SDK a6276aa and Chat 60b8fbd: the quiet composer
 
 - **Pins:** `SDK_REF` a6276aa (Isonomic UI 2b8a583) and `CHAT_REF` 60b8fbd move together. Chat's composers now focus quietly, with no blue, and are 96 high when empty. Search reads "Esc", and the four-point star sits by the greeting.
