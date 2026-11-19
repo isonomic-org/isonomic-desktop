@@ -39,8 +39,10 @@ pub const DRIVES: [(f32, f32, f32, f32); 5] = [
     (148.97, 464.19, 101.61, 124.2),
 ];
 
-/// A list row, its chip and its switch.
+/// A list row, its mark and the gap after it, its chip and its switch.
 pub const ROW: f32 = 63.;
+pub const LOGO: f32 = 40.;
+pub const LOGO_GAP: f32 = 16.;
 pub const CHIP: f32 = 28.;
 pub const SWITCH: (f32, f32, f32) = (28., 16., 12.);
 pub const SMALL: (f32, f32) = (12., 18.);

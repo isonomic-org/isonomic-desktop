@@ -9,5 +9,6 @@
 - `pill-*.glb` (asana, dropbox, figma, github, linear): the pills' 3D masters with their embossed marks, from the devices repository's `pills/marks` branch at 3835be7 (`assets/onboarding/pills/pill_<name>/model.glb`), unchanged. "Add integrations" draws them once, from above.
 - `wallet-cream.glb` and `id-card-black.glb`: the card wallet's and the ID card's 3D masters from the devices repository's `repo/asset-groups` branch at 30aef43 (`assets/onboarding/badges/wallet_cream/model.glb` and `badges/idcard_black/model.glb`), unchanged. "Your account exists." draws them once, from above.
 - `recovery-kit-holder.png`, `recovery-kit-seal.png`, `menu-bar.png`: the design's flat pictures for the steps that have no 3D model yet, exported at three pixels to a point, with the white ground cleared so they sit on the sidebar. To be replaced by 3D models.
+- `logos/*.png`: the marks beside the rows of "Local AI models" and "Add integrations", the design's own pictures (Isonomic Desktop, "09 · Local AI models" and "10 · Add integrations"), each in its 40-point box, exported at three pixels to a point, unchanged.
 
 All are replaced, never edited: the models from the devices repository, the sound from the brand folder.

@@ -4,6 +4,11 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The lists show the design's marks
+
+- **"Turn on local AI models" and "Integrations and connected apps":** each row showed its first letter on a chip. It now shows the design's own mark, in the design's 40-point box with 16 after it (`shell::onboarding::logos`; `ui::onboarding::steps::LOGO`).
+- **The pictures** are the design's, exported at three pixels to a point into `assets/onboarding/logos`.
+
 ## 2026-11-18 · The drives and the pills carry their marks
 
 - **"Turn on local AI models" and "Integrations and connected apps"** now draw the devices repository's final models: each drive with its mark engraved in its top, each pill with its mark embossed. Only the model files changed; they are drawn as before.

@@ -24,6 +24,7 @@ mod flow;
 mod flow_bodies;
 mod flow_view;
 mod laptop;
+mod logos;
 mod passkey;
 mod passkey_view;
 mod props;

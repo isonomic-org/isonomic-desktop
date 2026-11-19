@@ -10,10 +10,11 @@ use ui::onboarding::steps::{self as design};
 use ui::onboarding::terms::{self as shared};
 use ui::onboarding::{self as page};
 use ui::{
-    div, px, AnyElement, Context, Div, FontWeight, InteractiveElement as _, IntoElement,
-    MouseButton, ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _,
+    div, img, px, AnyElement, Context, Div, FontWeight, InteractiveElement as _, IntoElement,
+    MouseButton, ParentElement as _, StatefulInteractiveElement as _, Styled as _,
 };
 
+use super::logos;
 use super::steps;
 use super::Onboarding;
 
@@ -199,22 +200,13 @@ impl Onboarding {
                 .h(px(design::ROW))
                 .flex()
                 .items_center()
-                .gap(px(12.))
+                .gap(px(design::LOGO_GAP))
                 .border_b_1()
                 .border_color(page::hairline())
                 .child(
-                    // Its first letter stands in for its mark.
-                    text(fourth::ROW_TITLE)
+                    img(logos::logo(step, index))
                         .flex_none()
-                        .size(px(design::CHIP))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .rounded(px(shared::ACTION_CORNER))
-                        .bg(design::wash())
-                        .font_weight(FontWeight::SEMIBOLD)
-                        .text_color(shared::quiet())
-                        .child(SharedString::from(&name[..1])),
+                        .size(px(design::LOGO)),
                 )
                 .child(named(name, about))
                 .child(
