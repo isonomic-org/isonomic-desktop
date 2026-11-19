@@ -111,8 +111,25 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
     view.update(cx, |view, cx| view.skip_passkey(cx));
     cx.run_until_parked();
 
-    // Going on from the fourth screen chooses the account, once.
+    // "Continue with Face ID" brings up the sheet, then the later steps,
+    // each over the last; the account is chosen after the last, once.
     click(cx, "onboarding-face-id");
-    click(cx, "onboarding-face-id");
+    assert!(shown(cx, window, "onboarding-face-id-sheet"));
+    view.update(cx, |view, cx| view.skip_flow(cx));
+    for step in [
+        "onboarding-created",
+        "onboarding-kit",
+        "onboarding-confirm",
+        "onboarding-models",
+        "onboarding-links",
+        "onboarding-finish",
+    ] {
+        assert!(shown(cx, window, step), "{step}");
+        assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+        click(cx, "onboarding-next");
+        view.update(cx, |view, cx| view.skip_flow(cx));
+    }
+    view.update(cx, |view, cx| view.skip_flow(cx));
+    cx.run_until_parked();
     assert_eq!(*chosen.borrow(), [Chosen::Recover, Chosen::NewAccount]);
 }

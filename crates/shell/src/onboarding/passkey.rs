@@ -170,17 +170,12 @@ impl Onboarding {
         cx.notify();
     }
 
-    /// "Continue with Face ID": onboarding's later screens aren't built, so
-    /// the window hands over here.
-    pub fn continue_with_face_id(&mut self, cx: &mut Context<Self>) {
-        if self.passkey.is_some() {
-            self.hand_over(cx);
-        }
-    }
-
     /// "Previous step": back to the terms, as they were before they were
     /// accepted.
     pub fn previous_step(&mut self, cx: &mut Context<Self>) {
+        if self.asking.is_some() || self.flow.is_some() {
+            return;
+        }
         let (Some(_), Some(t)) = (self.passkey.take(), self.terms_now()) else {
             return;
         };

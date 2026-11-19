@@ -170,7 +170,8 @@ impl Render for Onboarding {
         // flies up on the second screen, across to the sidebar on the
         // third, and rests as its last frame.
         let margin = (design::LAPTOP_CANVAS - 1.) / 2.;
-        let laptop = self.frame.as_ref().map(|frame| {
+        let own_laptop = self.frame.as_ref().filter(|_| !self.is_setting_up());
+        let laptop = own_laptop.map(|frame| {
             let ((left, top, wide, tall), drop) = match third_now {
                 None => {
                     let (landed, _, _) = laptop::flight(frame.at);

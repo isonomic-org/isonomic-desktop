@@ -13,7 +13,7 @@ use ui::{
     ParentElement as _, Styled as _, TestSupportExt as _,
 };
 
-use super::{passkey, Onboarding};
+use super::{flow, passkey, Onboarding};
 
 const TITLE: &str = "Create your account with Face ID";
 const LEAD: &str = "Your account is a passkey. The private key is generated in this Mac's secure enclave and never leaves it \u{2014} Isonomic never sees it, and there is no seed phrase to lose.";
@@ -30,8 +30,14 @@ impl Onboarding {
     pub(super) fn seal_layer(&self, p: f32) -> impl IntoElement {
         let (left, top, side) = design::TILE;
         let (middle_x, middle_y) = (left + side / 2., top + side / 2.);
+        // On the next step it turns over and leaves by the left edge.
+        let gone = self
+            .flow_at(self.passkey.map_or(0., |started| started + p))
+            .map_or(0., |(_, f)| flow::left(f));
+        let narrow = flow::turned(gone);
         let rings = (0..design::RINGS.len()).rev().map(move |index| {
             let (share, fill, line) = passkey::ring(p, index);
+            let (fill, line) = (fill * (1. - gone), line * (1. - gone));
             let wide = design::RINGS[index].0 * share;
             div()
                 .absolute()
@@ -51,9 +57,12 @@ impl Onboarding {
             let from = shared::SIDEBAR + shared::TUCK - (canvas - side) / 2.;
             img(frame.image.clone())
                 .absolute()
-                .left(px(motion::between(from, middle_x - canvas / 2., arrived)))
+                .left(px(motion::between(from, middle_x - canvas / 2., arrived)
+                    + canvas * (1. - narrow) / 2.
+                    - (shared::SIDEBAR + 40.) * gone))
                 .top(px(middle_y - canvas / 2.))
-                .size(px(canvas))
+                .w(px(canvas * narrow))
+                .h(px(canvas))
         });
         div().absolute().size_full().children(rings).children(seal)
     }

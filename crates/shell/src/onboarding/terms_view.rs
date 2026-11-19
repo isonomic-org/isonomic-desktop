@@ -7,6 +7,7 @@
 
 use ui::component::Icon;
 use ui::onboarding::passkey::at as fourth;
+use ui::onboarding::steps::at as later;
 use ui::onboarding::terms::{self as design, at, signs};
 use ui::onboarding::{self as page};
 use ui::{
@@ -67,6 +68,8 @@ impl Onboarding {
             + self.passkey_at(t).map_or(0., |p| {
                 motion::progress(p, fourth::LIGHT_SHOWS, fourth::LIGHT_FADE)
             });
+        // And fades and comes back as each later step's art changes.
+        let fading = fading.min(1.) * self.dots_through_flow(t);
         let port_shown = motion::progress(t, at::DOTS_START, at::DOT_SHOWS) * fading;
         let dots = (0..design::DOTS).map(|index| {
             let (solid, radius) = terms::dot(t, index);
@@ -106,28 +109,14 @@ impl Onboarding {
         );
         let (label, label_line) = design::STEP_LABEL;
         let (title, title_line) = design::STEP_TITLE;
-        // On the fourth screen the words change: out, then in.
-        let change = self
-            .passkey_at(t)
-            .map_or(0., |p| motion::progress(p, 0., fourth::WORDS_CHANGE));
-        let (title_words, words) = if change < 0.5 {
-            (
-                "Accept terms",
-                "Isonomic runs on your Mac and you hold your own keys.",
-            )
-        } else {
-            (
-                "Create account",
-                "Face ID creates your account. No seed phrase, no password.",
-            )
-        };
-        let words_solid = (1. - 2. * change).abs();
+        // The words change with the screen: out, then in.
+        let (step_label, title_words, words, filled, words_solid) = self.stepper_now(t);
         let bars = (0..design::STEPS).map(|step| {
             div()
                 .flex_1()
                 .h(px(design::STEP_BAR))
                 .rounded(px(design::STEP_BAR / 2.))
-                .bg(if step == 0 {
+                .bg(if step < filled {
                     page::ink()
                 } else {
                     design::outline()
@@ -157,7 +146,7 @@ impl Onboarding {
                         div()
                             .font_family(design::MONO)
                             .font_weight(FontWeight::SEMIBOLD)
-                            .child("STEP 1"),
+                            .child(step_label),
                     )
                     .child(
                         div()
@@ -360,13 +349,18 @@ impl Onboarding {
     /// then the fourth screen's seal and, over it, its panel.
     pub(super) fn terms_front(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let fourth = self.passkey_at(t);
+        // The seal is gone once the first later step's art has taken over.
+        let seal_shown = self
+            .flow_at(t)
+            .is_none_or(|(flow, f)| flow.step == 0 && flow.forward && f < later::LEAVE);
         div()
             .absolute()
             .size_full()
             .child(self.stepper(t))
             .child(self.props_layer(t))
             .child(self.content(t, cx))
-            .children(fourth.map(|p| self.seal_layer(p)))
+            .children(fourth.filter(|_| seal_shown).map(|p| self.seal_layer(p)))
             .children(fourth.map(|p| self.passkey_panel(p, cx)))
+            .child(self.flow_layer(t, cx))
     }
 }

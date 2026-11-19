@@ -36,8 +36,9 @@ pub const MARK_REST_CENTRE: (f32, f32) = (60., 52.);
 /// On its way to the corner the mark turns once.
 pub const MARK_SPIN: f32 = 360.;
 
-/// The laptop's picture: 455 × 341 with its corner at (413, 163).
-pub const LAPTOP: (f32, f32, f32, f32) = (413., 163., 455., 341.);
+/// The laptop: 455 × 341 with its corner at (413, 150). Its top is at 150
+/// on every screen; only where it is across the window changes.
+pub const LAPTOP: (f32, f32, f32, f32) = (413., 150., 455., 341.);
 /// The moving laptop is drawn on a canvas this many times the picture's
 /// size, so a turning laptop isn't cut off at the picture's edge.
 pub const LAPTOP_CANVAS: f32 = 1.5;
@@ -76,6 +77,7 @@ pub fn button_glow() -> Vec<BoxShadow> {
 }
 
 pub mod passkey;
+pub mod steps;
 pub mod terms;
 
 /// The order of events, in seconds from the first frame. One thing at a

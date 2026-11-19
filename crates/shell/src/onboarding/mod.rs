@@ -19,6 +19,10 @@
 //! laptop's frames are drawn off the foreground thread, each for the time
 //! it will be shown at.
 
+mod art;
+mod flow;
+mod flow_bodies;
+mod flow_view;
 mod laptop;
 mod passkey;
 mod passkey_view;
@@ -28,6 +32,7 @@ mod signing;
 mod signing_view;
 mod sound;
 mod stage;
+mod steps;
 mod terms;
 mod terms_view;
 mod view;
@@ -51,7 +56,7 @@ use stage::Drawn;
 const FRAME: Duration = Duration::from_millis(16);
 
 /// What the person chose: to recover an account, on "Get started", or a
-/// new one, once they have gone on from the fourth screen.
+/// new one, once they have finished the last step.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Chosen {
     NewAccount,
@@ -85,6 +90,18 @@ pub struct Onboarding {
     seal_frame: Option<Drawn>,
     /// When the fourth screen started, on the third screen's clock.
     passkey: Option<f32>,
+    /// The later steps: their art, once read; when the Face ID sheet came
+    /// up and when it was answered; where they are; when "Setting up your
+    /// workspace" began; and their lists' switches. All times are on the
+    /// third screen's clock.
+    art: Option<Arc<art::Art>>,
+    asking: Option<f32>,
+    answered: Option<f32>,
+    flow: Option<flow::Flow>,
+    finishing: Option<f32>,
+    models: [bool; 8],
+    links: [bool; 8],
+    residency: [bool; 3],
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -99,6 +116,7 @@ impl Onboarding {
             let _ = view.update(cx, |view, _| view.props = props.ok().map(Arc::new));
             let seal = cx.background_spawn(async { Seal::load() }).await;
             let _ = view.update(cx, |view, _| view.seal = seal.ok().map(Arc::new));
+            let _ = view.update(cx, |_, cx| Onboarding::load_art(cx));
         })
         .detach();
         Self {
@@ -116,6 +134,14 @@ impl Onboarding {
             seal: None,
             seal_frame: None,
             passkey: None,
+            art: None,
+            asking: None,
+            answered: None,
+            flow: None,
+            finishing: None,
+            models: steps::MODEL_LIST.map(|(_, _, on)| on),
+            links: steps::LINK_LIST.map(|(_, _, on)| on),
+            residency: steps::RESIDENCY.map(|(_, _, on)| on),
         }
     }
 

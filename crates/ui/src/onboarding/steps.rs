@@ -1,0 +1,90 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+//! Sizes, colours and timings shared by onboarding's later screens, from
+//! the design ("Onboarding 0.4", "05" to "12"): the Face ID sheet, the
+//! steps from "Your account exists." to "Finish", and "Setting up your
+//! workspace". What they share with the third and fourth screens is in
+//! `terms` and `passkey`.
+
+use isonomic_app::ui::{rgb, rgba, Hsla};
+
+/// Each step's art sits about this line down the sidebar.
+pub const ART_X: f32 = 200.;
+/// A sprite is never drawn thinner than this share of its width as it
+/// turns over.
+pub const EDGE_ON: f32 = 0.03;
+
+/// A list row, its chip and its switch.
+pub const ROW: f32 = 63.;
+pub const CHIP: f32 = 28.;
+pub const SWITCH: (f32, f32, f32) = (28., 16., 12.);
+pub const SMALL: (f32, f32) = (12., 18.);
+pub const FIELD: (f32, f32) = (360., 38.);
+pub const WORD: f32 = 36.;
+pub const TABS: f32 = 40.;
+
+pub fn warning() -> Hsla {
+    rgb(0xfffbeb).into()
+}
+pub fn warning_ink() -> Hsla {
+    rgb(0x92400e).into()
+}
+pub fn good() -> Hsla {
+    rgb(0xdcfce7).into()
+}
+pub fn good_ink() -> Hsla {
+    rgb(0x166534).into()
+}
+pub fn wash() -> Hsla {
+    rgb(0xf3f4f6).into()
+}
+/// What dims the window behind the Face ID sheet.
+pub fn dim() -> Hsla {
+    rgba(0x11182766).into()
+}
+
+/// The Face ID sheet: 360 wide, in the middle of the window.
+pub const SHEET: (f32, f32) = (360., 250.);
+pub const SHEET_CORNER: f32 = 12.;
+
+/// "Setting up your workspace": the laptop in the middle, 490 across and
+/// as far down as on every other screen, its name under it, and the pill
+/// under that. The design has all three 85 lower.
+pub const SETUP_LAPTOP: f32 = 490.;
+pub const SETUP_NAME: (f32, f32, f32, f32) = (440., 397., 400., 24.);
+pub const SETUP_PILL: (f32, f32, f32, f32) = (480., 437., 320., 44.);
+/// The laptop turns over this often on its way there.
+pub const SETUP_TURNS: f32 = 1.;
+
+/// The order of events on each step, in seconds from the press that
+/// brought it on. One thing at a time.
+pub mod at {
+    /// The last step's art turns over and leaves by the left edge while
+    /// the next panel slides over the last from the right.
+    pub const LEAVE: f32 = 0.6;
+    pub const SLIDE: f32 = 0.7;
+    pub const WORDS_CHANGE: f32 = 0.3;
+    /// The step's art turns over as it comes out from under the panel.
+    pub const ART_ARRIVES: f32 = SLIDE - 0.1;
+    pub const FLIGHT: f32 = 0.9;
+    /// The dotted line fades with the old art and comes back with the new.
+    pub const DOTS_FADE: f32 = 0.3;
+    /// Nothing but the dots moves after this.
+    pub const END: f32 = ART_ARRIVES + FLIGHT + 0.1;
+
+    /// The Face ID sheet comes up, stays while the system would be asked,
+    /// and goes.
+    pub const SHEET_FADE: f32 = 0.25;
+    pub const ASKING: f32 = 1.8;
+
+    /// "Setting up your workspace": everything clears, the laptop turns
+    /// over on its way to the middle, its name and the pill come up, and onboarding hands
+    /// over.
+    pub const CLEAR: f32 = 0.4;
+    pub const LAPTOP_CENTRES: f32 = 0.3;
+    pub const CENTRE: f32 = 1.2;
+    pub const PILL_RISES: f32 = LAPTOP_CENTRES + CENTRE - 0.1;
+    pub const RISE: f32 = 0.6;
+    pub const SETTING_UP: f32 = 3.5;
+}
