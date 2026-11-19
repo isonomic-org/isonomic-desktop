@@ -1,0 +1,14 @@
+# Onboarding assets
+
+- `macbook-pro-13-2020.glb`: the 3D master of the 13-inch MacBook Pro (2020 enclosure) from the devices repository, `assets/macbook_pro13_2020/model.glb`, unchanged (SHA-256 `30d6b764019efa389a671eabd604d528f9b15a410a169b0551908120a2a2369e`). The window turns it on the way in.
+- `isonomic-logo-sound.wav`: the mark's sound from the brand folder, unchanged: two channels, 48 kHz, 16-bit, 4.2 s. The window plays it with the mark's intro and fades it out before the mark moves.
+- `clipboard-white.glb`: the white clipboard's 3D master from the devices repository, `assets/onboarding/clipboards/clipboard_white/model.glb` on its `repo/asset-groups` branch at 1282a50, unchanged (SHA-256 `bea06b0cd68c2de357e758b782b6229be0a15c8fbde68ffdfc5344bd97e51e1f`). The third screen turns it on the way in and rests on it.
+- `anud-pen.glb`: the Anud pen's 3D master from the devices repository, `assets/anud_pen/model.glb` at 10a7efc, unchanged (SHA-256 `479901d44b639a49322009eff40544a7bd9a8b34f833a2497faa1b6bed3a5ca5`). Likewise.
+- `face-id-seal.glb`: the Face ID tile's 3D master from the devices repository, `assets/onboarding/tiles/tile_faceid/model.glb` on its `repo/asset-groups` branch at 5e3c044, unchanged (SHA-256 `9f9d1ccc83cef656b59f14ca70e56f8c7947bde4a44de9a7abc0e63de00e5466`). The fourth screen turns it on the way in and rests on it; its rings of light are drawn by the window.
+- `drive-*.glb` (gemma, hugging-face, microsoft, mistral, qwen): the drives' 3D masters with their engraved marks, from the devices repository's `drives/marks` branch at 3c37fb3 (`assets/drive_<name>/model.glb`), unchanged. "Local AI models" draws them once, tilted as the design has them.
+- `pill-*.glb` (asana, dropbox, figma, github, linear): the pills' 3D masters with their embossed marks, from the devices repository's `pills/marks` branch at 3835be7 (`assets/onboarding/pills/pill_<name>/model.glb`), unchanged. "Add integrations" draws them once, from above.
+- `wallet-cream.glb` and `id-card-black.glb`: the card wallet's and the ID card's 3D masters from the devices repository's `repo/asset-groups` branch at 30aef43 (`assets/onboarding/badges/wallet_cream/model.glb` and `badges/idcard_black/model.glb`), unchanged. "Your account exists." draws them once, from above.
+- `recovery-kit-holder.png`, `recovery-kit-seal.png`, `menu-bar.png`: the design's flat pictures for the steps that have no 3D model yet, exported at three pixels to a point, with the white ground cleared so they sit on the sidebar. To be replaced by 3D models.
+- `logos/*.png`: the marks beside the rows of "Local AI models" and "Add integrations", the design's own pictures (Isonomic Desktop, "09 · Local AI models" and "10 · Add integrations"), each in its 40-point box, exported at three pixels to a point, unchanged.
+
+All are replaced, never edited: the models from the devices repository, the sound from the brand folder.

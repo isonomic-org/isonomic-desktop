@@ -19,6 +19,7 @@ pub mod lifecycle;
 pub mod light;
 pub mod logs;
 pub mod menubar;
+pub mod onboarding;
 pub mod problems;
 
 use std::sync::Arc;

@@ -1435,6 +1435,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "device3d"
+version = "0.9.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6783,12 +6790,17 @@ name = "shell"
 version = "0.9.0"
 dependencies = [
  "desktop-ui",
+ "device3d",
  "futures",
  "hello-app",
+ "image",
  "isonomic-app",
  "isonomic-client",
  "isonomic-proto",
  "isonomic-testkit",
+ "objc2 0.6.5",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
  "reports",
  "serde_json",
  "tempfile",

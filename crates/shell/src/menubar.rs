@@ -1,12 +1,16 @@
 // Copyright 2026 Anud Inc.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The menu bar icon (architecture spec, section 2): a status light, Open,
-//! Start at Login and Quit.
+//! The menu bar icon (architecture spec, section 2): the Isonomic mark, and
+//! under it the status line, Open, Start at Login and Quit.
+//!
+//! The mark is a template image, black on clear, as the system asks of a
+//! menu bar icon: the system colours it for a light or dark bar and for
+//! the pressed state.
 //!
 //! GPUI has no API for a status item, so on macOS this owns an
 //! `NSStatusItem` through the `tray-icon` crate, in the window process, on
-//! the main thread. The light follows the engine link's live watch; nothing
+//! the main thread. The status line follows the engine link's live watch; nothing
 //! polls. On other platforms `install` does nothing.
 
 use std::sync::Arc;
@@ -46,7 +50,6 @@ mod mac {
     use tokio::sync::{mpsc, watch};
     use tray_icon::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
     use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
-    use ui::tokens::light::ICON_SIZE;
     use ui::{App, AsyncApp};
 
     use super::LoginToggle;
@@ -56,12 +59,18 @@ mod mac {
     const LOGIN: &str = "login";
     const QUIT: &str = "quit";
 
-    fn icon_for(live: &Live) -> Option<Icon> {
-        Icon::from_rgba(light::icon(light::color(live)), ICON_SIZE, ICON_SIZE).ok()
+    /// The mark, 36 pixels square: 18 points on a bar at two pixels a point.
+    const MARK: &[u8] = include_bytes!("../../../assets/icon/menu-bar-mark.png");
+
+    fn mark() -> Option<Icon> {
+        let pixels = image::load_from_memory_with_format(MARK, image::ImageFormat::Png)
+            .ok()?
+            .into_rgba8();
+        let (width, height) = pixels.dimensions();
+        Icon::from_rgba(pixels.into_raw(), width, height).ok()
     }
 
     fn apply(tray: &TrayIcon, status: &MenuItem, live: &Live) {
-        let _ = tray.set_icon(icon_for(live));
         let line = light::status_line(live);
         let _ = tray.set_tooltip(Some(&line));
         status.set_text(&line);
@@ -89,8 +98,8 @@ mod mac {
         let mut builder = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_tooltip(light::status_line(&current));
-        if let Some(icon) = icon_for(&current) {
-            builder = builder.with_icon(icon);
+        if let Some(icon) = mark() {
+            builder = builder.with_icon_templated(icon);
         }
         let tray = match built
             .map_err(|e| e.to_string())

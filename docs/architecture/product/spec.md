@@ -8,7 +8,7 @@ Spec sections 2 and 3.
 - **System tabs.** Home (launcher, recents, search), App catalog, Activity (what each app did), Settings (Models, Connections, Backups, Identity and devices, Storage, General).
 - **Tabs keep their state.** An app is built on first open and stays alive. On small machines the hardware profile caps how many stay loaded; the least recently used is unloaded and restores from the engine when reopened.
 - **Any tab can pop out** into its own window in the same process.
-- **Menu bar icon.** Status light, open, snapshot now, AI web access toggle, quit.
+- **Menu bar icon.** The Isonomic mark as a template image (black on clear; the system colours it). Its menu: status line, open, snapshot now, AI web access toggle, quit.
 - **Closing the window hides it.** The window process stays resident for the menu bar icon. Only Quit ends it, and Quit asks the engine to stop in order unless the user chose to keep it running in the background.
 
 ## Processes
