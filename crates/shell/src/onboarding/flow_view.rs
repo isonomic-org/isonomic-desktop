@@ -15,7 +15,7 @@ use ui::{
 };
 
 use super::art::Sprite;
-use super::flow::{self, Flow};
+use super::flow::{self, Flow, Slip};
 use super::steps::STEPS;
 use super::Onboarding;
 
@@ -26,11 +26,15 @@ fn below(top: f32) -> f32 {
 }
 
 /// A sprite moved `shift` to the right and drawn `narrow` of its width
-/// about the art's middle line, as when the whole art turns over.
-fn sprite(sprite: &Sprite, shift: f32, narrow: f32, slipped: (f32, f32)) -> impl IntoElement {
+/// about the art's middle line, as when the whole art turns over. The ID
+/// card is also wherever `slip` has it.
+fn sprite(sprite: &Sprite, shift: f32, narrow: f32, slip: Slip) -> impl IntoElement {
     let (left, top, wide, tall) = sprite.place;
-    let (across, down) = if sprite.slips { slipped } else { (0., 0.) };
-    let (left, top) = (left + across, top + down);
+    let (left, top, narrow) = if sprite.slips {
+        (left + slip.across, top + slip.down, narrow * slip.narrow)
+    } else {
+        (left, top, narrow)
+    };
     let middle = left + wide / 2.;
     let drawn = wide * narrow;
     img(&sprite.picture)
@@ -95,30 +99,39 @@ impl Onboarding {
     }
 
     /// A step's art: leaving by the left edge, arriving from under the
-    /// panel, or at rest.
-    fn art(&self, step: usize, leaving: bool, f: f32, slipped: (f32, f32)) -> impl IntoElement {
+    /// panel, or at rest. The ID card arrives after the wallet, and lies
+    /// over it until it is tucked in.
+    fn art(&self, step: usize, leaving: bool, f: f32, slip: Slip) -> impl IntoElement {
         let sprites = self.art.as_ref().map(|art| &art.steps[step]);
-        let (shift, narrow) = if leaving {
-            let gone = flow::left(f);
-            (-(shared::SIDEBAR + 40.) * gone, flow::turned(gone))
-        } else {
-            let arrived = flow::arrived(f);
-            let leftmost = sprites
-                .into_iter()
-                .flatten()
-                .map(|sprite| sprite.place.0)
-                .fold(f32::MAX, f32::min);
-            (
-                (shared::SIDEBAR + shared::TUCK - leftmost) * (1. - arrived),
-                flow::turned(1. - arrived),
-            )
+        let leftmost = sprites
+            .into_iter()
+            .flatten()
+            .map(|sprite| sprite.place.0)
+            .fold(f32::MAX, f32::min);
+        let placed = |f: f32| {
+            if leaving {
+                let gone = flow::left(f);
+                (-(shared::SIDEBAR + 40.) * gone, flow::turned(gone))
+            } else {
+                let arrived = flow::arrived(f);
+                (
+                    (shared::SIDEBAR + shared::TUCK - leftmost) * (1. - arrived),
+                    flow::turned(1. - arrived),
+                )
+            }
         };
-        div().absolute().size_full().children(
-            sprites
-                .into_iter()
-                .flatten()
-                .map(move |one| sprite(one, shift, narrow, slipped)),
-        )
+        let (whole, card) = (placed(f), placed(f - at::CARD_FOLLOWS));
+        let (under, over): (Vec<_>, Vec<_>) = sprites
+            .into_iter()
+            .flatten()
+            .partition(|sprite| slip.tucked || !sprite.slips);
+        div()
+            .absolute()
+            .size_full()
+            .children(under.into_iter().chain(over).map(|one| {
+                let (shift, narrow) = if one.slips && !leaving { card } else { whole };
+                sprite(one, shift, narrow, slip)
+            }))
     }
 
     /// A step's panel, `slid` of the way in from the right.
@@ -410,11 +423,15 @@ impl Onboarding {
                     layer = layer.child(self.step_panel(before, 1., cx));
                 }
             }
-            let f = if forward { f } else { at::END };
+            let f = if forward {
+                f
+            } else {
+                at::END + at::CARD_FOLLOWS
+            };
             let slid = motion::ease(motion::ARRIVE, motion::progress(f, 0., at::SLIDE));
             // Its art waits under the panel until the panel is in.
             if f >= at::ART_ARRIVES {
-                layer = layer.child(self.art(step, false, f, (0., 0.)));
+                layer = layer.child(self.art(step, false, f, Slip::RESTING));
             }
             layer = layer.child(self.step_panel(step, slid, cx));
         }

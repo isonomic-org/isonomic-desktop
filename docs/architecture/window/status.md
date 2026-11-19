@@ -4,6 +4,12 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The ID card lies over the wallet, then tucks into it
+
+- **"Your account exists."** had the wallet on the left and the card beside it. The wallet is now in the middle of the sidebar and the card lies over it, its top out past the wallet's mouth, not in it.
+- **Coming on:** the wallet comes out from under the panel first and the card follows it (`steps::at::CARD_FOLLOWS`).
+- **On "Next step":** the card turns over as it lifts clear of the wallet's mouth, goes in between the wallet's back and its pocket, a little past where it rests, and comes back; a moment later the two turn over and leave by the left edge, and then the next panel comes on (`steps::at::CARD_LIFTS`, `CARD_TUCKS`, `CARD_RESTS`).
+
 ## 2026-11-18 · The lists show the design's marks
 
 - **"Turn on local AI models" and "Integrations and connected apps":** each row showed its first letter on a chip. It now shows the design's own mark, in the design's 40-point box with 16 after it (`shell::onboarding::logos`; `ui::onboarding::steps::LOGO`).

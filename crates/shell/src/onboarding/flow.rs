@@ -35,6 +35,47 @@ pub struct Flow {
     pub forward: bool,
 }
 
+/// Where the ID card is on its way into the wallet: how far from where
+/// it rests over it, in points; how wide it is drawn as it turns over,
+/// as a share of its width; and whether it is in the wallet yet, behind
+/// the pocket, or still over it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Slip {
+    pub across: f32,
+    pub down: f32,
+    pub narrow: f32,
+    pub tucked: bool,
+}
+
+impl Slip {
+    pub const RESTING: Slip = Slip {
+        across: 0.,
+        down: 0.,
+        narrow: 1.,
+        tucked: false,
+    };
+}
+
+/// The card `since` seconds after the press that sends it into the
+/// wallet: it turns over once as it lifts clear of the wallet's mouth,
+/// then goes in, a little past where it rests, and comes back.
+pub fn slip(since: f32) -> Slip {
+    let (left, top, _, _) = design::CARD;
+    let up = motion::ease(motion::CARRY, motion::progress(since, 0., at::CARD_LIFTS));
+    let tuck = motion::progress(since, at::CARD_LIFTS, at::CARD_TUCKS);
+    let down = motion::ease(motion::CARRY, (tuck / 0.7).min(1.));
+    let dip = (std::f32::consts::PI * ((tuck - 0.5) / 0.5).clamp(0., 1.)).sin();
+    Slip {
+        across: (design::CARD_OVER.0 - left) * up
+            + (design::CARD_IN.0 - design::CARD_OVER.0) * down,
+        down: (design::CARD_OVER.1 - top) * up
+            + (design::CARD_IN.1 - design::CARD_OVER.1) * down
+            + design::CARD_DIP * dip,
+        narrow: turned(0.5 * up),
+        tucked: since >= at::CARD_LIFTS,
+    }
+}
+
 /// How far the old art has gone (0 to 1), `f` seconds into a step.
 pub fn left(f: f32) -> f32 {
     motion::ease(motion::DEPART, motion::progress(f, 0., at::LEAVE))
@@ -87,27 +128,29 @@ impl Onboarding {
         }
     }
 
-    /// Where the ID card is on its way into the wallet at `t`, in points
-    /// from where it rests beside it: up over the wallet's mouth, then in.
-    pub(super) fn slipped(&self, t: f32) -> (f32, f32) {
-        let Some(flow) = self.flow.filter(|flow| Self::waits(*flow) > 0.) else {
-            return (0., 0.);
-        };
-        let (left, top, _, _) = design::CARD;
-        let half = at::SLIP / 2.;
-        let since = t - flow.started;
-        let over = motion::ease(motion::CARRY, motion::progress(since, 0., half));
-        let down = motion::ease(motion::CARRY, motion::progress(since, half, half));
-        (
-            (design::CARD_OVER.0 - left) * over + (design::CARD_IN.0 - design::CARD_OVER.0) * down,
-            (design::CARD_OVER.1 - top) * over + (design::CARD_IN.1 - design::CARD_OVER.1) * down,
-        )
+    /// Where the ID card is at `t`.
+    pub(super) fn slipped(&self, t: f32) -> Slip {
+        match self.flow.filter(|flow| Self::waits(*flow) > 0.) {
+            Some(flow) => slip(t - flow.started),
+            None => Slip::RESTING,
+        }
+    }
+
+    /// How long a step's art takes to come to rest after the rest of the
+    /// step has: on "Your account exists." the card follows the wallet.
+    fn lingers(flow: Flow) -> f32 {
+        if flow.step == steps::CREATED {
+            at::CARD_FOLLOWS
+        } else {
+            0.
+        }
     }
 
     fn settled_flow(&self) -> bool {
         match (self.flow, self.terms_now()) {
             (Some(flow), Some(t)) => {
-                !flow.forward || t - flow.started >= at::END + Self::waits(flow)
+                !flow.forward
+                    || t - flow.started >= at::END + Self::waits(flow) + Self::lingers(flow)
             }
             _ => true,
         }
@@ -297,6 +340,23 @@ mod tests {
         assert!((left(at::LEAVE) - 1.).abs() < 1e-3);
         assert!(arrived(at::LEAVE) < 0.05);
         assert!((arrived(at::END) - 1.).abs() < 1e-3);
+    }
+
+    #[test]
+    fn the_card_lifts_over_the_wallet_and_ends_tucked_in_it() {
+        let rest = slip(0.);
+        assert!(rest.down.abs() < 0.5 && !rest.tucked && (rest.narrow - 1.).abs() < 1e-3);
+        let clear = slip(at::CARD_LIFTS);
+        assert!((design::CARD.1 + clear.down - design::CARD_OVER.1).abs() < 0.5);
+        assert!(clear.tucked && (clear.narrow - 1.).abs() < 1e-3);
+        // On the way it is seen edge-on.
+        let thinnest = (0..=100)
+            .map(|step| slip(at::CARD_LIFTS * step as f32 / 100.).narrow)
+            .fold(1., f32::min);
+        assert!(thinnest < 0.2);
+        let rests = slip(at::SLIP);
+        assert!((design::CARD.1 + rests.down - design::CARD_IN.1).abs() < 0.5);
+        assert!((rests.narrow - 1.).abs() < 1e-3);
     }
 
     #[test]

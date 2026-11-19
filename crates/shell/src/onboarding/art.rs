@@ -146,7 +146,7 @@ fn pieces(bytes: &[u8], place: Place, kept: impl Fn(&str) -> bool) -> Option<Pic
 }
 
 /// The card wallet and the ID card, as three sprites so that the card can
-/// slip between the wallet's back and its pocket.
+/// lie over the wallet and then slip between its back and its pocket.
 fn wallet_and_card() -> Vec<Sprite> {
     let wallet = asset!("wallet-cream.glb");
     let sprite = |picture: Option<Picture>, place: Place, slips: bool| {

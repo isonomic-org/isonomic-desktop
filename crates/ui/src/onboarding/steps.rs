@@ -15,14 +15,16 @@ pub const ART_X: f32 = 200.;
 /// turns over.
 pub const EDGE_ON: f32 = 0.03;
 
-/// "Your account exists.": the card wallet and, beside it, the ID card.
-/// Before they leave, the card goes up over the wallet's mouth and slips
-/// in: where its corner is over the wallet, and where it comes to rest in
-/// it.
-pub const WALLET: (f32, f32, f32, f32) = (82., 464., 117.5, 120.);
-pub const CARD: (f32, f32, f32, f32) = (211.5, 477., 106.25, 93.75);
-pub const CARD_OVER: (f32, f32) = (87.6, 407.);
-pub const CARD_IN: (f32, f32) = (87.6, 470.);
+/// "Your account exists.": the card wallet in the middle and the ID card
+/// lying over it, its top out past the wallet's mouth. Before they
+/// leave, the card turns over as it lifts clear of the mouth, then tucks
+/// in: where its corner is when it is clear, where it comes to rest in
+/// the wallet, and how far past that it dips on the way.
+pub const WALLET: (f32, f32, f32, f32) = (141.25, 464., 117.5, 120.);
+pub const CARD: (f32, f32, f32, f32) = (146.875, 452., 106.25, 93.75);
+pub const CARD_OVER: (f32, f32) = (146.875, 398.);
+pub const CARD_IN: (f32, f32) = (146.875, 470.);
+pub const CARD_DIP: f32 = 5.;
 
 /// "Turn on local AI models": the drives are drawn as the design draws
 /// them, the way an icon of a drive is: from in front and this many
@@ -86,9 +88,15 @@ pub const SETUP_TURNS: f32 = 1.;
 /// The order of events on each step, in seconds from the press that
 /// brought it on. One thing at a time.
 pub mod at {
-    /// On leaving "Your account exists.", the card first slips into the
-    /// wallet; everything else waits for it.
-    pub const SLIP: f32 = 0.9;
+    /// "Your account exists." comes on wallet first; the card follows it
+    /// out from under the panel this much later.
+    pub const CARD_FOLLOWS: f32 = 0.45;
+    /// On leaving it, the card first turns over as it lifts, tucks into
+    /// the wallet, and rests there a moment; everything else waits.
+    pub const CARD_LIFTS: f32 = 0.55;
+    pub const CARD_TUCKS: f32 = 0.6;
+    pub const CARD_RESTS: f32 = 0.25;
+    pub const SLIP: f32 = CARD_LIFTS + CARD_TUCKS + CARD_RESTS;
     /// The last step's art turns over and leaves by the left edge while
     /// the next panel slides over the last from the right.
     pub const LEAVE: f32 = 0.6;
