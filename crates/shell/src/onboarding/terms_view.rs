@@ -6,6 +6,7 @@
 //! the two props, each placed where the design places it.
 
 use ui::component::Icon;
+use ui::onboarding::passkey::at as fourth;
 use ui::onboarding::terms::{self as design, at, signs};
 use ui::onboarding::{self as page};
 use ui::{
@@ -61,6 +62,11 @@ impl Onboarding {
         let fading = self.signing_at(t).map_or(1., |s| {
             1. - motion::progress(s, signs::CLIPBOARD_LEAVES, signs::DOTS_FADE)
         });
+        // And comes back once the seal has landed.
+        let fading = fading
+            + self.passkey_at(t).map_or(0., |p| {
+                motion::progress(p, fourth::LIGHT_SHOWS, fourth::LIGHT_FADE)
+            });
         let port_shown = motion::progress(t, at::DOTS_START, at::DOT_SHOWS) * fading;
         let dots = (0..design::DOTS).map(|index| {
             let (solid, radius) = terms::dot(t, index);
@@ -100,6 +106,22 @@ impl Onboarding {
         );
         let (label, label_line) = design::STEP_LABEL;
         let (title, title_line) = design::STEP_TITLE;
+        // On the fourth screen the words change: out, then in.
+        let change = self
+            .passkey_at(t)
+            .map_or(0., |p| motion::progress(p, 0., fourth::WORDS_CHANGE));
+        let (title_words, words) = if change < 0.5 {
+            (
+                "Accept terms",
+                "Isonomic runs on your Mac and you hold your own keys.",
+            )
+        } else {
+            (
+                "Create account",
+                "Face ID creates your account. No seed phrase, no password.",
+            )
+        };
+        let words_solid = (1. - 2. * change).abs();
         let bars = (0..design::STEPS).map(|step| {
             div()
                 .flex_1()
@@ -130,6 +152,7 @@ impl Onboarding {
                     .text_size(px(label))
                     .line_height(px(label_line))
                     .text_color(design::quiet())
+                    .opacity(words_solid)
                     .child(
                         div()
                             .font_family(design::MONO)
@@ -142,19 +165,21 @@ impl Onboarding {
                             .line_height(px(title_line))
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(page::ink())
-                            .child("Accept terms"),
+                            .child(title_words),
                     )
-                    .child("Isonomic runs on your Mac and you hold your own keys."),
+                    .child(words),
             )
             .child(div().w_full().flex().gap(px(8.)).children(bars))
     }
 
     /// A footer button: its label with an arrow before or after it.
-    fn action(
+    /// A footer button: back, or forward, and what a press does.
+    pub(super) fn action(
         &self,
         id: &'static str,
         label: &'static str,
         forward: bool,
+        press: fn(&mut Self, &mut Context<Self>),
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let (near, far, above) = design::ACTION_PAD;
@@ -184,14 +209,14 @@ impl Onboarding {
             .font_weight(FontWeight::MEDIUM)
             .text_color(ink)
             // A press here is a press, not the start of moving the window.
-            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation());
+            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .on_click(cx.listener(move |view, _, _, cx| press(view, cx)));
         if forward {
             button
                 .pl(px(far))
                 .pr(px(near))
                 .border_color(page::ink())
                 .bg(page::ink())
-                .on_click(cx.listener(|view, _, _, cx| view.accept(cx)))
                 .child(label)
                 .child(arrow)
         } else {
@@ -200,7 +225,6 @@ impl Onboarding {
                 .pr(px(far))
                 .border_color(design::outline())
                 .bg(page::page())
-                .on_click(cx.listener(|view, _, _, cx| view.decline(cx)))
                 .child(arrow)
                 .child(label)
         }
@@ -314,19 +338,35 @@ impl Onboarding {
                     .flex()
                     .items_center()
                     .justify_between()
-                    .child(self.action("onboarding-decline", "Decline", false, cx))
-                    .child(self.action("onboarding-accept", "Accept and continue", true, cx)),
+                    .child(self.action(
+                        "onboarding-decline",
+                        "Decline",
+                        false,
+                        Onboarding::decline,
+                        cx,
+                    ))
+                    .child(self.action(
+                        "onboarding-accept",
+                        "Accept and continue",
+                        true,
+                        Onboarding::accept,
+                        cx,
+                    )),
             )
     }
 
     /// In front of the mark and the laptop: the stepper, the clipboard and
-    /// the pen, and over them the content, which they come out from under.
+    /// the pen, and over them the content, which they come out from under;
+    /// then the fourth screen's seal and, over it, its panel.
     pub(super) fn terms_front(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {
+        let fourth = self.passkey_at(t);
         div()
             .absolute()
             .size_full()
             .child(self.stepper(t))
             .child(self.props_layer(t))
             .child(self.content(t, cx))
+            .children(fourth.map(|p| self.seal_layer(p)))
+            .children(fourth.map(|p| self.passkey_panel(p, cx)))
     }
 }

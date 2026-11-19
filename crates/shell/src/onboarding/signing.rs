@@ -5,7 +5,7 @@
 //! clipboard's pages lift by their corner and curl back off the last page,
 //! the pen goes to that corner and signs "hello", the pages are let go, the
 //! clipboard turns over and leaves by the left edge, the pen follows, and
-//! onboarding hands over.
+//! the fourth screen comes on (`passkey`).
 //!
 //! Its times are seconds since the press, which is itself a time on the
 //! third screen's clock, so every drawn frame is still placed by one clock.
@@ -83,8 +83,8 @@ impl Onboarding {
         self.signed.map(|signed| t - signed)
     }
 
-    /// "Accept and continue": the signing plays, then onboarding hands
-    /// over. Its later screens aren't built.
+    /// "Accept and continue": the signing plays, then the fourth screen
+    /// comes on.
     pub fn accept(&mut self, cx: &mut Context<Self>) {
         let (Some(pressed), Some(t), None) = (self.terms, self.terms_now(), self.signed) else {
             return;
@@ -140,20 +140,21 @@ impl Onboarding {
                     cx.background_executor().timer(spare).await;
                 }
             }
-            let _ = view.update(cx, |view, cx| view.hand_over(cx));
+            let _ = view.update(cx, |view, cx| view.begin_passkey(cx));
         })
         .detach();
     }
 
-    /// Jump to the end of the signing, as a test wants it.
+    /// Jump to the end of the signing and on to the fourth screen, as a
+    /// test wants it.
     pub fn skip_signing(&mut self, cx: &mut Context<Self>) {
         if self.signed.is_some() {
-            self.hand_over(cx);
+            self.begin_passkey(cx);
         }
     }
 
     /// Tell whoever listens that a new account was chosen, once.
-    fn hand_over(&mut self, cx: &mut Context<Self>) {
+    pub(super) fn hand_over(&mut self, cx: &mut Context<Self>) {
         if !std::mem::replace(&mut self.handed_over, true) {
             cx.emit(Chosen::NewAccount);
         }

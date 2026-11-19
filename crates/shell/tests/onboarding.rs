@@ -92,14 +92,27 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
     assert!(view.read_with(cx, |view, _| view.terms_now().is_none()));
     click(cx, "onboarding-new-account");
     view.update(cx, |view, cx| view.skip_terms(cx));
-    // Accepting plays the signing first; the account is chosen at its end,
-    // once.
+    // Accepting plays the signing first, then the fourth screen comes on.
     click(cx, "onboarding-accept");
     assert_eq!(*chosen.borrow(), [Chosen::Recover]);
     click(cx, "onboarding-decline");
     assert!(view.read_with(cx, |view, _| view.terms_now().is_some()));
     view.update(cx, |view, cx| view.skip_signing(cx));
-    view.update(cx, |view, cx| view.skip_signing(cx));
+    view.update(cx, |view, cx| view.skip_passkey(cx));
     cx.run_until_parked();
+    assert!(shown(cx, window, "onboarding-passkey"));
+    assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+
+    // "Previous step" goes back to the terms, which can be accepted again.
+    click(cx, "onboarding-previous");
+    assert!(!shown(cx, window, "onboarding-passkey"));
+    click(cx, "onboarding-accept");
+    view.update(cx, |view, cx| view.skip_signing(cx));
+    view.update(cx, |view, cx| view.skip_passkey(cx));
+    cx.run_until_parked();
+
+    // Going on from the fourth screen chooses the account, once.
+    click(cx, "onboarding-face-id");
+    click(cx, "onboarding-face-id");
     assert_eq!(*chosen.borrow(), [Chosen::Recover, Chosen::NewAccount]);
 }

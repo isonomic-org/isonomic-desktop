@@ -20,6 +20,8 @@
 //! it will be shown at.
 
 mod laptop;
+mod passkey;
+mod passkey_view;
 mod props;
 mod signature;
 mod signing;
@@ -40,6 +42,7 @@ use ui::{
 };
 
 use laptop::Scene;
+use passkey::Seal;
 use props::Props;
 use sound::Sound;
 use stage::Drawn;
@@ -48,7 +51,7 @@ use stage::Drawn;
 const FRAME: Duration = Duration::from_millis(16);
 
 /// What the person chose: to recover an account, on "Get started", or a
-/// new one, once they have accepted the terms on the third screen.
+/// new one, once they have gone on from the fourth screen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Chosen {
     NewAccount,
@@ -77,6 +80,11 @@ pub struct Onboarding {
     /// clock, and whether onboarding has handed over since.
     signed: Option<f32>,
     handed_over: bool,
+    /// The Face ID seal's model, once read, and its latest frame.
+    seal: Option<Arc<Seal>>,
+    seal_frame: Option<Drawn>,
+    /// When the fourth screen started, on the third screen's clock.
+    passkey: Option<f32>,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -89,6 +97,8 @@ impl Onboarding {
             let _ = view.update(cx, |view, _| view.scene = scene.ok().map(Arc::new));
             let props = cx.background_spawn(async { Props::load() }).await;
             let _ = view.update(cx, |view, _| view.props = props.ok().map(Arc::new));
+            let seal = cx.background_spawn(async { Seal::load() }).await;
+            let _ = view.update(cx, |view, _| view.seal = seal.ok().map(Arc::new));
         })
         .detach();
         Self {
@@ -103,6 +113,9 @@ impl Onboarding {
             pen: None,
             signed: None,
             handed_over: false,
+            seal: None,
+            seal_frame: None,
+            passkey: None,
         }
     }
 

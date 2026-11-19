@@ -4,6 +4,14 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · Onboarding's fourth screen, "Create your account with Face ID"
+
+- **Design:** "Onboarding 0.4", "04 · Passkey ceremony — idle" (Isonomic Desktop, node 372:1249). Sizes and timings are `ui::onboarding::passkey`; logic and the seal are `shell::onboarding::passkey`, drawing `passkey_view`.
+- **It follows the signing**, where onboarding used to hand over: the next panel slides over the last from the right, the stepper's words change, and the Face ID seal turns over as it comes out from under the panel into the sidebar. Then the dotted line comes back and two rings of light breathe around the seal.
+- **The seal is 3D:** the devices repository's Face ID tile, drawn by `device3d` from above. Its rings of light are see-through in the model, which `device3d` doesn't draw, so the window draws them, breathing as the model's own `pulse` animation does (one breath in 2 s, the wider ring 0.14 of a breath behind).
+- **The buttons:** "Continue with Face ID" hands over to the app's window; no Face ID is asked for yet, and the later screens aren't built. "Previous step" goes back to the terms as they were before they were accepted, without a motion of its own. "Why no password?" does nothing yet.
+- **Every later step should come on the same way:** its panel over the last from the right, then its props out from under it.
+
 ## 2026-11-18 · The laptop is its 3D model on every screen
 
 - **No picture:** the landed laptop used to give way to the design's finished picture, which showed as a change in its shading the moment it came to rest. The picture and its asset are gone. The laptop rests as its last drawn frame, in full detail, on the second screen and in the sidebar. Earlier entries that mention the picture describe what was.

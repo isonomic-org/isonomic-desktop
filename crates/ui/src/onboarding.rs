@@ -75,6 +75,7 @@ pub fn button_glow() -> Vec<BoxShadow> {
     ]
 }
 
+pub mod passkey;
 pub mod terms;
 
 /// The order of events, in seconds from the first frame. One thing at a
