@@ -4,6 +4,13 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The pages lift by their corner instead of folding over
+
+- **What changed:** on "Accept and continue" the clipboard's pages no longer fold over its top and behind the board. They lift by their bottom right corner and curl back toward the top left, far enough to bare that corner of the last page; the pen signs "hello" there; the pages are let go and settle; then the clipboard and the pen leave as before.
+- **How:** each page above the last is rebuilt at load as a sheet of small squares, and a lifted page's points are rolled up off the page and on over (`props::curl`), with the first page's printing. `device3d` draws the bent copy; `Shot::parts` stays for rigid pieces but onboarding no longer uses it.
+- **The signature line** on the last page is now in its bottom right corner. The written line is shown point by point only where the lifted pages leave the page bare, so it is covered as they come down.
+- **The clipboard's canvas** is back to one and a half times its box.
+
 ## 2026-11-18 · "Accept and continue" signs the last page
 
 - **What plays** (`shell::onboarding::signing`, timings in `ui::onboarding::terms::signs`): the clipboard's pages fold over its top one after another, down to the last; the pen goes to its signature line and writes "hello"; the pen goes back; the pages come down; the clipboard turns over and leaves by the left edge; the pen follows; the dotted line fades; then onboarding hands over to the app's window. About 6 s. "Decline" does nothing once it has started, and "Accept and continue" waits for the screen to come to rest.

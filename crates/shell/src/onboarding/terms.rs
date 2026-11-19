@@ -93,7 +93,7 @@ fn draw(scene: Option<&Scene>, props: Option<&Props>, last: f32, t: f32, scale: 
         .filter(|_| due(at::CLIPBOARD_FLIES, at::FLIGHT))
         .map(|props| {
             let (_, turn) = flight(t, at::CLIPBOARD_FLIES);
-            props.clipboard(turn, &[0.; design::PAGES], scale)
+            props.clipboard(turn, 0., scale)
         });
     let pen = props
         .filter(|_| due(at::PEN_FLIES, at::FLIGHT))

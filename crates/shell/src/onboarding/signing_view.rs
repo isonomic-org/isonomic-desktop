@@ -36,15 +36,16 @@ impl Onboarding {
                 .h(px(tall * design::CLIPBOARD_CANVAS))
         });
 
-        // The signature: as much as is written, while its page is in view.
+        // The signature: as much as is written, where the lifted pages
+        // leave the last one bare. They are where the clipboard's frame
+        // has them.
+        let lifted = self
+            .signing_at(self.clipboard.as_ref().map_or(t, |frame| frame.at))
+            .map_or(0., signing::lift);
         let written = self
             .signing_at(t)
-            .filter(|_| {
-                let drawn_for = self.clipboard.as_ref().map_or(t, |frame| frame.at);
-                self.signing_at(drawn_for).is_some_and(signing::uncovered)
-            })
             .map(signing::written)
-            .filter(|share| *share > 0.);
+            .filter(|share| *share > 0. && lifted > 0.);
         let signed = written.zip(self.props.clone()).map(|(share, props)| {
             canvas(
                 |_, _, _| (),
@@ -56,14 +57,19 @@ impl Onboarding {
                             bounds.origin.y + px(top + tall / 2. + y),
                         )
                     };
-                    let points = signature::written(share);
-                    let mut line = PathBuilder::stroke(px(design::SIGNATURE_LINE));
-                    line.move_to(place(points[0]));
-                    for on_line in &points[1..] {
-                        line.line_to(place(*on_line));
-                    }
-                    if let Ok(line) = line.build() {
-                        window.paint_path(line, design::signature());
+                    for pair in signature::written(share).windows(2) {
+                        if !pair
+                            .iter()
+                            .all(|on_line| props.signature_bare(*on_line, lifted))
+                        {
+                            continue;
+                        }
+                        let mut line = PathBuilder::stroke(px(design::SIGNATURE_LINE));
+                        line.move_to(place(pair[0]));
+                        line.line_to(place(pair[1]));
+                        if let Ok(line) = line.build() {
+                            window.paint_path(line, design::signature());
+                        }
                     }
                 },
             )

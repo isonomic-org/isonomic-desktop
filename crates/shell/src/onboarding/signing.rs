@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! What "Accept and continue" sets going on the third screen: the
-//! clipboard's pages fold over to the last, the pen goes to it and signs
-//! "hello", the pages come back down, the clipboard turns over and leaves
-//! by the left edge, the pen follows, and onboarding hands over.
+//! clipboard's pages lift by their corner and curl back off the last page,
+//! the pen goes to that corner and signs "hello", the pages are let go, the
+//! clipboard turns over and leaves by the left edge, the pen follows, and
+//! onboarding hands over.
 //!
 //! Its times are seconds since the press, which is itself a time on the
 //! third screen's clock, so every drawn frame is still placed by one clock.
@@ -19,23 +20,14 @@ use super::props::Props;
 use super::stage::Drawn;
 use super::{signature, Chosen, Onboarding, FRAME};
 
-/// How far over each folding page is `s` seconds in, in degrees, first
-/// page first. They fold from the first, and come back from the last.
-pub fn folds(s: f32) -> [f32; design::PAGES] {
-    std::array::from_fn(|page| {
-        let turn =
-            |starts: f32| motion::ease(motion::CARRY, motion::progress(s, starts, signs::PAGE));
-        let up = turn(signs::PAGE_STAGGER * page as f32);
-        let back = (design::PAGES - 1 - page) as f32;
-        let down = turn(signs::UNFOLDS + signs::PAGE_STAGGER * back);
-        design::FOLDED * (up - down)
-    })
-}
-
-/// Is the last page's signature in view? It is while the last page to
-/// fold is far enough over.
-pub fn uncovered(s: f32) -> bool {
-    folds(s)[design::PAGES - 1] > design::UNCOVERED
+/// How far the pages are lifted `s` seconds in, from 0 (lying flat) to 1.
+pub fn lift(s: f32) -> f32 {
+    let up = motion::ease(motion::CARRY, motion::progress(s, 0., signs::LIFT));
+    let down = motion::ease(
+        motion::CARRY,
+        motion::progress(s, signs::RELEASES, signs::RELEASE),
+    );
+    up - down
 }
 
 /// The share of the signature written.
@@ -67,15 +59,15 @@ pub fn leaving(s: f32, starts: f32, length: f32) -> (f32, f32) {
 /// The frames due between the last drawn time and `s`.
 fn draw(props: &Props, last: f32, s: f32, scale: f32) -> [Option<Arc<RenderImage>>; 2] {
     let due = |starts: f32, ends: f32| s >= starts && last < ends;
-    let folding = due(0., signs::FOLDED);
-    let unfolding = due(signs::UNFOLDS, signs::CLIPBOARD_LEAVES);
+    let lifting = due(0., signs::LIFT);
+    let settling = due(signs::RELEASES, signs::CLIPBOARD_LEAVES);
     let going = due(
         signs::CLIPBOARD_LEAVES,
         signs::CLIPBOARD_LEAVES + signs::LEAVE,
     );
-    let clipboard = (folding || unfolding || going).then(|| {
+    let clipboard = (lifting || settling || going).then(|| {
         let (_, turn) = leaving(s, signs::CLIPBOARD_LEAVES, signs::LEAVE);
-        props.clipboard(turn, &folds(s), scale)
+        props.clipboard(turn, lift(s), scale)
     });
     let pen = due(signs::PEN_LEAVES, signs::PEN_LEAVES + signs::PEN_LEAVE).then(|| {
         let (_, turn) = leaving(s, signs::PEN_LEAVES, signs::PEN_LEAVE);
@@ -196,19 +188,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_pages_fold_from_the_first_and_come_back_from_the_last() {
-        let early = folds(signs::PAGE * 0.5);
-        assert!(early[0] > early[design::PAGES - 1]);
-        let folded = folds(signs::FOLDED);
-        assert!(folded
-            .iter()
-            .all(|fold| (fold - design::FOLDED).abs() < 0.5));
-        assert!(uncovered(signs::WRITES));
-        let coming_back = folds(signs::UNFOLDS + signs::PAGE * 0.5);
-        assert!(coming_back[design::PAGES - 1] < coming_back[0]);
-        let down = folds(signs::CLIPBOARD_LEAVES);
-        assert!(down.iter().all(|fold| fold.abs() < 0.5));
-        assert!(!uncovered(signs::CLIPBOARD_LEAVES));
+    fn the_pages_are_up_for_the_whole_of_the_writing() {
+        assert!(lift(0.).abs() < 1e-3);
+        assert!(lift(signs::LIFT * 0.5) > 0.2);
+        assert!((lift(signs::WRITES) - 1.).abs() < 1e-3);
+        assert!((lift(signs::RELEASES) - 1.).abs() < 1e-3);
+        assert!(lift(signs::CLIPBOARD_LEAVES).abs() < 1e-3);
     }
 
     #[test]
@@ -217,7 +202,7 @@ mod tests {
         assert!((reached(signs::WRITES) - 1.).abs() < 1e-3);
         assert_eq!(written(signs::WRITES + signs::WRITE), 1.);
         assert!((reached(signs::PEN_RETURNS) - 1.).abs() < 1e-3);
-        assert!(reached(signs::UNFOLDS).abs() < 1e-3);
+        assert!(reached(signs::PEN_RETURNS + signs::REACH).abs() < 1e-3);
     }
 
     #[test]

@@ -5,8 +5,9 @@
 //! from the devices repository, each with the camera it rests under. They
 //! turn over on the way in and out, and stay as their last drawn frame.
 //!
-//! The clipboard's pages fold over its top, one at a time, down to the
-//! last, which has a line to sign on like the first.
+//! The clipboard's pages lift by their bottom right corner and curl back
+//! toward its top left, far enough to bare that corner of the last page,
+//! which has a line to sign on there.
 
 use std::ops::Range;
 use std::sync::Arc;
@@ -20,14 +21,26 @@ use super::stage::{self, Display};
 static CLIPBOARD: &[u8] = include_bytes!("../../../../assets/onboarding/clipboard-white.glb");
 static PEN: &[u8] = include_bytes!("../../../../assets/onboarding/anud-pen.glb");
 
-/// The clipboard's model, in its own metres: the line its pages turn
-/// about, under the clip; how far the first page's printing sits above the
-/// last page; and the box on the last page the signature is written in
-/// (left, baseline, width, height), just above its line.
-const HINGE: Vec3 = vec3(0., 0.0045, -0.1455);
-const FIRST_TO_LAST: f32 = -0.0012;
-const LAST_PAGE: f32 = 0.00436 + FIRST_TO_LAST;
-const SIGN_HERE: (f32, f32, f32, f32) = (-0.076, 0.0962, 0.078, 0.021);
+/// The clipboard's model, in its own metres. The pages lift from their
+/// bottom right corner, curling toward the top left: the corner, the way
+/// the curl travels across the page, how far it travels, the radius the
+/// paper rolls at, and how far round it rolls, from first lifting to fully
+/// lifted, in degrees.
+const CORNER: Vec3 = vec3(0.1003, 0., 0.1194);
+const TOWARD: Vec3 = vec3(-0.604, 0., -0.797);
+const PEEL: f32 = 0.13;
+const ROLL: f32 = 0.03;
+const OVER: (f32, f32) = (60., 150.);
+/// Squares along each side of a page, so that it can bend.
+const GRID: u32 = 28;
+/// How far the first page's printing sits above the last page, and how far
+/// right its signature line is moved to sit in the last page's bottom right
+/// corner; the height of the last page's printing; and the box there the
+/// signature is written in (left, baseline, width, height), just above the
+/// line.
+const FIRST_TO_LAST: Vec3 = vec3(0.088, -0.0012, 0.);
+const LAST_PAGE: f32 = 0.00436 - 0.0012;
+const SIGN_HERE: (f32, f32, f32, f32) = (0.012, 0.0962, 0.074, 0.02);
 /// What is printed on the first page, and turns over with it.
 const PRINTED: [&str; 12] = [
     "clause_1",
@@ -46,8 +59,9 @@ const PRINTED: [&str; 12] = [
 
 pub struct Props {
     clipboard: (Model, Camera),
-    /// The pages that fold, first page first, each with what is on it.
-    pages: Vec<Vec<Range<u32>>>,
+    /// Everything that lifts: the pages above the last, and the printing
+    /// on the first.
+    lifted: Vec<Range<u32>>,
     pen: (Model, Camera),
 }
 
@@ -55,22 +69,21 @@ impl Props {
     /// Read both models. Slow enough to keep off the foreground thread.
     pub fn load() -> Result<Props, ModelError> {
         let mut clipboard = Model::read(CLIPBOARD)?;
-        // The last page gets the first page's line to sign on.
+        // The last page gets the first page's line to sign on, in its
+        // bottom right corner.
         for printed in ["signature_line", "signature_label"] {
-            clipboard.copy_part(printed, vec3(0., FIRST_TO_LAST, 0.));
+            clipboard.copy_part(printed, FIRST_TO_LAST);
         }
-        // The file's sheets are numbered from the bottom: the first page
-        // is the highest number, the last page is sheet 1 and stays.
-        let pages = (0..design::PAGES)
-            .map(|page| {
-                let sheet = format!("sheet_{}", design::PAGES + 1 - page);
-                let printed = PRINTED.iter().filter(|_| page == 0);
-                std::iter::once(sheet.as_str())
-                    .chain(printed.copied())
-                    .filter_map(|name| clipboard.part(name))
-                    .collect()
-            })
+        // Every page above the last (the file's sheet 1) becomes a sheet of
+        // small squares, which can bend.
+        let flat: Vec<Range<u32>> = (2..=9)
+            .filter_map(|sheet| clipboard.part(&format!("sheet_{sheet}")))
             .collect();
+        let mut lifted: Vec<Range<u32>> = flat
+            .into_iter()
+            .map(|flat| bendable(&mut clipboard, flat))
+            .collect();
+        lifted.extend(PRINTED.iter().filter_map(|name| clipboard.part(name)));
         let (_, _, wide, tall) = design::CLIPBOARD;
         // Seen from above, as it lies.
         let above = Camera::front(
@@ -95,36 +108,33 @@ impl Props {
         );
         Ok(Props {
             clipboard: (clipboard, above),
-            pages,
+            lifted,
             pen: (pen, beside),
         })
     }
 
     /// The clipboard with `turn` degrees still to make (it turns over like
-    /// a card, about the line up the page) and each folding page `folds`
-    /// degrees over its top.
-    pub fn clipboard(
-        &self,
-        turn: f32,
-        folds: &[f32; design::PAGES],
-        scale: f32,
-    ) -> Arc<RenderImage> {
+    /// a card, about the line up the page) and its pages lifted by `lift`,
+    /// from 0 (lying flat) to 1.
+    pub fn clipboard(&self, turn: f32, lift: f32, scale: f32) -> Arc<RenderImage> {
         let (model, camera) = &self.clipboard;
         let (_, _, wide, tall) = design::CLIPBOARD;
-        let across = vec3(1., 0., 0.);
-        let parts: Vec<(Range<u32>, Transform)> = self
-            .pages
-            .iter()
-            .zip(folds)
-            .filter(|(_, fold)| **fold != 0.)
-            .flat_map(|(page, fold)| {
-                // Its foot comes up toward the camera and goes over the top.
-                let over = Transform::turn_about(across, -fold.to_radians(), HINGE);
-                page.iter().map(move |vertices| (vertices.clone(), over))
-            })
-            .collect();
+        let curled;
+        let model = if lift > 0. {
+            let mut bent = model.clone();
+            for vertices in &self.lifted {
+                for index in vertices.clone() {
+                    let vertex = &mut bent.vertices[index as usize];
+                    (vertex.position, vertex.normal) = curl(vertex.position, vertex.normal, lift);
+                }
+            }
+            curled = bent;
+            &curled
+        } else {
+            model
+        };
         stage::frame(
-            (model, camera, &parts),
+            (model, camera, &[]),
             Transform::turn_about(camera.up, turn.to_radians(), model.centre()),
             true,
             (
@@ -135,6 +145,14 @@ impl Props {
             scale,
             Display::NONE,
         )
+    }
+
+    /// Is this point of the signature's box bare, with the pages lifted by
+    /// `lift`? The lifted pages hang over what is nearest their curl.
+    pub fn signature_bare(&self, (x, y): (f32, f32), lift: f32) -> bool {
+        let (left, baseline, wide, tall) = SIGN_HERE;
+        let on_page = vec3(left + x * wide, 0., baseline - y * tall);
+        (on_page - CORNER).dot(TOWARD) < PEEL * lift - ROLL
     }
 
     /// Where a point of the signature's box (one wide and one tall, from
@@ -179,6 +197,81 @@ impl Props {
     }
 }
 
+/// Replace a flat page with one made of small squares at its top face:
+/// the new page's vertices.
+fn bendable(model: &mut Model, flat: Range<u32>) -> Range<u32> {
+    let corners = &model.vertices[flat.start as usize..flat.end as usize];
+    let (mut low, mut high) = (corners[0].position, corners[0].position);
+    for corner in corners {
+        (low, high) = (low.min(corner.position), high.max(corner.position));
+    }
+    let paper = model
+        .triangles
+        .iter()
+        .find(|triangle| flat.contains(&triangle.vertices[0]))
+        .map_or(0, |triangle| triangle.material);
+    model
+        .triangles
+        .retain(|triangle| !flat.contains(&triangle.vertices[0]));
+    let first = model.vertices.len() as u32;
+    let side = GRID + 1;
+    for row in 0..side {
+        for column in 0..side {
+            let (across, down) = (column as f32 / GRID as f32, row as f32 / GRID as f32);
+            model.vertices.push(device3d::model::Vertex {
+                position: vec3(
+                    low.x + (high.x - low.x) * across,
+                    high.y,
+                    low.z + (high.z - low.z) * down,
+                ),
+                normal: vec3(0., 1., 0.),
+            });
+        }
+    }
+    for row in 0..GRID {
+        for column in 0..GRID {
+            let corner = first + row * side + column;
+            for vertices in [
+                [corner, corner + side, corner + 1],
+                [corner + 1, corner + side, corner + side + 1],
+            ] {
+                model.triangles.push(device3d::model::Triangle {
+                    vertices,
+                    material: paper,
+                });
+            }
+        }
+    }
+    first..model.vertices.len() as u32
+}
+
+/// Where a point of a lifting page, and the way it faces, go when the
+/// pages are lifted by `lift`. Paper further from the corner than the curl
+/// has travelled lies flat; the rest rolls up off the page and on over,
+/// straight, toward the top left.
+fn curl(position: Vec3, normal: Vec3, lift: f32) -> (Vec3, Vec3) {
+    let up = vec3(0., 1., 0.);
+    let past = PEEL * lift - (position - CORNER).dot(TOWARD);
+    if past <= 0. {
+        return (position, normal);
+    }
+    let over = (OVER.0 + (OVER.1 - OVER.0) * lift).to_radians();
+    let round = (past / ROLL).min(over);
+    let straight = past - round * ROLL;
+    let (sin, cos) = round.sin_cos();
+    // Along the page toward the top left, and up off it.
+    let along = past - ROLL * sin - straight * cos;
+    let rise = ROLL * (1. - cos) + straight * sin;
+    let facing = up * cos + TOWARD * sin;
+    // Its height above the last page is kept, the way the paper now faces.
+    let above = position.y - LAST_PAGE;
+    let flat = vec3(position.x, LAST_PAGE, position.z);
+    (
+        flat + TOWARD * along + up * rise + facing * above,
+        facing * normal.y.signum(),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -186,10 +279,10 @@ mod tests {
     #[test]
     fn both_models_load_and_draw_at_rest() {
         let props = Props::load().unwrap();
-        assert_eq!(props.pages.len(), design::PAGES);
-        assert_eq!(props.pages[0].len(), 1 + PRINTED.len());
-        let clipboard = props.clipboard(0., &[0.; design::PAGES], 1.).size(0);
-        assert_eq!((clipboard.width.0, clipboard.height.0), (356, 475));
+        assert_eq!(props.lifted.len(), 8 + PRINTED.len());
+        let clipboard = props.clipboard(0., 0., 1.).size(0);
+        assert_eq!((clipboard.width.0, clipboard.height.0), (178, 238));
+        assert_eq!(props.clipboard(0., 1., 1.).size(0).width.0, 178);
         assert_eq!(props.pen(0., 1.).size(0).width.0, 168);
     }
 
@@ -198,9 +291,32 @@ mod tests {
         let props = Props::load().unwrap();
         let (_, _, wide, tall) = design::CLIPBOARD;
         let (x, y) = props.signature_point((0., 0.));
-        assert!(x < 0. && x > -wide / 2., "{x}");
+        assert!(x > 0. && x < wide / 2., "{x}");
         assert!(y > 0. && y < tall / 2., "{y}");
+        // Lifted all the way, the whole box is bare; lying flat, none is.
+        for corner in [(0., 0.), (0., 1.), (1., 0.), (1., 1.)] {
+            assert!(props.signature_bare(corner, 1.));
+            assert!(!props.signature_bare(corner, 0.));
+        }
         let (x, y) = props.pen_tip();
         assert!(x < 0. && y > design::PEN_LENGTH / 3., "{x}, {y}");
+    }
+}
+
+#[cfg(test)]
+mod curl_tests {
+    use super::*;
+
+    #[test]
+    fn the_corner_lifts_and_the_top_stays_down() {
+        let up = vec3(0., 1., 0.);
+        let corner = vec3(CORNER.x, LAST_PAGE + 0.001, CORNER.z);
+        assert_eq!(curl(corner, up, 0.), (corner, up));
+        let (lifted, facing) = curl(corner, up, 1.);
+        assert!(lifted.y > 0.05 && lifted.x < 0.02 && lifted.z < 0.02);
+        // Rolled past upright, it faces down.
+        assert!(facing.y < 0.);
+        let top = vec3(0., LAST_PAGE + 0.001, -0.14);
+        assert_eq!(curl(top, up, 1.), (top, up));
     }
 }
