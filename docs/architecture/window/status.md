@@ -4,12 +4,17 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The drives and the pills carry their marks
+
+- **"Turn on local AI models" and "Integrations and connected apps"** now draw the devices repository's final models: each drive with its mark engraved in its top, each pill with its mark embossed. Only the model files changed; they are drawn as before.
+- **Still not the design's:** the drives have a cap at the back as well as the front, and the window draws no shadow under them.
+
 ## 2026-11-18 · The drives are tilted as the design has them
 
 - **"Turn on local AI models":** the drives were drawn from straight above. They are now drawn as the design draws them, the way an icon of a drive is: from in front and 51° up, so the top shows with the front edge and its light under it (`ui::onboarding::steps::DRIVE_ELEVATION`).
 - **Nothing narrows toward the back:** `device3d::Camera::axonometric` is the stills' camera from two hundred model diagonals away, so edges that are parallel on the drive are parallel in the window.
 - **Where they rest** is where the design's drives are, without their shadows (`steps::DRIVES`).
-- **Not the design's yet:** the models have a cap at the back as well as the front and no mark engraved on top, and the window draws no shadow under them.
+- **Not the design's yet:** the models have a cap at the back as well as the front, and the window draws no shadow under them.
 
 ## 2026-11-18 · The wallet and the ID card are 3D
 
