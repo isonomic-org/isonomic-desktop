@@ -35,7 +35,7 @@ use std::time::{Duration, Instant};
 
 use ui::onboarding::{self as design, at};
 use ui::{
-    App, AppContext as _, Bounds, Context, Entity, EventEmitter, Image, WindowBackgroundAppearance,
+    App, AppContext as _, Bounds, Context, Entity, EventEmitter, WindowBackgroundAppearance,
     WindowBounds, WindowOptions,
 };
 
@@ -62,10 +62,8 @@ pub struct Onboarding {
     scale: f32,
     /// The laptop's model, once read.
     scene: Option<Arc<Scene>>,
-    /// The turning laptop's latest frame.
+    /// The laptop's latest frame. It rests as the last one drawn.
     frame: Option<Drawn>,
-    /// The picture the laptop lands on.
-    picture: Arc<Image>,
     /// The mark's sound, in the window a person sees; none in a test's.
     sound: Option<Sound>,
     /// When "Start new account" was pressed: the third screen's clock.
@@ -98,7 +96,6 @@ impl Onboarding {
             scale: 1.,
             scene: None,
             frame: None,
-            picture: laptop::picture(),
             sound: None,
             terms: None,
             props: None,
@@ -198,7 +195,7 @@ impl Onboarding {
                     return;
                 };
                 let Some(scene) = scene else {
-                    // No model: the picture alone fades in at the end.
+                    // No model: there is no laptop to show.
                     return;
                 };
                 let began = Instant::now();
@@ -232,16 +229,6 @@ impl Onboarding {
                 "onboarding: the laptop's flight drew {drawn} frames in {:.1} s",
                 at::LAPTOP_FLIGHT + 0.25
             ));
-            // Once the picture has taken over, the last frame goes.
-            cx.background_executor()
-                .timer(Duration::from_secs_f32(at::SETTLE + 0.1))
-                .await;
-            let _ = view.update(cx, |view, cx| {
-                if let Some(old) = view.frame.take() {
-                    cx.drop_image(old.image, None);
-                }
-                cx.notify();
-            });
         })
         .detach();
     }
@@ -279,8 +266,19 @@ pub fn open(cx: &mut App, next: impl FnOnce(&mut App) + 'static) -> Option<Entit
             }
             if let Some(next) = next.take() {
                 cx.defer(move |cx| {
-                    let _ = handle.update(cx, |_, window, _| window.remove_window());
+                    // The app's window opens first and takes the keyboard;
+                    // this one closes a moment later. Closed in the same
+                    // turn, the system raises an exception over the window
+                    // it was still watching for its Touch Bar, and the app
+                    // dies.
                     next(cx);
+                    cx.spawn(async move |cx| {
+                        cx.background_executor()
+                            .timer(Duration::from_secs_f32(at::CLOSES_AFTER))
+                            .await;
+                        let _ = handle.update(cx, |_, window, _| window.remove_window());
+                    })
+                    .detach();
                 });
             }
         })

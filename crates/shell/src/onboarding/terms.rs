@@ -127,10 +127,35 @@ impl Onboarding {
             return;
         }
         self.terms = None;
-        for frame in [&mut self.frame, &mut self.clipboard, &mut self.pen] {
+        for frame in [&mut self.clipboard, &mut self.pen] {
             if let Some(old) = frame.take() {
                 cx.drop_image(old.image, None);
             }
+        }
+        // The laptop is back in the centre: its frame counts as landed
+        // there, and is drawn again at that size.
+        let landed = first::at::LAPTOP_RISES + first::at::LAPTOP_FLIGHT;
+        if let Some(frame) = self.frame.as_mut() {
+            frame.at = landed;
+        }
+        if let Some(scene) = self.scene.clone() {
+            let scale = self.scale;
+            cx.spawn(async move |view, cx| {
+                let image = cx
+                    .background_spawn(async move { laptop::draw(&scene, landed, scale) })
+                    .await;
+                let _ = view.update(cx, |view, cx| {
+                    if view.terms.is_some() {
+                        return;
+                    }
+                    let frame = Drawn { image, at: landed };
+                    if let Some(old) = view.frame.replace(frame) {
+                        cx.drop_image(old.image, None);
+                    }
+                    cx.notify();
+                });
+            })
+            .detach();
         }
         cx.notify();
     }
@@ -142,6 +167,11 @@ impl Onboarding {
         }
         let pressed = Instant::now();
         self.terms = Some(pressed);
+        // The resting laptop's frame is now on this screen's clock, not yet
+        // moved.
+        if let Some(frame) = self.frame.as_mut() {
+            frame.at = 0.;
+        }
         cx.notify();
         cx.spawn(async move |view, cx| {
             let mut last = f32::MIN;
@@ -203,19 +233,6 @@ impl Onboarding {
                     cx.background_executor().timer(spare).await;
                 }
             }
-            // Once its picture has taken over, the laptop's last frame goes.
-            // The clipboard and the pen stay as their last frames.
-            cx.background_executor()
-                .timer(Duration::from_secs_f32(at::SETTLE + 0.1))
-                .await;
-            let _ = view.update(cx, |view, cx| {
-                if view.terms == Some(pressed) {
-                    if let Some(old) = view.frame.take() {
-                        cx.drop_image(old.image, None);
-                    }
-                    cx.notify();
-                }
-            });
         })
         .detach();
     }

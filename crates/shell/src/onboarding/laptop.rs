@@ -2,23 +2,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! The laptop on the onboarding window: its 3D model, turned and drawn a
-//! frame at a time off the foreground thread, and the finished picture it
-//! lands on.
+//! frame at a time off the foreground thread. It is the model on every
+//! screen: at rest it stays as its last drawn frame.
 
 use std::sync::Arc;
 
 use device3d::{Camera, Framing, Model, Transform};
 use ui::onboarding::{self as design, at};
-use ui::{motion, Image, ImageFormat, RenderImage};
+use ui::{motion, RenderImage};
 
 use super::stage::{self, Display};
 
 static MODEL: &[u8] = include_bytes!("../../../../assets/onboarding/macbook-pro-13-2020.glb");
-static PICTURE: &[u8] = include_bytes!("../../../../assets/onboarding/macbook-pro-13-2020.png");
 
 /// The model's silver, as its colour table names it.
 const SILVER: [u8; 3] = [0xCD, 0xCE, 0xD1];
-/// The lit display's corners in the finished picture: top left, top right,
+/// The lit display's corners, as the design colours it: top left, top right,
 /// bottom left, bottom right.
 const DISPLAY: [[u8; 3]; 4] = [
     [197, 201, 211],
@@ -30,7 +29,7 @@ const DISPLAY: [[u8; 3]; 4] = [
 /// Degrees left to turn below which the laptop counts as at rest.
 const AT_REST: f32 = 0.5;
 
-/// The model and the camera the finished picture was taken with.
+/// The model and the camera the design's laptop is seen by.
 pub struct Scene {
     model: Model,
     camera: Camera,
@@ -44,11 +43,6 @@ impl Scene {
         let camera = Camera::front(&model, Framing::LAPTOP_ELEVATION, Framing::LAPTOP);
         Ok(Scene { model, camera })
     }
-}
-
-/// The finished picture.
-pub fn picture() -> Arc<Image> {
-    Arc::new(Image::from_bytes(ImageFormat::Png, PICTURE.to_vec()))
 }
 
 /// Where the flight is at `now` seconds: how far up (0 at the bottom edge,

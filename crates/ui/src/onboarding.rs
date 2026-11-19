@@ -92,14 +92,14 @@ pub mod at {
     pub const LAPTOP_FLIGHT: f32 = 1.4;
     /// Its display lights over this share of the flight, ending with it.
     pub const LIGHT_SHARE: f32 = 0.6;
-    /// The landed laptop gives way to its finished picture.
-    pub const SETTLE: f32 = 0.3;
     /// Once it has landed the title comes up from the bottom edge, then
     /// each button.
     pub const TITLE_RISES: f32 = LAPTOP_RISES + LAPTOP_FLIGHT;
     pub const BUTTONS_RISE: f32 = TITLE_RISES + 0.3;
     pub const BUTTON_STAGGER: f32 = 0.2;
     pub const RISE: f32 = 0.6;
+    /// Onboarding's window closes this long after the app's has opened.
+    pub const CLOSES_AFTER: f32 = 0.3;
     /// Nothing moves after this.
     pub const END: f32 = BUTTONS_RISE + BUTTON_STAGGER + RISE + 0.1;
 }

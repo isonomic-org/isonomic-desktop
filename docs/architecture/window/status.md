@@ -4,6 +4,12 @@ Newest first.
 
 Older entries: `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The laptop is its 3D model on every screen
+
+- **No picture:** the landed laptop used to give way to the design's finished picture, which showed as a change in its shading the moment it came to rest. The picture and its asset are gone. The laptop rests as its last drawn frame, in full detail, on the second screen and in the sidebar. Earlier entries that mention the picture describe what was.
+- **"Decline"** draws the laptop again at its size in the centre.
+- **The handover no longer kills the app:** at the end of the signing the onboarding window was closed and the app's opened in the same turn. On a Mac with a Touch Bar the system then raised an exception over the closed window it was still watching, and the app died. The app's window now opens first and onboarding's closes 0.3 s later (`at::CLOSES_AFTER`). Seen on the 13-inch Mac: the app's window is up after the signing and no crash report is written.
+
 ## 2026-11-18 · The pages lift by their corner instead of folding over
 
 - **What changed:** on "Accept and continue" the clipboard's pages no longer fold over its top and behind the board. They lift by their bottom right corner and curl back toward the top left, far enough to bare that corner of the last page; the pen signs "hello" there; the pages are let go and settle; then the clipboard and the pen leave as before.

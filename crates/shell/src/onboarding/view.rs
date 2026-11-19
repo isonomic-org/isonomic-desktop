@@ -165,54 +165,27 @@ impl Render for Onboarding {
         .absolute()
         .size_full();
 
-        // The laptop: the turning model on its larger canvas, then the
-        // finished picture over it. It flies up on the second screen, and
-        // across to the sidebar on the third.
+        // The laptop: always its 3D model, as its latest drawn frame on a
+        // larger canvas, and placed by the time that frame was drawn for. It
+        // flies up on the second screen, across to the sidebar on the
+        // third, and rests as its last frame.
         let margin = (design::LAPTOP_CANVAS - 1.) / 2.;
-        let (place, drop, settled) = match third_now {
-            None => {
-                // A drawn frame is placed by the time it was drawn for.
-                let drawn_for = self.frame.as_ref().map_or(now, |frame| frame.at);
-                let (landed, _, _) = laptop::flight(drawn_for);
-                let (_, top, _, tall) = design::LAPTOP;
-                let flight_ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
-                (
-                    design::LAPTOP,
-                    (below(top) + tall * margin) * (1. - landed),
-                    motion::progress(now, flight_ends, at::SETTLE),
-                )
-            }
-            Some(t) => {
-                let drawn_for = self.frame.as_ref().map_or(t, |frame| frame.at);
-                let (gone, _) = terms::laptop_move(drawn_for);
-                let move_ends = third::LAPTOP_MOVES + third::LAPTOP_MOVE;
-                // Until its first frame is drawn the picture stays put.
-                let settled = if self.frame.is_none() {
-                    1.
-                } else {
-                    motion::progress(t, move_ends, third::SETTLE)
-                };
-                (terms::laptop_box(gone), 0., settled)
-            }
-        };
-        let (left, top, wide, tall) = place;
-        let turning = self.frame.as_ref().map(|frame| {
+        let laptop = self.frame.as_ref().map(|frame| {
+            let ((left, top, wide, tall), drop) = match third_now {
+                None => {
+                    let (landed, _, _) = laptop::flight(frame.at);
+                    let (_, top, _, tall) = design::LAPTOP;
+                    (design::LAPTOP, (below(top) + tall * margin) * (1. - landed))
+                }
+                Some(_) => (terms::laptop_box(terms::laptop_move(frame.at).0), 0.),
+            };
             img(frame.image.clone())
+                .id("onboarding-laptop")
                 .absolute()
                 .left(px(left - wide * margin))
                 .top(px(top - tall * margin + drop))
                 .w(px(wide * design::LAPTOP_CANVAS))
                 .h(px(tall * design::LAPTOP_CANVAS))
-        });
-        let picture = (settled > 0.).then(|| {
-            img(self.picture.clone())
-                .id("onboarding-laptop")
-                .absolute()
-                .left(px(left))
-                .top(px(top))
-                .w(px(wide))
-                .h(px(tall))
-                .opacity(settled)
         });
 
         let (title_left, title_top, title_wide, title_tall) = design::TITLE;
@@ -254,8 +227,7 @@ impl Render for Onboarding {
             .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
             .children(third_now.map(|t| self.terms_backdrop(t)))
             .child(mark)
-            .children(turning)
-            .children(picture)
+            .children(laptop)
             .child(title)
             .child(new_account)
             .child(recover)

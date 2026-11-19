@@ -124,8 +124,6 @@ pub mod at {
     pub const CLIPBOARD_FLIES: f32 = STEPPER_RISES + RISE - 0.1;
     pub const PEN_FLIES: f32 = CLIPBOARD_FLIES + 0.15;
     pub const FLIGHT: f32 = 1.;
-    /// The landed laptop gives way to its finished picture.
-    pub const SETTLE: f32 = 0.3;
     /// The dots come out one by one, then pulse toward the clipboard for
     /// as long as the screen is up.
     pub const DOTS_START: f32 = PEN_FLIES + FLIGHT - 0.1;
@@ -133,7 +131,7 @@ pub mod at {
     pub const DOT_SHOWS: f32 = 0.2;
     pub const PULSE: f32 = 1.6;
     /// Nothing but the dots moves after this.
-    pub const END: f32 = PEN_FLIES + FLIGHT + SETTLE + 0.1;
+    pub const END: f32 = PEN_FLIES + FLIGHT + 0.1;
 }
 
 /// The signature the pen writes on the last page.
