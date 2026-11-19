@@ -13,6 +13,9 @@ use crate::model::Model;
 /// zoom (focal length over sensor width).
 const DISTANCE_DIAGONALS: f32 = 4.5;
 const BASE_ZOOM: f32 = 85. / 36.;
+/// From this far, edges that are parallel on the model are parallel in
+/// the frame to within a quarter of a percent.
+const FAR_DIAGONALS: f32 = 200.;
 
 /// How the model sits in the frame.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -51,12 +54,22 @@ impl Camera {
     /// The camera straight in front of `model`, `elevation` degrees above
     /// its horizon.
     pub fn front(model: &Model, elevation: f32, framing: Framing) -> Camera {
+        Camera::standing(model, elevation, framing, DISTANCE_DIAGONALS)
+    }
+
+    /// The same camera from so far back that nothing narrows with
+    /// distance: an axonometric drawing, as an icon of an object is.
+    pub fn axonometric(model: &Model, elevation: f32, framing: Framing) -> Camera {
+        Camera::standing(model, elevation, framing, FAR_DIAGONALS)
+    }
+
+    fn standing(model: &Model, elevation: f32, framing: Framing, diagonals: f32) -> Camera {
         let (sin, cos) = elevation.to_radians().sin_cos();
         // The model's front faces +z, and y is up.
         let back = vec3(0., sin, cos);
         let diagonal = (model.max - model.min).length();
         let mut camera = Camera {
-            position: model.centre() + back * (diagonal * DISTANCE_DIAGONALS),
+            position: model.centre() + back * (diagonal * diagonals),
             right: vec3(1., 0., 0.),
             up: vec3(0., cos, -sin),
             back,

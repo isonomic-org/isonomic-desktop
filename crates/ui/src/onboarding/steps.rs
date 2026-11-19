@@ -24,6 +24,21 @@ pub const CARD: (f32, f32, f32, f32) = (211.5, 477., 106.25, 93.75);
 pub const CARD_OVER: (f32, f32) = (87.6, 407.);
 pub const CARD_IN: (f32, f32) = (87.6, 470.);
 
+/// "Turn on local AI models": the drives are drawn as the design draws
+/// them, the way an icon of a drive is: from in front and this many
+/// degrees up, so the top shows with the front edge and its light under
+/// it, and without narrowing toward the back. The boxes are the design's
+/// drives without their shadows, back to front: the outer pair, the
+/// inner pair, the middle one.
+pub const DRIVE_ELEVATION: f32 = 51.;
+pub const DRIVES: [(f32, f32, f32, f32); 5] = [
+    (-11.99, 491.45, 53.71, 65.65),
+    (358.05, 491.45, 53.71, 65.65),
+    (59.08, 482.36, 69.68, 85.16),
+    (270.93, 482.36, 69.68, 85.16),
+    (148.97, 464.19, 101.61, 124.2),
+];
+
 /// A list row, its chip and its switch.
 pub const ROW: f32 = 63.;
 pub const CHIP: f32 = 28.;

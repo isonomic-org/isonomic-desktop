@@ -3,9 +3,10 @@
 
 //! The art in the sidebar for each of onboarding's later steps, as
 //! sprites: a picture and where it rests. Where the devices repository has
-//! a 3D model (the drives of "Local AI models", the pills of "Add
-//! integrations") the sprite is that model drawn once, from above; where
-//! it has none yet, it is the design's own flat picture.
+//! a 3D model the sprite is that model drawn once: the pills of "Add
+//! integrations", the wallet and the ID card from above, the drives of
+//! "Local AI models" tilted as the design has them. Where it has none
+//! yet, it is the design's own flat picture.
 //!
 //! This is a first pass: a sprite turns over by being drawn narrower, not
 //! by its model being drawn again.
@@ -69,18 +70,22 @@ fn flat(png: &'static [u8], place: Place) -> Vec<Sprite> {
     }]
 }
 
-/// A row of models, each drawn once from above to fill its box.
-fn row(models: &[(&'static [u8], Place)]) -> Vec<Sprite> {
+/// A row of models, each drawn once to fill its box by the camera `seen`
+/// stands before it.
+fn row(
+    models: &[(&'static [u8], Place)],
+    fill: f32,
+    seen: impl Fn(&Model, Framing) -> Camera,
+) -> Vec<Sprite> {
     models
         .iter()
         .filter_map(|(bytes, place)| {
             let model = Model::read(bytes).ok()?;
             let (_, _, wide, tall) = *place;
-            let camera = Camera::front(
+            let camera = seen(
                 &model,
-                FROM_ABOVE,
                 Framing {
-                    fill: 0.98,
+                    fill,
                     lift: 0.,
                     aspect: tall / wide,
                 },
@@ -189,20 +194,30 @@ impl Art {
         art.steps[steps::CONFIRM] = flat(asset!("recovery-kit-seal.png"), (125., 450., 150., 150.));
         art.steps[steps::FINISH] = flat(asset!("menu-bar.png"), (60., 460., 304., 56.));
         // The drives, the middle one nearest; and the pills likewise.
-        art.steps[steps::MODELS] = row(&[
-            (asset!("drive-gemma.glb"), (-15., 485., 60., 74.)),
-            (asset!("drive-hugging-face.glb"), (355., 485., 60., 74.)),
-            (asset!("drive-mistral.glb"), (55., 474., 78., 96.)),
-            (asset!("drive-microsoft.glb"), (267., 474., 78., 96.)),
-            (asset!("drive-qwen.glb"), (143., 452., 114., 140.)),
-        ]);
-        art.steps[steps::LINKS] = row(&[
-            (asset!("pill-dropbox.glb"), (36., 502., 40., 40.)),
-            (asset!("pill-github.glb"), (324., 502., 40., 40.)),
-            (asset!("pill-asana.glb"), (90., 496., 52., 52.)),
-            (asset!("pill-figma.glb"), (258., 496., 52., 52.)),
-            (asset!("pill-linear.glb"), (156., 478., 88., 88.)),
-        ]);
+        let [gemma, hugging_face, mistral, microsoft, qwen] = design::DRIVES;
+        art.steps[steps::MODELS] = row(
+            &[
+                (asset!("drive-gemma.glb"), gemma),
+                (asset!("drive-hugging-face.glb"), hugging_face),
+                (asset!("drive-mistral.glb"), mistral),
+                (asset!("drive-microsoft.glb"), microsoft),
+                (asset!("drive-qwen.glb"), qwen),
+            ],
+            1.,
+            |model, framing| Camera::axonometric(model, design::DRIVE_ELEVATION, framing),
+        );
+        let from_above = |model: &Model, framing| Camera::front(model, FROM_ABOVE, framing);
+        art.steps[steps::LINKS] = row(
+            &[
+                (asset!("pill-dropbox.glb"), (36., 502., 40., 40.)),
+                (asset!("pill-github.glb"), (324., 502., 40., 40.)),
+                (asset!("pill-asana.glb"), (90., 496., 52., 52.)),
+                (asset!("pill-figma.glb"), (258., 496., 52., 52.)),
+                (asset!("pill-linear.glb"), (156., 478., 88., 88.)),
+            ],
+            0.98,
+            from_above,
+        );
         art
     }
 }
