@@ -16,7 +16,7 @@
 
 use std::time::Instant;
 
-use ui::onboarding::steps::at;
+use ui::onboarding::steps::{self as design, at};
 use ui::{motion, AppContext as _, Context};
 
 use super::art::Art;
@@ -73,12 +73,42 @@ pub fn turned(share: f32) -> f32 {
 impl Onboarding {
     /// The later steps' place and seconds into it, at `t`.
     pub fn flow_at(&self, t: f32) -> Option<(Flow, f32)> {
-        self.flow.map(|flow| (flow, t - flow.started))
+        self.flow
+            .map(|flow| (flow, t - flow.started - Self::waits(flow)))
+    }
+
+    /// How long a step waits before it comes on: the step after "Your
+    /// account exists." waits for the card to slip into the wallet.
+    fn waits(flow: Flow) -> f32 {
+        if flow.forward && flow.step == steps::KIT {
+            at::SLIP
+        } else {
+            0.
+        }
+    }
+
+    /// Where the ID card is on its way into the wallet at `t`, in points
+    /// from where it rests beside it: up over the wallet's mouth, then in.
+    pub(super) fn slipped(&self, t: f32) -> (f32, f32) {
+        let Some(flow) = self.flow.filter(|flow| Self::waits(*flow) > 0.) else {
+            return (0., 0.);
+        };
+        let (left, top, _, _) = design::CARD;
+        let half = at::SLIP / 2.;
+        let since = t - flow.started;
+        let over = motion::ease(motion::CARRY, motion::progress(since, 0., half));
+        let down = motion::ease(motion::CARRY, motion::progress(since, half, half));
+        (
+            (design::CARD_OVER.0 - left) * over + (design::CARD_IN.0 - design::CARD_OVER.0) * down,
+            (design::CARD_OVER.1 - top) * over + (design::CARD_IN.1 - design::CARD_OVER.1) * down,
+        )
     }
 
     fn settled_flow(&self) -> bool {
         match (self.flow, self.terms_now()) {
-            (Some(flow), Some(t)) => !flow.forward || t - flow.started >= at::END,
+            (Some(flow), Some(t)) => {
+                !flow.forward || t - flow.started >= at::END + Self::waits(flow)
+            }
             _ => true,
         }
     }

@@ -13,6 +13,7 @@
 use std::sync::Arc;
 
 use device3d::{Camera, Framing, Model, Transform};
+use ui::onboarding::steps as design;
 use ui::onboarding::terms::CLIPBOARD_ELEVATION as FROM_ABOVE;
 use ui::{Image, ImageFormat, ImageSource, RenderImage};
 
@@ -45,6 +46,8 @@ pub type Place = (f32, f32, f32, f32);
 pub struct Sprite {
     pub picture: Picture,
     pub place: Place,
+    /// Is this the ID card, which slips into the wallet?
+    pub slips: bool,
 }
 
 /// Each step's sprites, back to front.
@@ -62,6 +65,7 @@ fn flat(png: &'static [u8], place: Place) -> Vec<Sprite> {
     vec![Sprite {
         picture: Picture::Flat(Arc::new(Image::from_bytes(ImageFormat::Png, png.to_vec()))),
         place,
+        slips: false,
     }]
 }
 
@@ -93,9 +97,80 @@ fn row(models: &[(&'static [u8], Place)]) -> Vec<Sprite> {
             Some(Sprite {
                 picture: Picture::Drawn(image),
                 place: *place,
+                slips: false,
             })
         })
         .collect()
+}
+
+/// One model drawn from above to fill `place`, keeping only the pieces
+/// `kept` says to: the whole model still frames the camera, so the pieces
+/// of one model drawn apart still fit together.
+fn pieces(bytes: &[u8], place: Place, kept: impl Fn(&str) -> bool) -> Option<Picture> {
+    let mut model = Model::read(bytes).ok()?;
+    let (_, _, wide, tall) = place;
+    let camera = Camera::front(
+        &model,
+        FROM_ABOVE,
+        Framing {
+            fill: 1.,
+            lift: 0.,
+            aspect: tall / wide,
+        },
+    );
+    let dropped: Vec<_> = model
+        .parts
+        .iter()
+        .filter(|part| !kept(&part.name))
+        .map(|part| part.vertices.clone())
+        .collect();
+    model.triangles.retain(|triangle| {
+        !dropped
+            .iter()
+            .any(|part| part.contains(&triangle.vertices[0]))
+    });
+    Some(Picture::Drawn(stage::frame(
+        (&model, &camera, &[]),
+        Transform::IDENTITY,
+        true,
+        (wide, tall),
+        wide,
+        SCALE,
+        Display::NONE,
+    )))
+}
+
+/// The card wallet and the ID card, as three sprites so that the card can
+/// slip between the wallet's back and its pocket.
+fn wallet_and_card() -> Vec<Sprite> {
+    let wallet = asset!("wallet-cream.glb");
+    let sprite = |picture: Option<Picture>, place: Place, slips: bool| {
+        picture.map(|picture| Sprite {
+            picture,
+            place,
+            slips,
+        })
+    };
+    [
+        sprite(
+            pieces(wallet, design::WALLET, |part| part == "back"),
+            design::WALLET,
+            false,
+        ),
+        sprite(
+            pieces(asset!("id-card-black.glb"), design::CARD, |_| true),
+            design::CARD,
+            true,
+        ),
+        sprite(
+            pieces(wallet, design::WALLET, |part| part != "back"),
+            design::WALLET,
+            false,
+        ),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 impl Art {
@@ -106,7 +181,7 @@ impl Art {
         };
         // The design's flat pictures, each on a clear ground, at three
         // pixels to a point.
-        art.steps[steps::CREATED] = flat(asset!("id-badge.png"), (120., 452., 160., 160.));
+        art.steps[steps::CREATED] = wallet_and_card();
         art.steps[steps::KIT] = flat(
             asset!("recovery-kit-holder.png"),
             (123.2, 454.5, 150.7, 184.),
@@ -140,6 +215,8 @@ mod tests {
     fn every_step_has_its_art() {
         let art = Art::load();
         assert!(art.steps.iter().all(|sprites| !sprites.is_empty()));
+        assert_eq!(art.steps[steps::CREATED].len(), 3);
+        assert!(art.steps[steps::CREATED][1].slips);
         assert_eq!(art.steps[steps::MODELS].len(), 5);
         assert_eq!(art.steps[steps::LINKS].len(), 5);
     }

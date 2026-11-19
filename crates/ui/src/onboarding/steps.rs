@@ -15,6 +15,15 @@ pub const ART_X: f32 = 200.;
 /// turns over.
 pub const EDGE_ON: f32 = 0.03;
 
+/// "Your account exists.": the card wallet and, beside it, the ID card.
+/// Before they leave, the card goes up over the wallet's mouth and slips
+/// in: where its corner is over the wallet, and where it comes to rest in
+/// it.
+pub const WALLET: (f32, f32, f32, f32) = (82., 464., 117.5, 120.);
+pub const CARD: (f32, f32, f32, f32) = (211.5, 477., 106.25, 93.75);
+pub const CARD_OVER: (f32, f32) = (87.6, 407.);
+pub const CARD_IN: (f32, f32) = (87.6, 470.);
+
 /// A list row, its chip and its switch.
 pub const ROW: f32 = 63.;
 pub const CHIP: f32 = 28.;
@@ -60,6 +69,9 @@ pub const SETUP_TURNS: f32 = 1.;
 /// The order of events on each step, in seconds from the press that
 /// brought it on. One thing at a time.
 pub mod at {
+    /// On leaving "Your account exists.", the card first slips into the
+    /// wallet; everything else waits for it.
+    pub const SLIP: f32 = 0.9;
     /// The last step's art turns over and leaves by the left edge while
     /// the next panel slides over the last from the right.
     pub const LEAVE: f32 = 0.6;

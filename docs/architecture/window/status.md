@@ -4,6 +4,12 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-18 · The wallet and the ID card are 3D
+
+- **"Your account exists."** now shows the devices repository's card wallet and ID card, each drawn once from above, in place of the design's flat badge. The card rests beside the wallet, outside it.
+- **On leaving the step**, the card first goes up over the wallet's mouth and slips in, between the wallet's back and its pocket (the wallet is two sprites for that); then they turn over and leave by the left edge together, and only then does the next panel come on (`steps::at::SLIP`).
+- **Where they rest** is ours: the design has the card already in the wallet.
+
 ## 2026-11-18 · Every later onboarding screen, as a first pass
 
 - **What there is now** (`shell::onboarding::flow`, `flow_view`, `flow_bodies`, `steps`, `art`; tokens in `ui::onboarding::steps`): from "Continue with Face ID" the Face ID sheet comes up and goes, then six steps follow, each over the last: "Your account exists.", "Save your recovery kit", "Confirm your recovery kit", "Turn on local AI models", "Integrations and connected apps" and "Isonomic lives in your menu bar". "Finish setup" brings "Setting up your workspace", and then onboarding hands over to the app's window.
