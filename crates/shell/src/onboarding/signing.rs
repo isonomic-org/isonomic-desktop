@@ -142,9 +142,7 @@ impl Onboarding {
                                 image,
                                 at: drawn_for,
                             };
-                            if let Some(old) = slot.replace(new) {
-                                cx.drop_image(old.image, None);
-                            }
+                            stage::put(slot, new, cx);
                         }
                     }
                     cx.notify();

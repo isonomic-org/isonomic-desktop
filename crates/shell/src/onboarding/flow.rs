@@ -41,14 +41,14 @@ pub struct Flow {
 }
 
 /// Where the ID card is on its way into the wallet: how far from where
-/// it rests over it, in points; how wide it is drawn as it turns over,
-/// as a share of its width; and whether it is in the wallet yet, behind
-/// the pocket, or still over it.
+/// it rests over it, in points; how tall it is drawn as it flips over
+/// backward, as a share of its height; and whether it is in the wallet
+/// yet, behind the pocket, or still over it.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Slip {
     pub across: f32,
     pub down: f32,
-    pub narrow: f32,
+    pub flat: f32,
     pub tucked: bool,
 }
 
@@ -56,14 +56,16 @@ impl Slip {
     pub const RESTING: Slip = Slip {
         across: 0.,
         down: 0.,
-        narrow: 1.,
+        flat: 1.,
         tucked: false,
     };
 }
 
 /// The card `since` seconds after the press that sends it into the
-/// wallet: it turns over once as it lifts clear of the wallet's mouth,
-/// then goes in, a little past where it rests, and comes back.
+/// wallet: it flips over backward once as it lifts clear of the wallet's
+/// mouth, then slides straight down into it, a little past where it
+/// rests, and comes back. It goes up and down, so it turns about its
+/// level line, not its upright one.
 pub fn slip(since: f32) -> Slip {
     let (left, top, _, _) = design::CARD;
     let up = motion::ease(motion::CARRY, motion::progress(since, 0., at::CARD_LIFTS));
@@ -76,7 +78,7 @@ pub fn slip(since: f32) -> Slip {
         down: (design::CARD_OVER.1 - top) * up
             + (design::CARD_IN.1 - design::CARD_OVER.1) * down
             + design::CARD_DIP * dip,
-        narrow: turned(0.5 * up),
+        flat: turned(0.5 * up),
         tucked: since >= at::CARD_LIFTS,
     }
 }
@@ -325,7 +327,13 @@ impl Onboarding {
                     let (_, _, wide, tall) = ui::onboarding::terms::LAPTOP;
                     let image = cx
                         .background_spawn(async move {
-                            laptop::posed(&scene, turn, 1., (wide, tall), scale)
+                            laptop::posed(
+                                &scene,
+                                (turn, laptop::Flip::Right),
+                                1.,
+                                (wide, tall),
+                                scale,
+                            )
                         })
                         .await;
                     last = shown;
@@ -335,9 +343,7 @@ impl Onboarding {
                             image,
                             at: drawn_for,
                         };
-                        if let Some(old) = view.frame.replace(frame) {
-                            cx.drop_image(old.image, None);
-                        }
+                        super::stage::put(&mut view.frame, frame, cx);
                         cx.notify();
                     });
                     if kept.is_err() {
@@ -467,18 +473,18 @@ mod tests {
     #[test]
     fn the_card_lifts_over_the_wallet_and_ends_tucked_in_it() {
         let rest = slip(0.);
-        assert!(rest.down.abs() < 0.5 && !rest.tucked && (rest.narrow - 1.).abs() < 1e-3);
+        assert!(rest.down.abs() < 0.5 && !rest.tucked && (rest.flat - 1.).abs() < 1e-3);
         let clear = slip(at::CARD_LIFTS);
         assert!((design::CARD.1 + clear.down - design::CARD_OVER.1).abs() < 0.5);
-        assert!(clear.tucked && (clear.narrow - 1.).abs() < 1e-3);
+        assert!(clear.tucked && (clear.flat - 1.).abs() < 1e-3);
         // On the way it is seen edge-on.
         let thinnest = (0..=100)
-            .map(|step| slip(at::CARD_LIFTS * step as f32 / 100.).narrow)
+            .map(|step| slip(at::CARD_LIFTS * step as f32 / 100.).flat)
             .fold(1., f32::min);
         assert!(thinnest < 0.2);
         let rests = slip(at::SLIP);
         assert!((design::CARD.1 + rests.down - design::CARD_IN.1).abs() < 0.5);
-        assert!((rests.narrow - 1.).abs() < 1e-3);
+        assert!((rests.flat - 1.).abs() < 1e-3);
     }
 
     #[test]

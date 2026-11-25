@@ -362,9 +362,7 @@ impl Onboarding {
                         image,
                         at: shown_at,
                     };
-                    if let Some(old) = view.frame.replace(frame) {
-                        cx.drop_image(old.image, None);
-                    }
+                    stage::put(&mut view.frame, frame, cx);
                     cx.notify();
                 });
                 drawn += 1;

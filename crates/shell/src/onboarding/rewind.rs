@@ -19,7 +19,7 @@ use ui::onboarding::passkey::at as fourth;
 use ui::onboarding::terms::{at, signs};
 use ui::{AppContext as _, Context, RenderImage};
 
-use super::laptop::{self, Scene};
+use super::laptop::{self, Flip, Scene};
 use super::passkey::{self, Seal};
 use super::props::Props;
 use super::stage::{self, Drawn};
@@ -114,7 +114,7 @@ fn draw(
             .map(|scene| {
                 let (gone, turn) = terms::laptop_move(t);
                 let (_, _, wide, tall) = terms::laptop_box(gone);
-                laptop::posed(scene, turn, 1., (wide, tall), scale)
+                laptop::posed(scene, (turn, Flip::Left), 1., (wide, tall), scale)
             });
         frames.clipboard = props
             .filter(|_| within(t, at::CLIPBOARD_FLIES, at::FLIGHT))
@@ -191,9 +191,7 @@ impl Onboarding {
                         (&mut view.seal_frame, frames.seal),
                     ] {
                         if let Some(image) = new {
-                            if let Some(old) = slot.replace(Drawn { image, at: shown }) {
-                                cx.drop_image(old.image, None);
-                            }
+                            stage::put(slot, Drawn { image, at: shown }, cx);
                         }
                     }
                     cx.notify();

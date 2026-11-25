@@ -69,6 +69,20 @@ pub fn ahead(draw: impl FnOnce()) {
     AHEAD.set(false);
 }
 
+/// Put a new frame where the last one was, and let the last one's
+/// picture go from the window's memory, unless it is the same picture:
+/// two moments on one tick, or a piece at rest, are.
+pub fn put(slot: &mut Option<Drawn>, new: Drawn, cx: &mut ui::App) {
+    if let Some(old) = slot.replace(new) {
+        let same = slot
+            .as_ref()
+            .is_some_and(|new| Arc::ptr_eq(&new.image, &old.image));
+        if !same {
+            cx.drop_image(old.image, None);
+        }
+    }
+}
+
 /// Samples along each side of a pixel.
 const SAMPLES: usize = 2;
 

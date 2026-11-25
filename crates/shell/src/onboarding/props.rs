@@ -180,11 +180,11 @@ impl Props {
         (u * design::PEN_CANVAS, -v * design::PEN_CANVAS)
     }
 
-    /// The pen with `turn` degrees still to make: it tumbles end over end,
-    /// then leans as it lies.
+    /// The pen with `turn` degrees still to make: it comes and goes
+    /// sideways, so it turns about its upright line, then leans as it lies.
     pub fn pen(&self, turn: f32, scale: f32) -> Arc<RenderImage> {
         let (model, camera) = &self.pen;
-        let tumble = Transform::turn_about(camera.right, turn.to_radians(), model.centre());
+        let tumble = Transform::turn_about(camera.up, turn.to_radians(), model.centre());
         stage::frame(
             (model, camera, &[]),
             self.lean().after(&tumble),

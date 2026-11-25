@@ -13,7 +13,7 @@ use ui::onboarding::terms::at as third;
 use ui::onboarding::{self as design, at};
 use ui::AppContext as _;
 use ui::{
-    canvas, div, img, logo, motion, point, px, Context, FontWeight, InteractiveElement as _,
+    canvas, div, logo, motion, point, px, Context, FontWeight, InteractiveElement as _,
     IntoElement, MouseButton, ParentElement as _, Render, Styled as _, TestSupportExt as _, Window,
 };
 
@@ -223,13 +223,13 @@ impl Render for Onboarding {
                 }
                 Some(_) => (terms::laptop_box(terms::laptop_move(frame.at).0), 0.),
             };
-            img(frame.image.clone())
-                .id("onboarding-laptop")
-                .absolute()
-                .left(px(left - wide * margin))
-                .top(px(top - tall * margin + drop))
-                .w(px(wide * design::LAPTOP_CANVAS))
-                .h(px(tall * design::LAPTOP_CANVAS))
+            let canvas = (
+                left - wide * margin,
+                top - tall * margin + drop,
+                wide * design::LAPTOP_CANVAS,
+                tall * design::LAPTOP_CANVAS,
+            );
+            laptop::shown(frame.image.clone(), canvas).id("onboarding-laptop")
         });
 
         let (title_left, title_top, title_wide, title_tall) = design::TITLE;

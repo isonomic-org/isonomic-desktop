@@ -286,12 +286,19 @@ impl Onboarding {
         if let Some(done) = self.easel.as_mut().and_then(Easel::finished) {
             let at = done.at;
             if let Some((image, pose)) = done.holder {
-                if let Some((old, _)) = self.kit_frame.replace((Drawn { image, at }, pose)) {
+                // The same picture again stays in the window's memory.
+                let same = |old: &(Drawn, _)| Arc::ptr_eq(&old.0.image, &image);
+                let old = self.kit_frame.take().filter(|old| !same(old));
+                self.kit_frame = Some((Drawn { image, at }, pose));
+                if let Some((old, _)) = old {
                     cx.drop_image(old.image, None);
                 }
             }
             if let Some((image, clip)) = done.lock {
-                if let Some((old, _)) = self.lock_frame.replace((Drawn { image, at }, clip)) {
+                let same = |old: &(Drawn, _)| Arc::ptr_eq(&old.0.image, &image);
+                let old = self.lock_frame.take().filter(|old| !same(old));
+                self.lock_frame = Some((Drawn { image, at }, clip));
+                if let Some((old, _)) = old {
                     cx.drop_image(old.image, None);
                 }
             }

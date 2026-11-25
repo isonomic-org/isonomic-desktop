@@ -18,7 +18,7 @@ use ui::onboarding::terms::{self as design, at};
 use ui::onboarding::{self as first};
 use ui::{motion, AppContext as _, Context, RenderImage};
 
-use super::laptop::{self, Scene};
+use super::laptop::{self, Flip, Scene};
 use super::props::Props;
 use super::rewind::Land;
 use super::stage::{self, Drawn};
@@ -88,7 +88,7 @@ fn draw(scene: Option<&Scene>, props: Option<&Props>, last: f32, t: f32, scale: 
         .map(|scene| {
             let (gone, turn) = laptop_move(t);
             let (_, _, wide, tall) = laptop_box(gone);
-            laptop::posed(scene, turn, 1., (wide, tall), scale)
+            laptop::posed(scene, (turn, Flip::Left), 1., (wide, tall), scale)
         });
     let clipboard = props
         .filter(|_| due(at::CLIPBOARD_FLIES, at::FLIGHT))
@@ -177,9 +177,7 @@ impl Onboarding {
                         return;
                     }
                     let frame = Drawn { image, at: landed };
-                    if let Some(old) = view.frame.replace(frame) {
-                        cx.drop_image(old.image, None);
-                    }
+                    stage::put(&mut view.frame, frame, cx);
                     cx.notify();
                 });
             })
@@ -257,9 +255,7 @@ impl Onboarding {
                                 image,
                                 at: shown_at,
                             };
-                            if let Some(old) = slot.replace(new) {
-                                cx.drop_image(old.image, None);
-                            }
+                            stage::put(slot, new, cx);
                         }
                     }
                     cx.notify();

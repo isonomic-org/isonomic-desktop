@@ -159,6 +159,11 @@ fn fill_band(
             continue;
         }
         let inverse = 1. / area;
+        // Depth isn't even across a triangle seen in perspective, but its
+        // inverse is: blending depths themselves puts the middle of a large
+        // triangle that runs away from the camera in front of a smaller
+        // one lying just over it.
+        let near = [1. / a.depth, 1. / b.depth, 1. / c.depth];
         let edges = [(a, b), (b, c), (c, a)];
         for y in y0..=y1 as usize {
             let py = y as f32 + 0.5;
@@ -183,7 +188,7 @@ fn fill_band(
                 let wa = (((b.x - px) * (c.y - py) - (b.y - py) * (c.x - px)) * inverse).max(0.);
                 let wb = (((c.x - px) * (a.y - py) - (c.y - py) * (a.x - px)) * inverse).max(0.);
                 let wc = (1. - wa - wb).max(0.);
-                let depth = wa * a.depth + wb * b.depth + wc * c.depth;
+                let depth = 1. / (wa * near[0] + wb * near[1] + wc * near[2]);
                 let sample = &mut out[row + (x - first) as usize];
                 if depth >= sample.depth {
                     continue;

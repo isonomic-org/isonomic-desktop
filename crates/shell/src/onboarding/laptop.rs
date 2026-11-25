@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use device3d::{Camera, Framing, Model, Transform};
 use ui::onboarding::{self as design, at};
-use ui::{motion, RenderImage};
+use ui::{div, img, motion, px, Div, ParentElement as _, RenderImage, Styled as _};
 
 use super::stage::{self, Display};
 
@@ -63,23 +63,39 @@ pub fn flight(now: f32) -> (f32, f32, f32) {
 pub fn draw(scene: &Scene, now: f32, scale: f32) -> Arc<RenderImage> {
     let (_, turn, light) = flight(now);
     let (_, _, wide, tall) = design::LAPTOP;
-    posed(scene, turn, light, (wide, tall), scale)
+    posed(scene, (turn, Flip::Over), light, (wide, tall), scale)
 }
 
-/// Draw the laptop with `turn` degrees of a somersault still to make, its
+/// Which way the laptop turns over: the way it is going. Up from the
+/// bottom edge it goes head over heels; going left or right it turns
+/// about its upright line, that way.
+#[derive(Clone, Copy)]
+pub enum Flip {
+    Over,
+    Left,
+    Right,
+}
+
+/// Draw the laptop with `turn` degrees of a turn still to make, its
 /// display lit by `light`, for a picture of `size` points.
 pub fn posed(
     scene: &Scene,
-    turn: f32,
+    (turn, flip): (f32, Flip),
     light: f32,
     (wide, tall): (f32, f32),
     scale: f32,
 ) -> Arc<RenderImage> {
     let linear = |c: [u8; 3]| c.map(|c| device3d::shade::to_linear(c as f32 / 255.));
+    let (axis, angle) = match flip {
+        Flip::Over => (scene.camera.right, -turn),
+        Flip::Left => (scene.camera.up, turn),
+        Flip::Right => (scene.camera.up, -turn),
+    };
     stage::frame(
         (&scene.model, &scene.camera, &[]),
-        // A somersault: about the camera's level axis, through its middle.
-        Transform::turn_about(scene.camera.right, -turn.to_radians(), scene.model.centre()),
+        // It turns the way it goes, through its middle: head over heels
+        // about the camera's level axis, or about its upright one.
+        Transform::turn_about(axis, angle.to_radians(), scene.model.centre()),
         // Half the detail while it moves; full at rest, at either end.
         !(AT_REST..=360. - AT_REST).contains(&turn),
         (wide * design::LAPTOP_CANVAS, tall * design::LAPTOP_CANVAS),
@@ -91,6 +107,31 @@ pub fn posed(
         },
     )
 }
+
+/// The laptop's picture on its canvas, `wide` by `tall` with its corner
+/// at (`left`, `top`), less a point all round. While it moves it is drawn
+/// at half the detail and stretched, and a stretched picture's outermost
+/// pixels take a little of whatever lies beside it in the window's
+/// memory: a hairline along its edges. The canvas is clear there, so
+/// nothing of the laptop is lost.
+pub fn shown(image: Arc<RenderImage>, (left, top, wide, tall): (f32, f32, f32, f32)) -> Div {
+    div()
+        .absolute()
+        .left(px(left + EDGE))
+        .top(px(top + EDGE))
+        .w(px(wide - 2. * EDGE))
+        .h(px(tall - 2. * EDGE))
+        .overflow_hidden()
+        .child(
+            img(image)
+                .absolute()
+                .left(px(-EDGE))
+                .top(px(-EDGE))
+                .w(px(wide))
+                .h(px(tall)),
+        )
+}
+const EDGE: f32 = 1.;
 
 #[cfg(test)]
 mod tests {

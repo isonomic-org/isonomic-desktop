@@ -37,10 +37,11 @@ fn below(top: f32) -> f32 {
 /// card is also wherever `slip` has it.
 fn sprite(sprite: &Sprite, shift: f32, narrow: f32, slip: Slip) -> impl IntoElement {
     let (left, top, wide, tall) = sprite.place;
-    let (left, top, narrow) = if sprite.slips {
-        (left + slip.across, top + slip.down, narrow * slip.narrow)
+    // The card flips over backward: about its level line.
+    let (left, top, flat) = if sprite.slips {
+        (left + slip.across, top + slip.down, slip.flat)
     } else {
-        (left, top, narrow)
+        (left, top, 1.)
     };
     let middle = left + wide / 2.;
     let drawn = wide * narrow;
@@ -49,9 +50,9 @@ fn sprite(sprite: &Sprite, shift: f32, narrow: f32, slip: Slip) -> impl IntoElem
         .left(px(design::ART_X + (middle - design::ART_X) * narrow
             - drawn / 2.
             + shift))
-        .top(px(top))
+        .top(px(top + tall * (1. - flat) / 2.))
         .w(px(drawn))
-        .h(px(tall))
+        .h(px(tall * flat))
 }
 
 impl Onboarding {
@@ -352,12 +353,13 @@ impl Onboarding {
             let drawn_for = self.finishing.map_or(g, |began| frame.at - began);
             let (there, _) = flow::centring(drawn_for.max(0.));
             let across = motion::between(from_left, design::SETUP_LAPTOP, there);
-            img(frame.image.clone())
-                .absolute()
-                .left(px(across - wide * margin))
-                .top(px(top - tall * margin))
-                .w(px(wide * page::LAPTOP_CANVAS))
-                .h(px(tall * page::LAPTOP_CANVAS))
+            let canvas = (
+                across - wide * margin,
+                top - tall * margin,
+                wide * page::LAPTOP_CANVAS,
+                tall * page::LAPTOP_CANVAS,
+            );
+            super::laptop::shown(frame.image.clone(), canvas)
         });
         let mark = canvas(
             |_, _, _| (),

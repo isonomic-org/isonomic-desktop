@@ -153,9 +153,7 @@ impl Onboarding {
                             image,
                             at: drawn_for,
                         };
-                        if let Some(old) = view.seal_frame.replace(frame) {
-                            cx.drop_image(old.image, None);
-                        }
+                        stage::put(&mut view.seal_frame, frame, cx);
                         cx.notify();
                     });
                     if kept.is_err() {
@@ -222,9 +220,7 @@ impl Onboarding {
                     }
                     for (slot, image) in [(&mut view.clipboard, drawn.0), (&mut view.pen, drawn.1)]
                     {
-                        if let Some(old) = slot.replace(Drawn { image, at: t }) {
-                            cx.drop_image(old.image, None);
-                        }
+                        stage::put(slot, Drawn { image, at: t }, cx);
                     }
                     cx.notify();
                 });
