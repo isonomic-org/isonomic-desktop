@@ -1,0 +1,139 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+//! Pictures of onboarding's screens, each at rest, for checking them
+//! against the design: the real view in a headless window with a real
+//! renderer, saved as `NN-name.png`.
+//!
+//! It runs only when `ONBOARDING_SHOTS` names the folder to save them in,
+//! and is skipped where no headless renderer starts:
+//!
+//! ```sh
+//! ONBOARDING_SHOTS=/tmp/shots cargo test -p shell --test onboarding_shots
+//! ```
+//!
+//! What moves by a timer of its own (the laptop, the clipboard, the pen
+//! and the seal) may be missing from a picture; the panels never are.
+
+extern crate ui as gpui;
+
+use std::path::PathBuf;
+use std::time::Duration;
+
+use shell::onboarding::{self, Chosen, Onboarding};
+use ui::test::TestWindowExt as _;
+use ui::{AnyWindowHandle, AppContext as _, Entity, HeadlessAppContext};
+
+struct Shots {
+    cx: HeadlessAppContext,
+    window: AnyWindowHandle,
+    view: Entity<Onboarding>,
+    folder: PathBuf,
+    taken: usize,
+}
+
+impl Shots {
+    fn open(folder: PathBuf) -> Option<Shots> {
+        // No GPU and no software driver: no renderer starts.
+        let mut cx = std::panic::catch_unwind(|| {
+            let platform = ui::platform::current_platform(true);
+            HeadlessAppContext::with_platform(
+                platform.text_system(),
+                std::sync::Arc::new(ui::assets::AllAssets),
+                ui::platform::current_headless_renderer,
+            )
+        })
+        .ok()?;
+        cx.update(ui::init);
+        let (window, view) = cx
+            .update(|cx| {
+                let options = ui::WindowOptions {
+                    focus: false,
+                    show: false,
+                    ..onboarding::window_options(cx)
+                };
+                ui::open_window(options, cx, |_, cx| cx.new(Onboarding::new))
+            })
+            .ok()?;
+        cx.capture_screenshot(window).ok()?;
+        Some(Shots {
+            cx,
+            window,
+            view,
+            folder,
+            taken: 0,
+        })
+    }
+
+    fn act(&mut self, act: impl FnOnce(&mut Onboarding, &mut ui::Context<Onboarding>)) {
+        let view = self.view.clone();
+        self.cx.update(|cx| view.update(cx, act));
+        self.cx.run_until_parked();
+    }
+
+    /// Draw until what is drawn off the foreground thread has come, then
+    /// save the window as it is.
+    fn shot(&mut self, name: &str) {
+        for _ in 0..12 {
+            self.cx.run_until_parked();
+            let _ = self
+                .cx
+                .update_window(self.window, |_, window, cx| window.render_frame(cx));
+            std::thread::sleep(Duration::from_millis(40));
+        }
+        let image = self
+            .cx
+            .update_window(self.window, |_, window, cx| {
+                window.render_frame(cx);
+                window.render_to_image()
+            })
+            .expect("the window is open")
+            .expect("the window renders");
+        self.taken += 1;
+        let path = self.folder.join(format!("{:02}-{name}.png", self.taken));
+        image.save(&path).expect("the picture saves");
+    }
+}
+
+/// Not under the test harness: the Mac's platform starts only on the main
+/// thread.
+fn main() {
+    let Some(folder) = std::env::var_os("ONBOARDING_SHOTS").map(PathBuf::from) else {
+        eprintln!("skipped: ONBOARDING_SHOTS names no folder");
+        return;
+    };
+    std::fs::create_dir_all(&folder).expect("the folder can be made");
+    let Some(mut shots) = Shots::open(folder) else {
+        eprintln!("skipped: no headless renderer here");
+        return;
+    };
+    shots.act(|view, cx| view.skip(cx));
+    shots.shot("get-started");
+    shots.act(|view, cx| view.choose(Chosen::NewAccount, cx));
+    shots.act(|view, cx| view.skip_terms(cx));
+    shots.shot("terms");
+    shots.act(|view, cx| view.accept(cx));
+    shots.act(|view, cx| view.skip_signing(cx));
+    shots.act(|view, cx| view.skip_passkey(cx));
+    shots.shot("passkey");
+    shots.act(|view, cx| view.continue_with_face_id(cx));
+    std::thread::sleep(Duration::from_millis(400));
+    shots.shot("face-id-sheet");
+    for step in ["created", "kit", "confirm"] {
+        shots.act(|view, cx| view.skip_flow(cx));
+        shots.shot(step);
+        shots.act(|view, cx| view.next_step(cx));
+    }
+    // The last press found no words typed.
+    shots.shot("confirm-wrong");
+    shots.act(|view, cx| view.fill_words(cx));
+    shots.act(|view, cx| view.next_step(cx));
+    shots.shot("confirm-right");
+    for step in ["models", "links", "finish"] {
+        shots.act(|view, cx| view.skip_flow(cx));
+        shots.shot(step);
+        shots.act(|view, cx| view.next_step(cx));
+    }
+    std::thread::sleep(Duration::from_millis(1500));
+    shots.shot("setting-up");
+}

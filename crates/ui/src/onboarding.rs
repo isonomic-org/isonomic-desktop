@@ -36,22 +36,25 @@ pub const MARK_REST_CENTRE: (f32, f32) = (60., 52.);
 /// On its way to the corner the mark turns once.
 pub const MARK_SPIN: f32 = 360.;
 
-/// The laptop: 455 × 341 with its corner at (413, 150). Its top is at 150
+/// The laptop: 300 × 225 with its corner at (490, 150). Its top is at 150
 /// on every screen; only where it is across the window changes.
-pub const LAPTOP: (f32, f32, f32, f32) = (413., 150., 455., 341.);
+pub const LAPTOP: (f32, f32, f32, f32) = (490., 150., 300., 225.424);
 /// The moving laptop is drawn on a canvas this many times the picture's
 /// size, so a turning laptop isn't cut off at the picture's edge.
 pub const LAPTOP_CANVAS: f32 = 1.5;
 /// Turns it makes on the way up.
 pub const LAPTOP_TURNS: f32 = 1.;
 
-/// "Welcome to Isonomic": 18 on 24, centred in a 400 column at (440, 526).
-pub const TITLE: (f32, f32, f32, f32) = (440., 526., 400., 24.);
+/// "Welcome to Isonomic": 18 on 24, centred in a 400 column at (440, 397).
+pub const TITLE: (f32, f32, f32, f32) = (440., 397., 400., 24.);
 pub const TITLE_SIZE: f32 = 18.;
-/// The two buttons: 320 × 44, at (480, 562) and (480, 618).
+/// "Start new account": 320 × 44 at (480, 433). Under it, the link to
+/// recover an account: 14 on 18, centred in the title's column at 489.
 pub const BUTTON: (f32, f32) = (320., 44.);
 pub const BUTTON_LEFT: f32 = 480.;
-pub const BUTTON_TOPS: [f32; 2] = [562., 618.];
+pub const BUTTON_TOP: f32 = 433.;
+pub const LINK_TOP: f32 = 489.;
+pub const LINK_LABEL: (f32, f32) = (14., 18.);
 pub const BUTTON_PAD: (f32, f32) = (20., 6.);
 pub const BUTTON_LABEL: f32 = 14.;
 /// The arrow's ring and the arrow in it.

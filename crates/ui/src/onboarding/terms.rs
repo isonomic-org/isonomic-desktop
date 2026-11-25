@@ -68,7 +68,7 @@ pub const PULSE_LENGTH: f32 = 4.;
 /// The stepper: 320 wide at (40, 638).
 pub const STEPPER: (f32, f32, f32) = (40., 638., 320.);
 pub const STEPPER_TEXT: f32 = 241.;
-pub const STEPS: usize = 5;
+pub const STEPS: usize = 6;
 pub const STEP_BAR: f32 = 6.;
 pub const STEP_LABEL: (f32, f32) = (12., 16.);
 pub const STEP_TITLE: (f32, f32) = (20., 28.);

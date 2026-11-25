@@ -46,8 +46,8 @@ use std::time::{Duration, Instant};
 
 use ui::onboarding::{self as design, at};
 use ui::{
-    App, AppContext as _, Bounds, Context, Entity, EventEmitter, FocusHandle,
-    WindowBackgroundAppearance, WindowBounds, WindowOptions,
+    App, AppContext as _, Bounds, Context, Entity, EventEmitter, WindowBackgroundAppearance,
+    WindowBounds, WindowOptions,
 };
 
 use laptop::Scene;
@@ -55,6 +55,7 @@ use passkey::Seal;
 use props::Props;
 use sound::Sound;
 use stage::Drawn;
+use ui::component::input::InputState;
 
 /// The shortest time between two of the laptop's frames.
 const FRAME: Duration = Duration::from_millis(16);
@@ -106,13 +107,19 @@ pub struct Onboarding {
     models: [bool; 8],
     links: [bool; 8],
     residency: [bool; 3],
+    /// The two lists' chosen tabs and their search boxes, which are made
+    /// at the first draw; and whether the kit is ticked as stored.
+    tabs: [usize; 2],
+    search: Option<[Entity<InputState>; 2]>,
+    stored: bool,
     /// The recovery kit: its models, once read; the holder's and the
     /// padlock's latest frames, each with how it lies in it; the thread
     /// that draws them; the three words typed back, which of them is being
     /// typed, and which the last press found wrong; when a wrong word
     /// shook the holder and when the right words were confirmed, on the
-    /// third screen's clock; and the keyboard's focus for the words, with
-    /// whether it is still to be taken.
+    /// third screen's clock; and the three inputs the words are typed in,
+    /// made at the first draw, with whether the one being typed is still
+    /// to take the keyboard and whether they are behind what is typed.
     kit: Option<Arc<kit::Kit>>,
     kit_frame: Option<(Drawn, kit::Pose)>,
     lock_frame: Option<(Drawn, f32)>,
@@ -126,8 +133,24 @@ pub struct Onboarding {
     /// And is it being unlocked, on the way back out of that step?
     locked: bool,
     unlocking: bool,
-    words_focus: FocusHandle,
+    words: Option<[Entity<InputState>; 3]>,
     wants_words: bool,
+    words_stale: bool,
+    /// What this Mac is called, for "Setting up your workspace".
+    device: ui::SharedString,
+}
+
+/// The name this Mac was given, or "This Mac" when it can't be read.
+fn computer_name() -> String {
+    std::process::Command::new("scutil")
+        .args(["--get", "ComputerName"])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|name| name.trim().to_owned())
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| "This Mac".to_owned())
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -170,6 +193,9 @@ impl Onboarding {
             models: steps::MODEL_LIST.map(|(_, _, on)| on),
             links: steps::LINK_LIST.map(|(_, _, on)| on),
             residency: steps::RESIDENCY.map(|(_, _, on)| on),
+            tabs: [0; 2],
+            search: None,
+            stored: true,
             kit: None,
             kit_frame: None,
             lock_frame: None,
@@ -181,8 +207,10 @@ impl Onboarding {
             confirmed: None,
             locked: false,
             unlocking: false,
-            words_focus: cx.focus_handle(),
+            words: None,
+            words_stale: false,
             wants_words: false,
+            device: computer_name().into(),
         }
     }
 

@@ -4,16 +4,20 @@
 //! The onboarding window's drawing: every piece placed where the design
 //! places it in the 1280 × 800 page, moved by the one clock.
 
+use ui::assets::IconName;
+use ui::component::button::Button;
+use ui::component::input::{InputEvent, InputState};
+use ui::component::link::Link;
 use ui::component::Icon;
 use ui::onboarding::terms::at as third;
 use ui::onboarding::{self as design, at};
+use ui::AppContext as _;
 use ui::{
     canvas, div, img, logo, motion, point, px, Context, FontWeight, InteractiveElement as _,
-    IntoElement, MouseButton, ParentElement as _, Render, SharedString,
-    StatefulInteractiveElement as _, Styled as _, TestSupportExt as _, Window,
+    IntoElement, MouseButton, ParentElement as _, Render, Styled as _, TestSupportExt as _, Window,
 };
 
-use super::{laptop, terms, Chosen, Onboarding};
+use super::{kit_run, laptop, terms, Chosen, Onboarding};
 
 /// How far below its place something starts so that it is under the
 /// window's bottom edge.
@@ -34,93 +38,88 @@ fn departed_after(t: Option<f32>) -> f32 {
     departed(t.map(|t| t - third::LEAVE_STAGGER))
 }
 
-/// One of the two buttons, in the order they come up.
-#[derive(Clone, Copy)]
-struct Choice {
-    id: &'static str,
-    label: &'static str,
-    /// The arrow's icon in the interface library's catalog.
-    arrow: &'static str,
-    chosen: Chosen,
-}
-
-const CHOICES: [Choice; 2] = [
-    Choice {
-        id: "onboarding-new-account",
-        label: "Start new account",
-        arrow: "icons/arrow-right.svg",
-        chosen: Chosen::NewAccount,
-    },
-    Choice {
-        id: "onboarding-recover",
-        label: "Recover your account",
-        arrow: "icons/arrow-down.svg",
-        chosen: Chosen::Recover,
-    },
-];
-
 impl Onboarding {
-    fn button(&self, index: usize, now: f32, cx: &mut Context<Self>) -> impl IntoElement {
-        let Choice {
-            id,
-            label,
-            arrow,
-            chosen: choice,
-        } = CHOICES[index];
+    /// "Start new account", which leaves to the right when pressed.
+    fn new_account(&self, now: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let (wide, tall) = design::BUTTON;
         let (pad_left, pad_right) = design::BUTTON_PAD;
-        let top = design::BUTTON_TOPS[index];
-        let starts = at::BUTTONS_RISE + at::BUTTON_STAGGER * index as f32;
-        let risen = motion::ease(motion::ARRIVE, motion::progress(now, starts, at::RISE));
-        // When a new account is started, that button leaves to the right
-        // and the other drops out of the window.
-        let (across, down) = if choice == Chosen::NewAccount {
-            let gone = departed_after(self.terms_now());
-            ((design::WIDTH - design::BUTTON_LEFT + 8.) * gone, 0.)
-        } else {
-            (0., below(top) * departed(self.terms_now()))
-        };
-        div()
-            .id(id)
-            .test_support()
-            .absolute()
-            .left(px(design::BUTTON_LEFT + across))
-            .top(px(top + below(top) * (1. - risen) + down))
-            .w(px(wide))
-            .h(px(tall))
-            .pl(px(pad_left))
-            .pr(px(pad_right))
+        let top = design::BUTTON_TOP;
+        let risen = motion::ease(
+            motion::ARRIVE,
+            motion::progress(now, at::BUTTONS_RISE, at::RISE),
+        );
+        let gone = departed_after(self.terms_now());
+        let ring = div()
+            .flex_none()
+            .size(px(design::RING))
             .flex()
             .items_center()
-            .justify_between()
-            .rounded(px(tall / 2.))
-            .border_1()
+            .justify_center()
+            .rounded_full()
+            .border(px(design::RING_LINE))
             .border_color(design::hairline())
-            .bg(design::page())
-            .shadow(design::button_glow())
-            .cursor_pointer()
-            .text_size(px(design::BUTTON_LABEL))
-            .font_weight(FontWeight::MEDIUM)
-            .text_color(design::ink())
+            .child(Icon::from(IconName::ArrowRight).size(px(design::ARROW)));
+        div()
+            .absolute()
+            .left(px(
+                design::BUTTON_LEFT + (design::WIDTH - design::BUTTON_LEFT + 8.) * gone
+            ))
+            .top(px(top + below(top) * (1. - risen)))
             // A press here is a press, not the start of moving the window.
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-            .on_click(cx.listener(move |view, _, _, cx| view.choose(choice, cx)))
-            .child(SharedString::from(label))
             .child(
-                div()
-                    .size(px(design::RING))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .rounded(px(design::RING / 2.))
-                    .border(px(design::RING_LINE))
-                    .border_color(design::hairline())
+                Button::new("onboarding-new-account")
+                    .outline()
+                    .w(px(wide))
+                    .h(px(tall))
+                    .pl(px(pad_left))
+                    .pr(px(pad_right))
+                    .rounded(px(tall / 2.))
+                    .shadow(design::button_glow())
+                    .on_click(cx.listener(|view, _, _, cx| view.choose(Chosen::NewAccount, cx)))
                     .child(
-                        Icon::default()
-                            .path(arrow)
-                            .size(px(design::ARROW))
-                            .text_color(design::ink()),
+                        div()
+                            .w(px(wide - pad_left - pad_right - 2.))
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .text_size(px(design::BUTTON_LABEL))
+                            .font_weight(FontWeight::MEDIUM)
+                            .child("Start new account")
+                            .child(ring),
                     ),
+            )
+    }
+
+    /// "Recover existing account", a link under it, which drops out of
+    /// the window when a new account is started.
+    fn recover(&self, now: f32, cx: &mut Context<Self>) -> impl IntoElement {
+        let (left, _, wide, _) = design::TITLE;
+        let (size, line) = design::LINK_LABEL;
+        let top = design::LINK_TOP;
+        let risen = motion::ease(
+            motion::ARRIVE,
+            motion::progress(now, at::BUTTONS_RISE + at::BUTTON_STAGGER, at::RISE),
+        );
+        div()
+            .id("onboarding-recover")
+            .test_support()
+            .absolute()
+            .left(px(left))
+            .top(px(top
+                + below(top) * (1. - risen)
+                + below(top) * departed(self.terms_now())))
+            .w(px(wide))
+            .flex()
+            .justify_center()
+            .child(
+                Link::new("onboarding-recover-link")
+                    .text_size(px(size))
+                    .line_height(px(line))
+                    .font_weight(FontWeight::MEDIUM)
+                    .text_color(design::ink())
+                    .on_click(cx.listener(|view, _, _, cx| view.choose(Chosen::Recover, cx)))
+                    .child("Recover existing account"),
             )
     }
 }
@@ -131,10 +130,37 @@ impl Render for Onboarding {
             self.start(cx);
         }
         self.scale = window.scale_factor();
+        if self.search.is_none() {
+            let mut search = || cx.new(|cx| InputState::new(window, cx).placeholder("Search"));
+            self.search = Some([search(), search()]);
+        }
         self.land();
         self.draw_kit(cx);
-        if std::mem::take(&mut self.wants_words) {
-            self.words_focus.focus(window, cx);
+        if self.words.is_none() {
+            self.words = Some([0, 1, 2].map(|index| {
+                let word = cx.new(|cx| InputState::new(window, cx).validate(kit_run::fits));
+                cx.subscribe_in(
+                    &word,
+                    window,
+                    move |view, word, event: &InputEvent, _, cx| {
+                        view.word_event(index, word.read(cx).value(), event, cx)
+                    },
+                )
+                .detach();
+                word
+            }));
+        }
+        if let Some(words) = &self.words {
+            if std::mem::take(&mut self.words_stale) {
+                for (word, typed) in words.iter().zip(&self.typed) {
+                    if word.read(cx).value() != typed.as_str() {
+                        word.update(cx, |word, cx| word.set_value(typed.clone(), window, cx));
+                    }
+                }
+            }
+            if std::mem::take(&mut self.wants_words) {
+                words[self.typing].update(cx, |word, cx| word.focus(window, cx));
+            }
         }
         let now = self.now();
         let third_now = self.terms_now();
@@ -218,8 +244,8 @@ impl Render for Onboarding {
             .text_color(design::ink())
             .child("Welcome to Isonomic");
 
-        let new_account = self.button(0, now, cx);
-        let recover = self.button(1, now, cx);
+        let new_account = self.new_account(now, cx);
+        let recover = self.recover(now, cx);
 
         div()
             .id("onboarding")

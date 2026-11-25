@@ -9,10 +9,11 @@ use ui::onboarding::passkey::{self as design, at};
 use ui::onboarding::terms::{self as shared};
 use ui::onboarding::{self as page};
 use ui::{
-    div, img, motion, px, Context, FontWeight, InteractiveElement as _, IntoElement, MouseButton,
+    div, img, motion, px, Context, FontWeight, InteractiveElement as _, IntoElement,
     ParentElement as _, Styled as _, TestSupportExt as _,
 };
 
+use super::flow_bodies::{held, outlined};
 use super::{flow, passkey, Onboarding};
 
 const TITLE: &str = "Create your account with Face ID";
@@ -127,8 +128,6 @@ impl Onboarding {
         let (sub, sub_line) = shared::SUBHEADING;
         let (caption, caption_line) = design::CAPTION;
         let (card_x, card_y) = design::CARD_PAD;
-        let (label, label_line) = shared::ACTION_LABEL;
-        let (_, _, above) = shared::ACTION_PAD;
         let away = page::WIDTH - shared::SIDEBAR + 8.;
         div()
             .id("onboarding-passkey")
@@ -194,25 +193,11 @@ impl Onboarding {
                             )
                             .children((0..STEPS.len()).map(Self::step)),
                     )
-                    .child(
-                        div().flex().pt(px(4.)).child(
-                            div()
-                                .id("onboarding-why")
-                                .px(px(design::ASIDE_PAD))
-                                .py(px(above))
-                                .rounded(px(shared::ACTION_CORNER))
-                                .border_1()
-                                .border_color(shared::outline())
-                                .bg(page::page())
-                                .shadow(shared::action_shadow())
-                                .text_size(px(label))
-                                .line_height(px(label_line))
-                                .font_weight(FontWeight::MEDIUM)
-                                .text_color(shared::body())
-                                .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-                                .child("Why no password?"),
-                        ),
-                    ),
+                    .child(div().flex().pt(px(4.)).child(held(outlined(
+                        "onboarding-why",
+                        "Why no password?",
+                        None,
+                    )))),
             )
             .child(
                 div()

@@ -5,17 +5,20 @@
 //! the Face ID sheet, and "Setting up your workspace". The panels' bodies
 //! are in `flow_bodies`.
 
+use ui::assets::IconName;
+use ui::component::spinner::Spinner;
+use ui::component::{Icon, Sizable as _, Size};
 use ui::onboarding::steps::{self as design, at};
 use ui::onboarding::terms::{self as shared};
 use ui::onboarding::{self as page};
 use ui::{
     canvas, div, img, logo, motion, point, px, Context, FontWeight, InteractiveElement as _,
-    IntoElement, MouseButton, ParentElement as _, StatefulInteractiveElement as _, Styled as _,
-    TestSupportExt as _,
+    IntoElement, MouseButton, ParentElement as _, Styled as _, TestSupportExt as _,
 };
 
 use super::art::Sprite;
 use super::flow::{self, Flow, Slip};
+use super::flow_bodies::{held, outlined};
 use super::steps::{self, STEPS};
 use super::Onboarding;
 
@@ -149,16 +152,15 @@ impl Onboarding {
         let (sub, sub_line) = shared::SUBHEADING;
         let (header_top, header_bottom) = shared::HEADER_PAD;
         let away = page::WIDTH - shared::SIDEBAR + 8.;
-        let header = div()
-            .flex_none()
-            .w_full()
-            .pt(px(header_top))
-            .pb(px(header_bottom))
-            .px(px(shared::PAD))
+        // A list step has a button beside its heading and its tabs under
+        // it, all above the rule.
+        let (add, filters) = self.header_extras(index, cx).unzip();
+        let listed = filters.is_some();
+        let titles = div()
+            .flex_1()
             .flex()
             .flex_col()
-            .gap(px(6.))
-            .border_color(page::hairline())
+            .gap(px(if listed { 6. } else { 10. }))
             .child(
                 div()
                     .text_size(px(heading))
@@ -175,6 +177,26 @@ impl Onboarding {
                     .text_color(shared::quiet())
                     .child(step.lead),
             );
+        let header = div()
+            .flex_none()
+            .w_full()
+            .pt(px(header_top))
+            .pb(px(header_bottom + if listed { 2. } else { 0. }))
+            .px(px(shared::PAD))
+            .flex()
+            .flex_col()
+            .gap(px(24.))
+            .border_color(page::hairline())
+            .child(
+                div()
+                    .w_full()
+                    .flex()
+                    .items_start()
+                    .gap(px(24.))
+                    .child(titles)
+                    .children(add),
+            )
+            .children(filters);
         let header = if step.ruled {
             header.border_b_1()
         } else {
@@ -201,7 +223,7 @@ impl Onboarding {
                     .flex_1()
                     .overflow_hidden()
                     .px(px(shared::PAD))
-                    .pt(px(20.))
+                    .pt(px(if listed { 0. } else { 20. }))
                     .child(self.body(index, cx)),
             )
             .child(
@@ -236,8 +258,6 @@ impl Onboarding {
     /// way in.
     fn sheet(&self, solid: f32, cx: &mut Context<Self>) -> impl IntoElement {
         let (wide, tall) = design::SHEET;
-        let (label, label_line) = shared::ACTION_LABEL;
-        let dots = (0..3).map(|_| div().size(px(6.)).rounded(px(3.)).bg(shared::outline()));
         div()
             .id("onboarding-face-id-sheet")
             .test_support()
@@ -263,11 +283,9 @@ impl Onboarding {
                     .items_center()
                     .gap(px(12.))
                     .child(
-                        div()
-                            .size(px(44.))
-                            .rounded(px(22.))
-                            .border_2()
-                            .border_color(page::ink()),
+                        Icon::from(IconName::FingerprintRecognition)
+                            .size(px(40.))
+                            .text_color(page::ink()),
                     )
                     .child(
                         div()
@@ -284,7 +302,7 @@ impl Onboarding {
                             .text_color(shared::body())
                             .child("Create a passkey for \u{201c}isonomic.com\u{201d}"),
                     )
-                    .child(div().flex().gap(px(6.)).py(px(6.)).children(dots))
+                    .child(div().py(px(6.)).child(Spinner::new()))
                     .child(
                         div()
                             .font_family(shared::SERIF)
@@ -294,24 +312,10 @@ impl Onboarding {
                             .text_color(page::ink())
                             .child("Looking for your face\u{2026}"),
                     )
-                    .child(
-                        div()
-                            .id("onboarding-cancel")
-                            .test_support()
-                            .px(px(17.))
-                            .py(px(9.))
-                            .rounded(px(shared::ACTION_CORNER))
-                            .border_1()
-                            .border_color(shared::outline())
-                            .bg(page::page())
-                            .cursor_pointer()
-                            .text_size(px(label))
-                            .line_height(px(label_line))
-                            .font_weight(FontWeight::MEDIUM)
-                            .text_color(shared::body())
-                            .on_click(cx.listener(|view, _, _, cx| view.cancel_face_id(cx)))
-                            .child("Cancel"),
-                    ),
+                    .child(held(
+                        outlined("onboarding-cancel", "Cancel", None)
+                            .on_click(cx.listener(|view, _, _, cx| view.cancel_face_id(cx))),
+                    )),
             )
     }
 
@@ -384,7 +388,7 @@ impl Onboarding {
                     .line_height(px(name_tall))
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(page::ink())
-                    .child("This Mac"),
+                    .child(self.device.clone()),
             )
             .child(
                 div()
@@ -393,26 +397,42 @@ impl Onboarding {
                     .top(px(pill_top + below(pill_top) * (1. - pill_risen)))
                     .w(px(pill_wide))
                     .h(px(pill_tall))
-                    .px(px(7.))
+                    .px(px(6.))
                     .flex()
                     .items_center()
                     .gap(px(10.))
                     .rounded(px(pill_tall / 2.))
                     .border_1()
                     .border_color(page::hairline())
-                    .bg(page::page())
+                    .bg(design::field())
                     .shadow(page::button_glow())
                     .text_size(px(page::BUTTON_LABEL))
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(page::ink())
                     .child(
                         div()
-                            .size(px(page::RING))
-                            .rounded(px(page::RING / 2.))
-                            .border(px(page::RING_LINE))
-                            .border_color(page::hairline()),
+                            .flex_none()
+                            .size(px(design::SETUP_MARK.0))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .rounded_full()
+                            .border_1()
+                            .border_color(design::accent().opacity(0.5))
+                            .child(
+                                div()
+                                    .size(px(design::SETUP_MARK.1))
+                                    .rounded_full()
+                                    .border(px(page::RING_LINE))
+                                    .border_color(design::accent()),
+                            ),
                     )
-                    .child("Setting up your workspace"),
+                    .child(div().flex_1().child("Setting up your workspace"))
+                    .child(
+                        Spinner::new()
+                            .color(design::accent())
+                            .with_size(Size::Size(px(design::SETUP_MARK.0))),
+                    ),
             )
     }
 

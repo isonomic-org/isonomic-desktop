@@ -16,10 +16,11 @@
 use std::sync::{mpsc, Arc, Mutex};
 use std::time::Instant;
 
+use ui::component::input::InputEvent;
 use ui::onboarding::kit::{self as design, at};
 use ui::onboarding::steps::at as step;
 use ui::onboarding::terms as shared;
-use ui::{motion, Context, KeyDownEvent, RenderImage};
+use ui::{motion, App, Context, RenderImage, SharedString};
 
 use super::flow::{self, Flow};
 use super::kit::{self, Kit, Pose};
@@ -29,6 +30,11 @@ use super::Onboarding;
 
 /// The longest a typed word may be.
 const LONGEST: usize = 12;
+
+/// May `word` be typed? Letters only, and no longer than the longest.
+pub(super) fn fits(word: &str, _: &mut App) -> bool {
+    word.chars().count() <= LONGEST && word.chars().all(char::is_alphabetic)
+}
 
 /// How far the holder is shaken to the right, `s` seconds after a wrong
 /// word, in points.
@@ -329,6 +335,7 @@ impl Onboarding {
             self.shaken = Some(t);
             if let Some(first) = self.wrong.iter().position(|wrong| *wrong) {
                 self.typing = first;
+                self.wants_words = true;
             }
             cx.notify();
             return;
@@ -348,44 +355,25 @@ impl Onboarding {
         .detach();
     }
 
-    /// Start typing word `index`.
-    pub(super) fn type_word(&mut self, index: usize, cx: &mut Context<Self>) {
-        self.typing = index;
-        cx.notify();
-    }
-
-    /// A key, while the words have the keyboard.
-    pub(super) fn word_key(&mut self, event: &KeyDownEvent, cx: &mut Context<Self>) {
-        if self.is_confirmed() {
-            return;
-        }
-        let keys = &event.keystroke;
-        if keys.modifiers.platform || keys.modifiers.control || keys.modifiers.alt {
-            return;
-        }
-        match keys.key.as_str() {
-            "backspace" => {
-                self.typed[self.typing].pop();
-                self.wrong[self.typing] = false;
+    /// Something happened in input `index`, which now reads `word`.
+    pub(super) fn word_event(
+        &mut self,
+        index: usize,
+        word: SharedString,
+        event: &InputEvent,
+        cx: &mut Context<Self>,
+    ) {
+        match event {
+            // Confirmed words stay as they are.
+            InputEvent::Change if self.is_confirmed() => self.words_stale = true,
+            InputEvent::Change if self.typed[index] != word.as_ref() => {
+                self.typed[index] = word.to_string();
+                self.wrong[index] = false;
             }
-            "tab" if keys.modifiers.shift => self.typing = (self.typing + 2) % 3,
-            "tab" => self.typing = (self.typing + 1) % 3,
-            "enter" => {
-                self.next_step(cx);
-                return;
-            }
-            _ => {
-                let letters = keys.key_char.as_deref().unwrap_or_default();
-                let word = &mut self.typed[self.typing];
-                for letter in letters.chars().filter(|letter| letter.is_alphabetic()) {
-                    if word.chars().count() < LONGEST {
-                        word.push(letter);
-                    }
-                }
-                self.wrong[self.typing] = false;
-            }
+            InputEvent::PressEnter { .. } => self.next_step(cx),
+            InputEvent::Focus => self.typing = index,
+            _ => return,
         }
-        cx.stop_propagation();
         cx.notify();
     }
 
@@ -393,6 +381,7 @@ impl Onboarding {
     pub fn fill_words(&mut self, cx: &mut Context<Self>) {
         self.typed = steps::ASKED.map(|place| steps::WORDS[place - 1].to_owned());
         self.wrong = [false; 3];
+        self.words_stale = true;
         cx.notify();
     }
 

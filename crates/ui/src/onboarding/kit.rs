@@ -24,6 +24,10 @@ pub const SHAKE: (f32, f32) = (7., 4.);
 /// and the words in a row.
 pub const CELL: f32 = 38.;
 pub const CELL_GAP: f32 = 10.;
+/// A cell to type in is this wide, a quarter of the row less its gaps;
+/// the words not asked for are this faint.
+pub const CELL_WIDE: f32 = 188.5;
+pub const SHOWN: f32 = 0.45;
 pub const ACROSS: usize = 4;
 pub fn wrong() -> Hsla {
     rgb(0xb91c1c).into()

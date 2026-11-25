@@ -29,16 +29,16 @@ pub const LINKS: usize = 4;
 pub const FINISH: usize = 5;
 
 const ACCOUNT: (&str, &str, &str, usize) = (
-    "STEP 1",
+    "STEP 2",
     "Create account",
     "Face ID creates your account. No seed phrase, no password.",
-    1,
+    2,
 );
 const RECOVERY: (&str, &str, &str, usize) = (
-    "STEP 2",
+    "STEP 3",
     "Recovery kit",
     "Save the kit that protects your encrypted data if this device is lost.",
-    2,
+    3,
 );
 
 const fn step(
@@ -90,10 +90,10 @@ pub const STEPS: [Step; 6] = [
     step(
         "onboarding-models",
         (
-            "STEP 3 \u{b7} OPTIONAL",
+            "STEP 4 \u{b7} OPTIONAL",
             "Local AI models",
             "Choose which models run on this machine. You can change this any time.",
-            3,
+            4,
         ),
         "Turn on local AI models",
         "Models run on this machine and start only when an app needs them.",
@@ -103,10 +103,10 @@ pub const STEPS: [Step; 6] = [
     step(
         "onboarding-links",
         (
-            "STEP 4 \u{b7} OPTIONAL",
+            "STEP 5 \u{b7} OPTIONAL",
             "Add integrations",
             "Supercharge your workflow and connect the tools you use every day to your account.",
-            4,
+            5,
         ),
         "Integrations and connected apps",
         "Supercharge your workflow and connect the tool you use every day.",
@@ -116,10 +116,10 @@ pub const STEPS: [Step; 6] = [
     step(
         "onboarding-finish",
         (
-            "STEP 5",
+            "STEP 6",
             "Finish",
             "Set autostart and menu bar options, then launch.",
-            5,
+            6,
         ),
         "Isonomic lives in your menu bar",
         "Closing a window hides it \u{2014} your node keeps running. Only Quit from the menu bar shuts the stack down, in reverse dependency order.",

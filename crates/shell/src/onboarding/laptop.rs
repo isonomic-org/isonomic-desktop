@@ -116,9 +116,9 @@ mod tests {
         let scene = Scene::load().unwrap();
         let landed = draw(&scene, at::LAPTOP_RISES + at::LAPTOP_FLIGHT, 1.);
         let size = landed.size(0);
-        assert_eq!((size.width.0, size.height.0), (683, 512));
+        assert_eq!((size.width.0, size.height.0), (450, 338));
         // Mid-turn it is drawn at half the detail.
         let turning = draw(&scene, at::LAPTOP_RISES + 0.1, 1.);
-        assert_eq!(turning.size(0).width.0, 341);
+        assert_eq!(turning.size(0).width.0, 225);
     }
 }

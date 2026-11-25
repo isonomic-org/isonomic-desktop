@@ -41,16 +41,26 @@ pub const DRIVES: [(f32, f32, f32, f32); 5] = [
     (148.97, 464.19, 101.61, 124.2),
 ];
 
-/// A list row, its mark and the gap after it, its chip and its switch.
+/// The design's buttons: how tall one is, the space beside its label,
+/// and its icon; and the smaller "Connect".
+pub const BUTTON: f32 = 38.;
+pub const BUTTON_PAD: f32 = 16.;
+pub const ICON: f32 = 18.;
+pub const CONNECT: f32 = 34.;
+pub const CONNECT_PAD: f32 = 12.;
+/// The passkey's mark in its tile.
+pub const PASSKEY_ICON: f32 = 22.;
+/// What a field and a note lie on.
+pub fn field() -> Hsla {
+    rgb(0xf9fafb).into()
+}
+
+/// A list row, its mark and the gap after it.
 pub const ROW: f32 = 63.;
 pub const LOGO: f32 = 40.;
 pub const LOGO_GAP: f32 = 16.;
-pub const CHIP: f32 = 28.;
-pub const SWITCH: (f32, f32, f32) = (28., 16., 12.);
 pub const SMALL: (f32, f32) = (12., 18.);
 pub const FIELD: (f32, f32) = (360., 38.);
-pub const WORD: f32 = 36.;
-pub const TABS: f32 = 40.;
 
 pub fn warning() -> Hsla {
     rgb(0xfffbeb).into()
@@ -82,6 +92,11 @@ pub const SHEET_CORNER: f32 = 12.;
 pub const SETUP_LAPTOP: f32 = 490.;
 pub const SETUP_NAME: (f32, f32, f32, f32) = (440., 397., 400., 24.);
 pub const SETUP_PILL: (f32, f32, f32, f32) = (480., 437., 320., 44.);
+/// The pill's mark and its spinner, and the colour of both.
+pub const SETUP_MARK: (f32, f32) = (32., 12.);
+pub fn accent() -> Hsla {
+    rgb(0xe8501f).into()
+}
 /// The laptop turns over this often on its way there.
 pub const SETUP_TURNS: f32 = 1.;
 

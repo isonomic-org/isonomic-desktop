@@ -5,17 +5,20 @@
 //! mark and the laptop, and in front of them the stepper, the content and
 //! the two props, each placed where the design places it.
 
-use ui::component::Icon;
+use ui::assets::IconName;
+use ui::component::button::{Button, ButtonVariants as _};
 use ui::onboarding::passkey::at as fourth;
+use ui::onboarding::steps as buttons;
 use ui::onboarding::steps::at as later;
 use ui::onboarding::terms::{self as design, at, signs};
 use ui::onboarding::{self as page};
 use ui::{
     div, motion, px, Context, FontWeight, HighlightStyle, InteractiveElement as _, IntoElement,
-    MouseButton, ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _,
-    StyledText, TestSupportExt as _,
+    ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _, StyledText,
+    TestSupportExt as _,
 };
 
+use super::flow_bodies::{held, icon};
 use super::{terms, Onboarding};
 
 /// The disclosure's clauses: the words in heavier type, then the rest.
@@ -171,52 +174,17 @@ impl Onboarding {
         press: fn(&mut Self, &mut Context<Self>),
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        let (near, far, above) = design::ACTION_PAD;
-        let (size, line) = design::ACTION_LABEL;
-        let (ink, arrow) = if forward {
-            (page::page(), "icons/arrow-right.svg")
-        } else {
-            (design::body(), "icons/arrow-left.svg")
-        };
-        let arrow = Icon::default()
-            .path(arrow)
-            .size(px(design::ACTION_ARROW))
-            .text_color(ink);
-        let button = div()
-            .id(id)
-            .test_support()
-            .flex()
-            .items_center()
-            .gap(px(8.))
-            .py(px(above))
-            .rounded(px(design::ACTION_CORNER))
-            .border_1()
-            .shadow(design::action_shadow())
-            .cursor_pointer()
-            .text_size(px(size))
-            .line_height(px(line))
-            .font_weight(FontWeight::MEDIUM)
-            .text_color(ink)
-            // A press here is a press, not the start of moving the window.
-            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+        let button = Button::new(id)
+            .label(label)
+            .h(px(buttons::BUTTON))
+            .px(px(buttons::BUTTON_PAD))
             .on_click(cx.listener(move |view, _, _, cx| press(view, cx)));
-        if forward {
-            button
-                .pl(px(far))
-                .pr(px(near))
-                .border_color(page::ink())
-                .bg(page::ink())
-                .child(label)
-                .child(arrow)
+        // A press here is a press, not the start of moving the window.
+        held(if forward {
+            button.primary().child(icon(IconName::ArrowRight))
         } else {
-            button
-                .pl(px(near))
-                .pr(px(far))
-                .border_color(design::outline())
-                .bg(page::page())
-                .child(arrow)
-                .child(label)
-        }
+            button.outline().icon(icon(IconName::ArrowLeft))
+        })
     }
 
     fn content(&self, t: f32, cx: &mut Context<Self>) -> impl IntoElement {

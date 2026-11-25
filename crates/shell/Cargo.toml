@@ -33,3 +33,9 @@ isonomic-testkit.workspace = true
 hello-app.workspace = true
 isonomic-app = { workspace = true, features = ["test-support"] }
 tempfile.workspace = true
+
+# Pictures of onboarding's screens. It has its own `main`: the Mac's
+# platform starts only on the main thread, which the test harness keeps.
+[[test]]
+name = "onboarding_shots"
+harness = false
