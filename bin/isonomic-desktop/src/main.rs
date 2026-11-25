@@ -380,7 +380,13 @@ fn main() {
                         }),
                         cx,
                     );
-                    if !state.set_up {
+                    if onboard {
+                        // Onboarding was the setup: no first run after it.
+                        cx.background_spawn(async move {
+                            let _ = capsule.mark_set_up();
+                        })
+                        .detach();
+                    } else if !state.set_up {
                         let setup = FirstRunSetup {
                             client: host_client,
                             capsule,
@@ -395,6 +401,19 @@ fn main() {
             let _ = window.update(cx, |_, window, cx| {
                 shell.update(cx, |shell, cx| shell.focus_rail(window, cx))
             });
+            // After onboarding comes Chat, once its engine is connected.
+            if onboard {
+                let (chat, mut live) = (shell.clone(), client.live());
+                cx.spawn(async move |cx| {
+                    let _ = live.wait_for(|live| live.connected).await;
+                    let _ = cx.update_window(window, |_, window, cx| {
+                        chat.update(cx, |shell, cx| {
+                            shell.open_link("isonomic://chat/home", window, cx);
+                        })
+                    });
+                })
+                .detach();
+            }
             cx.on_action(move |_: &Acknowledgements, cx| {
                 lifecycle::show(cx);
                 cx.spawn(async move |cx| {
