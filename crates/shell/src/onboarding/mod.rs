@@ -295,11 +295,10 @@ impl Onboarding {
             let flight = scene.clone();
             cx.background_spawn(async move {
                 let ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
-                stage::ahead(|| {
-                    for now in stage::ticks(at::LAPTOP_RISES - 0.25, ends) {
-                        laptop::draw(&flight, now, scale);
-                    }
-                });
+                // Nothing else is drawn in 3D yet: these take every core.
+                for now in stage::ticks(at::LAPTOP_RISES - 0.25, ends) {
+                    laptop::draw(&flight, now, scale);
+                }
             })
             .await;
             // The next screen's are drawn once this one's motion is over.
