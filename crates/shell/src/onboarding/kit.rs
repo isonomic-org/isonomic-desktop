@@ -41,6 +41,10 @@ const HALF_BAR: f32 = 0.0024;
 const TOP: (&str, &str) = ("face_0", "tile_0_3_11");
 const MARK: &str = "G_body__mark";
 const MARK_SHADE: f32 = 0.45;
+const FACE: &str = "G_face";
+const FACE_LIGHT: f32 = 1.75;
+const BODY: &str = "G_body";
+const BODY_LIGHT: f32 = 1.5;
 const TILE: &str = "tile_";
 const TOP_TILE: &str = "tile_0_";
 
@@ -140,6 +144,15 @@ impl Kit {
             if material.name == MARK {
                 material.base = material.base.map(|channel| channel * MARK_SHADE);
             }
+            // The plates' faces are brushed bright and the frame is a
+            // lighter grey, as the design draws them; the file has both
+            // darker.
+            let lighter = match material.name.as_str() {
+                FACE => FACE_LIGHT,
+                BODY => BODY_LIGHT,
+                _ => 1.,
+            };
+            material.base = material.base.map(|channel| (channel * lighter).min(1.));
         }
         let lost = || ModelError::Malformed("a piece of the recovery kit");
         let top =

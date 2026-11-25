@@ -131,8 +131,17 @@ impl Render for Onboarding {
         }
         self.scale = window.scale_factor();
         if self.search.is_none() {
-            let mut search = || cx.new(|cx| InputState::new(window, cx).placeholder("Search"));
-            self.search = Some([search(), search()]);
+            self.search = Some([0, 1].map(|_| {
+                let search = cx.new(|cx| InputState::new(window, cx).placeholder("Search"));
+                // What is sought changes what its list shows.
+                cx.subscribe_in(&search, window, |_, _, event: &InputEvent, _, cx| {
+                    if matches!(event, InputEvent::Change) {
+                        cx.notify();
+                    }
+                })
+                .detach();
+                search
+            }));
         }
         self.land();
         self.draw_kit(cx);

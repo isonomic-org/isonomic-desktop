@@ -12,21 +12,21 @@ use isonomic_app::ui::{rgb, Hsla};
 /// window. The canvas is wider and taller than the holder so that it can
 /// turn over and fold inside it.
 pub const CANVAS: (f32, f32) = (220., 300.);
-pub const CENTRE: (f32, f32) = (200., 540.);
+pub const CENTRE: (f32, f32) = (199., 546.5);
 /// How tall the open holder is, loop to loop.
-pub const OPEN_TALL: f32 = 156.;
+pub const OPEN_TALL: f32 = 181.;
 /// The padlock's canvas.
-pub const LOCK_CANVAS: (f32, f32) = (48., 84.);
+pub const LOCK_CANVAS: (f32, f32) = (56., 98.);
 /// A wrong word shakes the holder this far to each side, this many times.
 pub const SHAKE: (f32, f32) = (7., 4.);
 
 /// The words to type back: a cell of the grid, the gaps between cells,
 /// and the words in a row.
 pub const CELL: f32 = 38.;
-pub const CELL_GAP: f32 = 10.;
+pub const CELL_GAP: f32 = 12.;
 /// A cell to type in is this wide, a quarter of the row less its gaps;
 /// the words not asked for are this faint.
-pub const CELL_WIDE: f32 = 188.5;
+pub const CELL_WIDE: f32 = 187.;
 pub const SHOWN: f32 = 0.45;
 pub const ACROSS: usize = 4;
 pub fn wrong() -> Hsla {

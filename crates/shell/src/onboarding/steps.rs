@@ -192,6 +192,21 @@ pub const MODEL_LIST: [(&str, &str, bool); 8] = [
     ),
 ];
 
+/// The tab each model is under, and each integration, by its place in
+/// the tabs.
+pub const MODEL_KINDS: [usize; 8] = [1, 1, 3, 4, 4, 4, 2, 1];
+pub const LINK_KINDS: [usize; 8] = [3, 3, 1, 3, 3, 2, 2, 3];
+
+/// Is a row of kind `kind`, called `name` and described by `about`, in
+/// the list when tab `tab` is chosen and `sought` is in the search box?
+/// The first tab is everything; the search looks in both lines, whatever
+/// the capitals.
+pub fn listed(kind: usize, tab: usize, sought: &str, (name, about): (&str, &str)) -> bool {
+    let sought = sought.trim().to_lowercase();
+    (tab == 0 || kind == tab)
+        && (name.to_lowercase().contains(&sought) || about.to_lowercase().contains(&sought))
+}
+
 pub const LINK_TABS: [&str; 5] = [
     "All integrations",
     "Developer tools",
@@ -255,3 +270,23 @@ pub const AFTER: (&str, &str) = (
     "What happens when you finish",
     "Caddy and SQLite come up first, then Postgres, Valkey and SeaweedFS in parallel. Target is all healthy in under 10 seconds. You land on the launcher with an empty apps grid and a link to the store.",
 );
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_list_shows_what_its_tab_and_its_search_ask_for() {
+        let row = ("Qwen3.5 4B", "Default chat model on every tier.");
+        assert!(listed(1, 0, "", row) && listed(1, 1, "", row) && !listed(1, 2, "", row));
+        assert!(listed(1, 0, " QWEN ", row) && listed(1, 0, "every tier", row));
+        assert!(!listed(1, 0, "mistral", row) && !listed(1, 2, "qwen", row));
+        // Every row is under a tab there is.
+        assert!(MODEL_KINDS
+            .iter()
+            .all(|kind| (1..MODEL_TABS.len()).contains(kind)));
+        assert!(LINK_KINDS
+            .iter()
+            .all(|kind| (1..LINK_TABS.len()).contains(kind)));
+    }
+}

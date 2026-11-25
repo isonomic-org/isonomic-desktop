@@ -31,9 +31,13 @@ use super::Onboarding;
 /// The longest a typed word may be.
 const LONGEST: usize = 12;
 
-/// May `word` be typed? Letters only, and no longer than the longest.
+/// May `word` be typed? Letters, with spaces around them as a pasted word
+/// may have, and no longer than the longest.
 pub(super) fn fits(word: &str, _: &mut App) -> bool {
-    word.chars().count() <= LONGEST && word.chars().all(char::is_alphabetic)
+    let letters = word.trim();
+    word.chars().count() <= LONGEST + 4
+        && letters.chars().count() <= LONGEST
+        && letters.chars().all(char::is_alphabetic)
 }
 
 /// How far the holder is shaken to the right, `s` seconds after a wrong

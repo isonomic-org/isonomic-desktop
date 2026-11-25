@@ -266,6 +266,18 @@ impl Onboarding {
         cx.notify();
     }
 
+    /// Is the step's forward button waiting on the person? On "Save your
+    /// recovery kit" it is, until the kit is ticked as stored.
+    pub(super) fn held_back(&self) -> bool {
+        self.flow.is_some_and(|flow| flow.step == steps::KIT) && !self.stored
+    }
+
+    /// Tick the kit as stored somewhere safe, or not.
+    pub fn store_kit(&mut self, stored: bool, cx: &mut Context<Self>) {
+        self.stored = stored;
+        cx.notify();
+    }
+
     /// A step's forward button: the next step, or after the last,
     /// "Setting up your workspace" and the handover.
     pub fn next_step(&mut self, cx: &mut Context<Self>) {
@@ -273,6 +285,9 @@ impl Onboarding {
             return;
         };
         if !self.settled_flow() {
+            return;
+        }
+        if self.held_back() {
             return;
         }
         if flow.step == steps::CONFIRM && !self.locked {

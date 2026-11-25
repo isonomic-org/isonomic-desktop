@@ -45,7 +45,7 @@ pub const DRIVES: [(f32, f32, f32, f32); 5] = [
 /// and its icon; and the smaller "Connect".
 pub const BUTTON: f32 = 38.;
 pub const BUTTON_PAD: f32 = 16.;
-pub const ICON: f32 = 18.;
+pub const ICON: f32 = 20.;
 pub const CONNECT: f32 = 34.;
 pub const CONNECT_PAD: f32 = 12.;
 /// The passkey's mark in its tile.
@@ -99,10 +99,18 @@ pub const SHEET_DIM: f32 = 0.4;
 /// address is for, the address box's padding around its button, and how
 /// wide its note and a setting's words run.
 pub const CARD_GAP: f32 = 22.;
-pub const ROOT_ROW_PAD: f32 = 9.;
+pub const ROOT_ROW_PAD: f32 = 8.5;
 pub const ADDRESS_PAD: f32 = 5.;
 pub const NOTE_WIDE: f32 = 520.;
 pub const SETTING_WIDE: f32 = 420.;
+/// A step with no rule under its heading starts this far under it.
+pub const BODY_TOP: f32 = 22.;
+/// A note: its icon, its title and its words.
+pub const NOTE_ICON: f32 = 20.;
+pub const NOTE_TITLE: (f32, f32) = (13., 20.);
+pub const NOTE_TEXT: (f32, f32) = (12., 19.);
+/// A list with nothing to show says so this far down.
+pub const EMPTY_PAD: f32 = 48.;
 /// How strong the ring around the pill's mark is.
 pub const SETUP_RING: f32 = 0.5;
 pub const SHEET_CORNER: f32 = 12.;

@@ -4,6 +4,16 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-25 · Onboarding's edge cases, and a second design pass
+
+- **"Save your recovery kit"** can't be left forward until the kit is ticked as stored: "Continue" is disabled and `next_step` holds (`Onboarding::held_back`, `store_kit`).
+- **The words typed back** may have capitals and spaces around them, as the screen says (`kit_run::fits`). A wrong word is red whether or not it has the keyboard, and takes the keyboard so it can be put right. With nothing typed, the line under the grid asks for the words instead of calling word 4 wrong.
+- **The lists** show what their tab and their search box ask for (`steps::listed`, `MODEL_KINDS`, `LINK_KINDS`), and say so when that is nothing.
+- **"Setting up your workspace"** cuts a long name short with an ellipsis.
+- **Tested in `tests/onboarding.rs`:** "Cancel" on the Face ID sheet and asking again; the unticked kit; words with capitals and spaces; a wrong word, then put right.
+- **Design pass:** the notes are a grey card with the 20 px "i" centred beside the text (laid out here with the library's icon, because the library's alert pins its icon to the top at its own size); the kit's grid has the design's 187-wide cells with 12 between; "Learn more" is underlined only when pointed at; button icons are 20; the holder is the design's size (181 tall, open) with bright faces and a lighter frame; a step with no rule starts 22 under its heading.
+- **Not done:** "Recover existing account" still leads nowhere, since recovery has no screens; Escape doesn't dismiss the Face ID sheet; the primary colour is the library theme's near-black where the design has navy.
+
 ## 2026-11-25 · "Decline" and the Face ID screen's "Previous step" play backward
 
 - **Was:** "Decline" on the terms and "Previous step" on "Create your account with Face ID" showed the screen before at once.

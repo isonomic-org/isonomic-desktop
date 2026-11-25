@@ -88,7 +88,8 @@ impl Onboarding {
             )
             .min_h(px(design::CELL));
         let input = if self.wrong[index] {
-            input.border_color(design::wrong())
+            // Wrong shows whether or not it has the keyboard.
+            input.focus_bordered(false).border_color(design::wrong())
         } else {
             input
         };
@@ -112,6 +113,9 @@ impl Onboarding {
             .collect();
         let wrong = self.wrong.iter().position(|wrong| *wrong);
         let under = match (wrong, self.is_confirmed().then_some(())) {
+            (Some(_), _) if self.words_typed() == 0 => text(fourth::ROW_TEXT)
+                .text_color(design::wrong())
+                .child("Type words 4, 11 and 19 from your kit to continue."),
             (Some(index), _) => text(fourth::ROW_TEXT)
                 .text_color(design::wrong())
                 .child(format!(

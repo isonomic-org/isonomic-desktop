@@ -7,7 +7,6 @@
 //! connect buttons flip, and nothing else here does anything yet.
 
 use ui::assets::IconName;
-use ui::component::alert::Alert;
 use ui::component::button::{Button, ButtonVariants as _};
 use ui::component::checkbox::Checkbox;
 use ui::component::input::Input;
@@ -89,12 +88,50 @@ pub(super) fn outlined(
     }
 }
 
-/// A note with its title, as the design's cards with an "i" have it.
-pub(super) fn note(id: &'static str, (title, words): (&'static str, &'static str)) -> Alert {
-    Alert::new(id, words)
-        .title(title)
+/// A note: a grey card with the "i" beside its title and its words. The
+/// library's alert pins its icon to the top at its own size, so the card
+/// is laid out here, with the library's icon.
+pub(super) fn note(
+    id: &'static str,
+    (title, words): (&'static str, &'static str),
+) -> impl IntoElement {
+    let (pad_x, pad_y) = fourth::CARD_PAD;
+    div()
+        .id(id)
+        .w_full()
+        .px(px(pad_x - 1.))
+        .py(px(pad_y - 1.))
+        .flex()
+        .items_center()
+        .gap_3()
+        .rounded(px(fourth::CARD_CORNER))
+        .border_1()
+        .border_color(page::hairline())
         .bg(design::field())
-        .text_size(px(design::SMALL.0))
+        .child(
+            Icon::from(IconName::Information)
+                .size(px(design::NOTE_ICON))
+                .flex_none()
+                .text_color(page::ink()),
+        )
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .flex()
+                .flex_col()
+                .child(
+                    text(design::NOTE_TITLE)
+                        .font_weight(FontWeight::SEMIBOLD)
+                        .text_color(page::ink())
+                        .child(title),
+                )
+                .child(
+                    text(design::NOTE_TEXT)
+                        .text_color(fourth::faint())
+                        .child(words),
+                ),
+        )
 }
 
 /// A name with a line about it under it.
@@ -214,7 +251,38 @@ impl Onboarding {
         rows: &'static [(&'static str, &'static str, bool)],
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let rows = rows.iter().enumerate().map(|(index, (name, about, _))| {
+        let (which, kinds, nothing) = if step == steps::MODELS {
+            (0, &steps::MODEL_KINDS, "No models here yet.")
+        } else {
+            (1, &steps::LINK_KINDS, "No integrations here yet.")
+        };
+        let sought = self
+            .search
+            .as_ref()
+            .map_or_else(Default::default, |search| search[which].read(cx).value());
+        let shown: Vec<_> = rows
+            .iter()
+            .enumerate()
+            .filter(|(index, (name, about, _))| {
+                steps::listed(kinds[*index], self.tabs[which], &sought, (name, about))
+            })
+            .collect();
+        if shown.is_empty() {
+            let says = if sought.trim().is_empty() {
+                nothing.to_owned()
+            } else {
+                format!("Nothing matches \u{201c}{}\u{201d}.", sought.trim())
+            };
+            return text(shared::ACTION_LABEL)
+                .w_full()
+                .py(px(design::EMPTY_PAD))
+                .flex()
+                .justify_center()
+                .text_color(fourth::faint())
+                .child(says)
+                .into_any_element();
+        }
+        let rows = shown.into_iter().map(|(index, (name, about, _))| {
             let control = if step == steps::MODELS {
                 self.switch(step, index, self.models[index], cx)
                     .into_any_element()
@@ -242,6 +310,8 @@ impl Onboarding {
                         .text_size(px(shared::ACTION_LABEL.0))
                         .line_height(px(shared::ACTION_LABEL.1))
                         .text_color(shared::quiet())
+                        // Underlined only when pointed at, as the design has it.
+                        .text_decoration_0()
                         .child("Learn more"),
                 )
                 .child(control)
@@ -355,6 +425,7 @@ impl Onboarding {
                         ))
                         .child(
                             Tag::custom(design::good(), design::good_ink(), design::good())
+                                .py_0p5()
                                 .gap_1p5()
                                 .child(div().size_1p5().rounded_full().bg(design::good_ink()))
                                 .child("Active"),
@@ -411,7 +482,7 @@ impl Onboarding {
             .child(
                 div()
                     .w_full()
-                    .py_1()
+                    .py_1p5()
                     .flex()
                     .items_center()
                     .gap_3()
@@ -421,8 +492,7 @@ impl Onboarding {
                             .checked(self.stored)
                             .label("I\u{2019}ve stored this somewhere safe, off this machine.")
                             .on_click(cx.listener(|view, stored: &bool, _, cx| {
-                                view.stored = *stored;
-                                cx.notify();
+                                view.store_kit(*stored, cx)
                             })),
                     )
                     .child(div().flex_1())
@@ -468,7 +538,7 @@ impl Onboarding {
             .flex()
             .flex_col()
             .gap_5()
-            .child(card().py_1().children(rows))
+            .child(card().py_1p5().children(rows))
             .child(note("onboarding-finish-note", steps::AFTER))
             .into_any_element()
     }

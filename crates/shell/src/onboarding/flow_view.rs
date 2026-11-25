@@ -228,7 +228,13 @@ impl Onboarding {
                     .flex_1()
                     .overflow_hidden()
                     .px(px(shared::PAD))
-                    .pt(px(if listed { 0. } else { 20. }))
+                    .pt(px(if listed {
+                        0.
+                    } else if step.ruled {
+                        20.
+                    } else {
+                        design::BODY_TOP
+                    }))
                     .child(self.body(index, cx)),
             )
             .child(
@@ -396,7 +402,7 @@ impl Onboarding {
                     .line_height(px(name_tall))
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(page::ink())
-                    .child(self.device.clone()),
+                    .child(div().max_w_full().truncate().child(self.device.clone())),
             )
             .child(
                 div()

@@ -115,6 +115,13 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
 
     // "Continue with Face ID" brings up the sheet, then the later steps,
     // each over the last; the account is chosen after the last, once.
+    // "Cancel" on the sheet goes back to the screen, and it can be asked
+    // for again.
+    click(cx, "onboarding-face-id");
+    assert!(shown(cx, window, "onboarding-face-id-sheet"));
+    click(cx, "onboarding-cancel");
+    assert!(!shown(cx, window, "onboarding-face-id-sheet"));
+    assert!(shown(cx, window, "onboarding-passkey"));
     click(cx, "onboarding-face-id");
     assert!(shown(cx, window, "onboarding-face-id-sheet"));
     view.update(cx, |view, cx| view.skip_flow(cx));
@@ -137,13 +144,23 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
             view.update(cx, |view, cx| view.skip_flow(cx));
             assert!(shown(cx, window, step));
         }
+        if step == "onboarding-kit" {
+            // Not past it while the kit isn't ticked as stored.
+            view.update(cx, |view, cx| view.store_kit(false, cx));
+            click(cx, "onboarding-next");
+            view.update(cx, |view, cx| view.skip_flow(cx));
+            assert!(shown(cx, window, step) && !shown(cx, window, "onboarding-confirm"));
+            view.update(cx, |view, cx| view.store_kit(true, cx));
+        }
         if step == "onboarding-confirm" {
             // Not past it until the kit's three words are typed back.
             click(cx, "onboarding-next");
             view.update(cx, |view, cx| view.skip_flow(cx));
             assert!(shown(cx, window, step));
             // Each is typed in its own input: a press on it, then the word.
-            for (index, word) in ["hollow", "ribbon", "sketch"].into_iter().enumerate() {
+            // Capital letters and the spaces around a word don't matter; a
+            // wrong word does, until it is put right.
+            for (index, word) in [" Hollow", "RIBBON ", "sketches"].into_iter().enumerate() {
                 cx.update_window(window, |_, window, cx| {
                     window.render_frame(cx);
                     window.click(("onboarding-word", index), cx);
@@ -153,6 +170,11 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
                 cx.simulate_input(window, word);
                 cx.run_until_parked();
             }
+            click(cx, "onboarding-next");
+            view.update(cx, |view, cx| view.skip_flow(cx));
+            assert!(shown(cx, window, step) && !shown(cx, window, "onboarding-models"));
+            cx.simulate_keystrokes(window, "backspace backspace");
+            cx.run_until_parked();
         }
         click(cx, "onboarding-next");
         view.update(cx, |view, cx| view.skip_flow(cx));

@@ -7,6 +7,7 @@
 
 use ui::assets::IconName;
 use ui::component::button::{Button, ButtonVariants as _};
+use ui::component::Disableable as _;
 use ui::onboarding::passkey::at as fourth;
 use ui::onboarding::steps as buttons;
 use ui::onboarding::steps::at as later;
@@ -178,6 +179,7 @@ impl Onboarding {
             .label(label)
             .h(px(buttons::BUTTON))
             .px(px(buttons::BUTTON_PAD))
+            .disabled(forward && self.held_back())
             .on_click(cx.listener(move |view, _, _, cx| press(view, cx)));
         // A press here is a press, not the start of moving the window.
         held(if forward {
