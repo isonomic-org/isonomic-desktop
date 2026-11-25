@@ -126,6 +126,15 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
     ] {
         assert!(shown(cx, window, step), "{step}");
         assert_eq!(*chosen.borrow(), [Chosen::Recover]);
+        if step == "onboarding-kit" {
+            // "Previous step" goes back, and the step comes on again.
+            click(cx, "onboarding-back");
+            view.update(cx, |view, cx| view.skip_flow(cx));
+            assert!(shown(cx, window, "onboarding-created") && !shown(cx, window, step));
+            click(cx, "onboarding-next");
+            view.update(cx, |view, cx| view.skip_flow(cx));
+            assert!(shown(cx, window, step));
+        }
         if step == "onboarding-confirm" {
             // Not past it until the kit's three words are typed back.
             click(cx, "onboarding-next");

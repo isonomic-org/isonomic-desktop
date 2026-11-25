@@ -80,7 +80,7 @@ impl Onboarding {
                 )
                 .into_any_element();
         };
-        let typing = self.confirmed.is_none() && self.typing == index;
+        let typing = !self.is_confirmed() && self.typing == index;
         let edge = if self.wrong[index] {
             design::wrong()
         } else if typing {
@@ -137,7 +137,7 @@ impl Onboarding {
             );
         }
         let wrong = self.wrong.iter().position(|wrong| *wrong);
-        let under = match (wrong, self.confirmed) {
+        let under = match (wrong, self.is_confirmed().then_some(())) {
             (Some(index), _) => text(fourth::ROW_TEXT)
                 .text_color(design::wrong())
                 .child(format!(

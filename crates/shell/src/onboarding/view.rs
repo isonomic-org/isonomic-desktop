@@ -131,6 +131,7 @@ impl Render for Onboarding {
             self.start(cx);
         }
         self.scale = window.scale_factor();
+        self.land();
         self.draw_kit(cx);
         if std::mem::take(&mut self.wants_words) {
             self.words_focus.focus(window, cx);

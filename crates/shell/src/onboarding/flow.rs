@@ -8,6 +8,7 @@
 //! Every step comes on the same way: the last step's art turns over and
 //! leaves by the left edge, the next panel slides over the last from the
 //! right, and the step's art turns over as it comes out from under it.
+//! "Previous step" plays the same backward.
 //!
 //! This is a first pass with nothing behind it: no Face ID is asked for,
 //! nothing is created, switched on, connected or saved, and the values
@@ -32,8 +33,11 @@ pub struct Flow {
     pub step: usize,
     /// When this step came on.
     pub started: f32,
-    /// Did it come on from the step before? Coming back has no motion.
+    /// Did it come on from the step before?
     pub forward: bool,
+    /// Is it being left by "Previous step"? Then its coming on plays
+    /// backward, and the step before is there when that ends.
+    pub back: bool,
 }
 
 /// Where the ID card is on its way into the wallet: how far from where
@@ -113,10 +117,65 @@ pub fn turned(share: f32) -> f32 {
 }
 
 impl Onboarding {
-    /// The later steps' place and seconds into it, at `t`.
+    /// The later steps' place and seconds into it, at `t`. A step being
+    /// left by "Previous step" is that step coming on, with its seconds
+    /// counting down; when they run out, the step before is there, at rest.
     pub fn flow_at(&self, t: f32) -> Option<(Flow, f32)> {
-        self.flow
-            .map(|flow| (flow, t - flow.started - Self::waits(flow)))
+        let flow = self.flow?;
+        if !flow.back {
+            return Some((flow, t - flow.started - Self::waits(flow)));
+        }
+        let coming = Flow {
+            forward: true,
+            back: false,
+            ..flow
+        };
+        let left = self.span(flow) - (t - flow.started);
+        if left > 0. {
+            Some((coming, left - Self::waits(coming)))
+        } else {
+            Self::before(flow, t).map(|rests| (rests, at::END))
+        }
+    }
+
+    /// The step before `flow`'s, at rest since `t`; none before the first.
+    fn before(flow: Flow, t: f32) -> Option<Flow> {
+        flow.step.checked_sub(1).map(|step| Flow {
+            step,
+            started: t,
+            forward: false,
+            back: false,
+        })
+    }
+
+    /// How long a step takes to come on, and so to be left backward: its
+    /// wait, its motion, what its art does after, and, for the confirmed
+    /// kit, its unlocking.
+    fn span(&self, flow: Flow) -> f32 {
+        let coming = Flow {
+            forward: true,
+            back: false,
+            ..flow
+        };
+        let unlocks = if self.unlocking && flow.step == steps::CONFIRM {
+            kit_at::CONFIRMED
+        } else {
+            0.
+        };
+        Self::waits(coming) + at::END + Self::lingers(coming) + unlocks
+    }
+
+    /// Once a step has been left backward, the step before is where the
+    /// later steps are. Called at every draw.
+    pub(super) fn land(&mut self) {
+        let (Some(flow), Some(t)) = (self.flow, self.terms_now()) else {
+            return;
+        };
+        if flow.back && t - flow.started >= self.span(flow) {
+            self.flow = Self::before(flow, t);
+            self.unlocking = false;
+            self.wants_words = flow.step == steps::CONFIRM + 1 && !self.locked;
+        }
     }
 
     /// How long a step waits before it comes on: the step after "Your
@@ -131,9 +190,9 @@ impl Onboarding {
 
     /// Where the ID card is at `t`.
     pub(super) fn slipped(&self, t: f32) -> Slip {
-        match self.flow.filter(|flow| Self::waits(*flow) > 0.) {
-            Some(flow) => slip(t - flow.started),
-            None => Slip::RESTING,
+        match self.flow_at(t) {
+            Some((flow, f)) if Self::waits(flow) > 0. => slip(f + Self::waits(flow)),
+            _ => Slip::RESTING,
         }
     }
 
@@ -152,8 +211,9 @@ impl Onboarding {
     fn settled_flow(&self) -> bool {
         match (self.flow, self.terms_now()) {
             (Some(flow), Some(t)) => {
-                !flow.forward
-                    || t - flow.started >= at::END + Self::waits(flow) + Self::lingers(flow)
+                !flow.back
+                    && (!flow.forward
+                        || t - flow.started >= at::END + Self::waits(flow) + Self::lingers(flow))
             }
             _ => true,
         }
@@ -198,6 +258,7 @@ impl Onboarding {
             step: steps::CREATED,
             started: t,
             forward: true,
+            back: false,
         });
         cx.notify();
     }
@@ -211,7 +272,7 @@ impl Onboarding {
         if !self.settled_flow() {
             return;
         }
-        if flow.step == steps::CONFIRM {
+        if flow.step == steps::CONFIRM && !self.locked {
             // Not before its three words are typed back.
             self.confirm_words(t, cx);
             return;
@@ -282,13 +343,18 @@ impl Onboarding {
             step: flow.step + 1,
             started: t,
             forward: true,
+            back: false,
         });
+        // Past "Confirm your recovery kit", the kit stays locked.
+        self.locked |= flow.step == steps::CONFIRM;
         self.confirmed = None;
         self.wants_words = flow.step + 1 == steps::CONFIRM;
         cx.notify();
     }
 
-    /// A step's "Previous step": the step before, as it rests.
+    /// A step's "Previous step": its coming on plays backward, and the
+    /// step before is there when that ends. The locked kit is unlocked on
+    /// the way back out of "Confirm your recovery kit".
     pub fn back_step(&mut self, cx: &mut Context<Self>) {
         let (Some(flow), Some(t), None) = (self.flow, self.terms_now(), self.finishing) else {
             return;
@@ -296,13 +362,16 @@ impl Onboarding {
         if !self.settled_flow() {
             return;
         }
-        self.flow = flow.step.checked_sub(1).map(|step| Flow {
-            step,
+        if flow.step == steps::CONFIRM {
+            self.unlocking = std::mem::take(&mut self.locked);
+            self.unconfirm();
+        }
+        self.flow = Some(Flow {
             started: t,
             forward: false,
+            back: true,
+            ..flow
         });
-        self.unconfirm();
-        self.wants_words = flow.step == steps::CONFIRM + 1;
         cx.notify();
     }
 
@@ -330,9 +399,15 @@ impl Onboarding {
         }
         // The sheet is gone at once, not faded.
         self.answered = None;
-        if let Some(flow) = self.flow.as_mut() {
-            flow.forward = false;
-        }
+        self.flow = match (self.flow, self.terms_now()) {
+            (Some(flow), Some(t)) if flow.back => Self::before(flow, t),
+            (Some(flow), _) => Some(Flow {
+                forward: false,
+                ..flow
+            }),
+            _ => None,
+        };
+        self.unlocking = false;
         cx.notify();
     }
 

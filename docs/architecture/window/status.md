@@ -4,6 +4,15 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-24 · "Previous step" plays a step's coming on backward
+
+- **Was:** "Previous step" on the later steps showed the step before at once, at rest.
+- **Now:** the step being left plays its coming on backward (`flow::Flow::back`): its art turns over and goes back under its panel, the panel slides off to the right, the stepper's words change back, and the step before's art comes back in from the left edge. The step before is there when that ends (`Onboarding::land`), and no button is heard until then.
+- **What each step's art does backward:** the ID card comes out of the wallet and lies over it again; the holder's tiles turn back, it closes and goes under the panel; on "Confirm your recovery kit" it turns to face the person again.
+- **The locked kit:** past "Confirm your recovery kit" the kit stays locked. Going back to that step shows it closed with its padlock on, and "Continue" goes on without asking for the words again. Going back out of it unlocks it first: the padlock's body drops, it goes back under the panel, and the holder opens with its back turned, before the rest plays backward.
+- **From "Your account exists."** back to "Create your account with Face ID" likewise; the seal comes back in from the left edge.
+- **Not yet:** "Previous step" on "Create your account with Face ID" and "Decline" on the terms still go back at once.
+
 ## 2026-11-24 · Onboarding ends in Chat, not in the old first run
 
 - **Was:** when onboarding handed over, the app's window opened on the old first run (Capsule, Memory, Isonomic ID, Local model), which onboarding replaces.

@@ -122,6 +122,10 @@ pub struct Onboarding {
     wrong: [bool; 3],
     shaken: Option<f32>,
     confirmed: Option<f32>,
+    /// Is the kit locked, its words confirmed and the step left forward?
+    /// And is it being unlocked, on the way back out of that step?
+    locked: bool,
+    unlocking: bool,
     words_focus: FocusHandle,
     wants_words: bool,
 }
@@ -175,6 +179,8 @@ impl Onboarding {
             wrong: [false; 3],
             shaken: None,
             confirmed: None,
+            locked: false,
+            unlocking: false,
             words_focus: cx.focus_handle(),
             wants_words: false,
         }

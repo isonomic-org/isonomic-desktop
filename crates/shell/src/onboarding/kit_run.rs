@@ -127,15 +127,44 @@ impl Easel {
 }
 
 impl Onboarding {
+    /// Seconds into the confirmed kit's closing and locking, at `t`: from
+    /// the press that confirmed it, or counting down as "Previous step"
+    /// leaves the step and unlocks it.
+    fn confirming(&self, t: f32) -> Option<f32> {
+        if let Some(confirmed) = self.confirmed {
+            return Some(t - confirmed);
+        }
+        match self.flow_at(t)? {
+            (
+                Flow {
+                    step: steps::CONFIRM,
+                    forward: true,
+                    ..
+                },
+                f,
+            ) if self.unlocking && f > step::END => Some(f - step::END),
+            _ => None,
+        }
+    }
+
     /// How the holder lies at `t`, while it is in the sidebar.
     pub(super) fn kit_pose(&self, t: f32) -> Option<Pose> {
         let (flow, f) = self.flow_at(t)?;
+        if let Some(s) = self.confirming(t) {
+            let closed = motion::ease(motion::CARRY, motion::progress(s, 0., at::CLOSE));
+            return Some(Pose {
+                away: 180. * (1. - closed),
+                fold: 180. * closed,
+                risen: closed,
+                ..Pose::OPEN
+            });
+        }
         let turned = kit::spinning(self.kit.as_ref().map_or(0, |kit| kit.tiles()));
         let ease = |starts: f32, length: f32| {
             motion::ease(motion::CARRY, motion::progress(f, starts, length))
         };
-        match (flow.step, flow.forward, self.confirmed) {
-            (steps::KIT, true, _) => {
+        match (flow.step, flow.forward) {
+            (steps::KIT, true) => {
                 let opened = ease(at::OPENS, at::OPEN);
                 Some(Pose {
                     turn: (1. - flow::arrived(f)) * 360.,
@@ -145,25 +174,15 @@ impl Onboarding {
                     spun: (f - at::SPINS).clamp(0., turned),
                 })
             }
-            (steps::KIT, false, _) => Some(Pose::OPEN),
-            (steps::CONFIRM, _, Some(confirmed)) => {
-                let closed = motion::ease(
-                    motion::CARRY,
-                    motion::progress(t - confirmed, 0., at::CLOSE),
-                );
-                Some(Pose {
-                    away: 180. * (1. - closed),
-                    fold: 180. * closed,
-                    risen: closed,
-                    ..Pose::OPEN
-                })
-            }
-            (steps::CONFIRM, true, None) => Some(Pose {
+            (steps::KIT, false) => Some(Pose::OPEN),
+            (steps::CONFIRM, true) => Some(Pose {
                 away: 180. * ease(at::TURNS_AWAY, at::TURN),
                 ..Pose::OPEN
             }),
-            (steps::CONFIRM, false, None) => Some(Pose::AWAY),
-            (steps::MODELS, true, _) if f < step::LEAVE => Some(Pose::CLOSED),
+            // Come back to from a later step, it is still locked.
+            (steps::CONFIRM, false) if self.locked => Some(Pose::CLOSED),
+            (steps::CONFIRM, false) => Some(Pose::AWAY),
+            (steps::MODELS, true) if f < step::LEAVE => Some(Pose::CLOSED),
             _ => None,
         }
     }
@@ -172,16 +191,16 @@ impl Onboarding {
     /// while the padlock is in the sidebar.
     pub(super) fn lock_clip(&self, t: f32) -> Option<f32> {
         let (flow, f) = self.flow_at(t)?;
+        if let Some(s) = self.confirming(t) {
+            return (s >= at::LOCK_COMES).then(|| {
+                motion::ease(
+                    motion::ARRIVE,
+                    motion::progress(s, at::LOCK_CLIPS, at::CLIP),
+                )
+            });
+        }
         match (flow.step, flow.forward) {
-            (steps::CONFIRM, _) => {
-                let s = t - self.confirmed?;
-                (s >= at::LOCK_COMES).then(|| {
-                    motion::ease(
-                        motion::ARRIVE,
-                        motion::progress(s, at::LOCK_CLIPS, at::CLIP),
-                    )
-                })
-            }
+            (steps::CONFIRM, false) if self.locked => Some(1.),
             (steps::MODELS, true) if f < step::LEAVE => Some(1.),
             _ => None,
         }
@@ -223,12 +242,12 @@ impl Onboarding {
     /// How far the padlock still is from its place at `t`, in points to
     /// the right: it comes out from under the panel.
     pub(super) fn lock_coming(&self, t: f32) -> f32 {
-        let Some(confirmed) = self.confirmed else {
+        let Some(s) = self.confirming(t) else {
             return 0.;
         };
         let came = motion::ease(
             motion::CARRY,
-            motion::progress(t - confirmed, at::LOCK_COMES, at::LOCK_FLIGHT),
+            motion::progress(s, at::LOCK_COMES, at::LOCK_FLIGHT),
         );
         (shared::SIDEBAR + shared::TUCK - design::CENTRE.0 + design::LOCK_CANVAS.0) * (1. - came)
     }
@@ -285,6 +304,11 @@ impl Onboarding {
         self.typed[index].trim().to_lowercase() == steps::WORDS[steps::ASKED[index] - 1]
     }
 
+    /// Have the three words been confirmed?
+    pub(super) fn is_confirmed(&self) -> bool {
+        self.confirmed.is_some() || self.locked
+    }
+
     /// How many of the three words are typed.
     pub(super) fn words_typed(&self) -> usize {
         self.typed
@@ -297,7 +321,7 @@ impl Onboarding {
     /// holder; the right three close and lock it, and then the next step
     /// comes on.
     pub(super) fn confirm_words(&mut self, t: f32, cx: &mut Context<Self>) {
-        if self.confirmed.is_some() {
+        if self.is_confirmed() {
             return;
         }
         self.wrong = [0, 1, 2].map(|index| !self.matches(index));
@@ -332,7 +356,7 @@ impl Onboarding {
 
     /// A key, while the words have the keyboard.
     pub(super) fn word_key(&mut self, event: &KeyDownEvent, cx: &mut Context<Self>) {
-        if self.confirmed.is_some() {
+        if self.is_confirmed() {
             return;
         }
         let keys = &event.keystroke;
