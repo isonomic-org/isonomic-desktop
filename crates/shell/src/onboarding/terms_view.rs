@@ -134,13 +134,13 @@ impl Onboarding {
             .w(px(wide))
             .flex()
             .flex_col()
-            .gap(px(24.))
+            .gap_6()
             .child(
                 div()
                     .w(px(design::STEPPER_TEXT))
                     .flex()
                     .flex_col()
-                    .gap(px(8.))
+                    .gap_2()
                     .text_size(px(label))
                     .line_height(px(label_line))
                     .text_color(design::quiet())
@@ -161,7 +161,7 @@ impl Onboarding {
                     )
                     .child(words),
             )
-            .child(div().w_full().flex().gap(px(8.)).children(bars))
+            .child(div().w_full().flex().gap_2().children(bars))
     }
 
     /// A footer button: its label with an arrow before or after it.
@@ -234,7 +234,7 @@ impl Onboarding {
                     .border_color(page::hairline())
                     .flex()
                     .flex_col()
-                    .gap(px(6.))
+                    .gap_1p5()
                     .child(
                         div()
                             .text_size(px(heading))

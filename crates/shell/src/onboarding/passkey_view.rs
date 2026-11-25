@@ -100,7 +100,7 @@ impl Onboarding {
             div()
                 .flex()
                 .flex_col()
-                .gap(px(2.))
+                .gap_0p5()
                 .child(
                     div()
                         .text_size(px(title))
@@ -193,7 +193,7 @@ impl Onboarding {
                             )
                             .children((0..STEPS.len()).map(Self::step)),
                     )
-                    .child(div().flex().pt(px(4.)).child(held(outlined(
+                    .child(div().flex().pt_1().child(held(outlined(
                         "onboarding-why",
                         "Why no password?",
                         None,

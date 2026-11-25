@@ -74,7 +74,14 @@ impl Shots {
     /// Draw until what is drawn off the foreground thread has come, then
     /// save the window as it is.
     fn shot(&mut self, name: &str) {
-        for _ in 0..12 {
+        self.shot_after(12, name);
+    }
+
+    /// The same after `rounds` draws, each 40 ms after the last.
+    fn shot_after(&mut self, rounds: usize, name: &str) {
+        for _ in 0..rounds {
+            // Timers run by this clock, not the wall's.
+            self.cx.advance_clock(Duration::from_millis(40));
             self.cx.run_until_parked();
             let _ = self
                 .cx
@@ -95,6 +102,33 @@ impl Shots {
     }
 }
 
+impl Shots {
+    /// `ONBOARDING_SHOTS_BACK` is set: pictures of "Decline" and of
+    /// "Previous step" on the fourth screen under way, about two a second,
+    /// instead of the screens at rest.
+    fn going_back(mut self) {
+        self.act(|view, cx| view.skip(cx));
+        self.act(|view, cx| view.choose(Chosen::NewAccount, cx));
+        self.act(|view, cx| view.skip_terms(cx));
+        self.shot("terms");
+        self.act(|view, cx| view.decline(cx));
+        for _ in 0..24 {
+            self.shot_after(1, "declining");
+        }
+        self.act(|view, cx| view.choose(Chosen::NewAccount, cx));
+        self.act(|view, cx| view.skip_terms(cx));
+        self.act(|view, cx| view.accept(cx));
+        // The signing, then the fourth screen coming on.
+        for _ in 0..18 {
+            self.shot("signing");
+        }
+        self.act(|view, cx| view.previous_step(cx));
+        for _ in 0..40 {
+            self.shot_after(1, "going-back");
+        }
+    }
+}
+
 /// Not under the test harness: the Mac's platform starts only on the main
 /// thread.
 fn main() {
@@ -107,6 +141,9 @@ fn main() {
         eprintln!("skipped: no headless renderer here");
         return;
     };
+    if std::env::var_os("ONBOARDING_SHOTS_BACK").is_some() {
+        return shots.going_back();
+    }
     shots.act(|view, cx| view.skip(cx));
     shots.shot("get-started");
     shots.act(|view, cx| view.choose(Chosen::NewAccount, cx));

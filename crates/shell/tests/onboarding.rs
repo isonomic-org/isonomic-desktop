@@ -89,6 +89,7 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
 
     // Declining goes back to the two ways to start.
     click(cx, "onboarding-decline");
+    view.update(cx, |view, cx| view.skip_rewind(cx));
     assert!(view.read_with(cx, |view, _| view.terms_now().is_none()));
     click(cx, "onboarding-new-account");
     view.update(cx, |view, cx| view.skip_terms(cx));
@@ -105,6 +106,7 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
 
     // "Previous step" goes back to the terms, which can be accepted again.
     click(cx, "onboarding-previous");
+    view.update(cx, |view, cx| view.skip_rewind(cx));
     assert!(!shown(cx, window, "onboarding-passkey"));
     click(cx, "onboarding-accept");
     view.update(cx, |view, cx| view.skip_signing(cx));
@@ -140,7 +142,17 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
             click(cx, "onboarding-next");
             view.update(cx, |view, cx| view.skip_flow(cx));
             assert!(shown(cx, window, step));
-            view.update(cx, |view, cx| view.fill_words(cx));
+            // Each is typed in its own input: a press on it, then the word.
+            for (index, word) in ["hollow", "ribbon", "sketch"].into_iter().enumerate() {
+                cx.update_window(window, |_, window, cx| {
+                    window.render_frame(cx);
+                    window.click(("onboarding-word", index), cx);
+                })
+                .unwrap();
+                cx.run_until_parked();
+                cx.simulate_input(window, word);
+                cx.run_until_parked();
+            }
         }
         click(cx, "onboarding-next");
         view.update(cx, |view, cx| view.skip_flow(cx));

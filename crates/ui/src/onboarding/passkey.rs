@@ -29,7 +29,9 @@ pub fn light() -> Hsla {
 
 /// The content: 784 wide, 48 in from the sidebar and 40 down.
 pub const CONTENT: (f32, f32, f32) = (48., 40., 784.);
-pub const HEAD: f32 = 560.;
+/// The heading's column is 560 in the design; 8 more here, so that a
+/// line that just fits there isn't broken.
+pub const HEAD: f32 = 568.;
 pub const HEAD_GAP: f32 = 10.;
 pub const GAP: f32 = 24.;
 /// The card of what happens next.

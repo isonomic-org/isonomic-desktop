@@ -11,6 +11,7 @@ use ui::component::alert::Alert;
 use ui::component::button::{Button, ButtonVariants as _};
 use ui::component::checkbox::Checkbox;
 use ui::component::input::Input;
+use ui::component::link::Link;
 use ui::component::switch::Switch;
 use ui::component::tab::{Tab, TabBar};
 use ui::component::tag::Tag;
@@ -102,7 +103,7 @@ fn named(name: &'static str, about: &'static str) -> Div {
         .flex_1()
         .flex()
         .flex_col()
-        .gap(px(2.))
+        .gap_0p5()
         .child(
             text(fourth::ROW_TITLE)
                 .font_weight(FontWeight::MEDIUM)
@@ -192,7 +193,7 @@ impl Onboarding {
             .w_full()
             .flex()
             .items_center()
-            .gap(px(12.))
+            .gap_3()
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
             .child(div().flex_none().child(tabs))
             .children(search);
@@ -236,8 +237,10 @@ impl Onboarding {
                 )
                 .child(named(name, about))
                 .child(
-                    text(shared::ACTION_LABEL)
+                    Link::new(("onboarding-learn", step * 16 + index))
                         .flex_none()
+                        .text_size(px(shared::ACTION_LABEL.0))
+                        .line_height(px(shared::ACTION_LABEL.1))
                         .text_color(shared::quiet())
                         .child("Learn more"),
                 )
@@ -255,7 +258,7 @@ impl Onboarding {
         let root = steps::ROOT.iter().enumerate().map(|(index, (what, how))| {
             let row = div()
                 .w_full()
-                .py(px(9.))
+                .py(px(design::ROOT_ROW_PAD))
                 .flex()
                 .justify_between()
                 .border_color(page::hairline())
@@ -280,7 +283,7 @@ impl Onboarding {
             .w_full()
             .flex()
             .flex_col()
-            .gap(px(22.))
+            .gap(px(design::CARD_GAP))
             .child(
                 card()
                     .bg(design::field())
@@ -291,12 +294,12 @@ impl Onboarding {
                         // The address, with its button in its box.
                         div()
                             .w_full()
-                            .pl(px(12.))
-                            .pr(px(5.))
-                            .py(px(5.))
+                            .pl_3()
+                            .pr(px(design::ADDRESS_PAD))
+                            .py(px(design::ADDRESS_PAD))
                             .flex()
                             .items_center()
-                            .gap(px(8.))
+                            .gap_2()
                             .rounded(px(shared::ACTION_CORNER))
                             .border_1()
                             .border_color(shared::outline())
@@ -312,7 +315,7 @@ impl Onboarding {
                     )
                     .child(
                         text(design::SMALL)
-                            .max_w(px(520.))
+                            .max_w(px(design::NOTE_WIDE))
                             .text_color(fourth::faint())
                             .child(steps::ADDRESS_NOTE),
                     ),
@@ -328,7 +331,7 @@ impl Onboarding {
                         .w_full()
                         .flex()
                         .items_center()
-                        .gap(px(12.))
+                        .gap_3()
                         .child(
                             div()
                                 .flex_none()
@@ -352,8 +355,8 @@ impl Onboarding {
                         ))
                         .child(
                             Tag::custom(design::good(), design::good_ink(), design::good())
-                                .gap(px(5.))
-                                .child(div().size(px(6.)).rounded_full().bg(design::good_ink()))
+                                .gap_1p5()
+                                .child(div().size_1p5().rounded_full().bg(design::good_ink()))
                                 .child("Active"),
                         ),
                 ),
@@ -377,7 +380,7 @@ impl Onboarding {
                     .px(px(fourth::ROW_PAD))
                     .flex()
                     .items_center()
-                    .gap(px(8.))
+                    .gap_2()
                     .rounded(px(shared::ACTION_CORNER))
                     .border_1()
                     .border_color(shared::outline())
@@ -395,7 +398,7 @@ impl Onboarding {
             .w_full()
             .flex()
             .flex_col()
-            .gap(px(8.))
+            .gap_2()
             .child(caption(
                 "ISONOMIC RECOVERY KIT \u{b7} WORKSPACE MASTER KEY \u{b7} 24 WORDS",
             ))
@@ -408,10 +411,10 @@ impl Onboarding {
             .child(
                 div()
                     .w_full()
-                    .py(px(4.))
+                    .py_1()
                     .flex()
                     .items_center()
-                    .gap(px(12.))
+                    .gap_3()
                     .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                     .child(
                         Checkbox::new("onboarding-stored")
@@ -445,12 +448,12 @@ impl Onboarding {
             .map(|(index, (name, about, _))| {
                 let row = div()
                     .w_full()
-                    .py(px(16.))
+                    .py_4()
                     .flex()
                     .items_start()
-                    .gap(px(12.))
+                    .gap_3()
                     .border_color(page::hairline())
-                    .child(named(name, about).max_w(px(420.)))
+                    .child(named(name, about).max_w(px(design::SETTING_WIDE)))
                     .child(div().flex_1())
                     .child(self.switch(steps::FINISH, index, self.residency[index], cx));
                 if index == 0 {
@@ -464,8 +467,8 @@ impl Onboarding {
             .w_full()
             .flex()
             .flex_col()
-            .gap(px(20.))
-            .child(card().py(px(4.)).children(rows))
+            .gap_5()
+            .child(card().py_1().children(rows))
             .child(note("onboarding-finish-note", steps::AFTER))
             .into_any_element()
     }

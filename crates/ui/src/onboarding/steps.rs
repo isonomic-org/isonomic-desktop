@@ -83,7 +83,28 @@ pub fn dim() -> Hsla {
 }
 
 /// The Face ID sheet: 360 wide, in the middle of the window.
-pub const SHEET: (f32, f32) = (360., 250.);
+pub const SHEET: (f32, f32) = (360., 297.);
+/// Its padding above and to the sides, and below; the gap between its
+/// lines; its icon and its spinner; and its three sizes of text.
+pub const SHEET_PAD: (f32, f32) = (28., 22.);
+pub const SHEET_GAP: f32 = 14.;
+pub const SHEET_ICON: f32 = 44.;
+pub const SHEET_SPINNER: f32 = 32.;
+pub const SHEET_TITLE: (f32, f32) = (16., 22.);
+pub const SHEET_TEXT: (f32, f32) = (13., 19.);
+pub const SHEET_STATUS: (f32, f32) = (14., 20.);
+/// How dark the window behind it gets.
+pub const SHEET_DIM: f32 = 0.4;
+/// "Your account exists.": the gap between its cards, a row of what the
+/// address is for, the address box's padding around its button, and how
+/// wide its note and a setting's words run.
+pub const CARD_GAP: f32 = 22.;
+pub const ROOT_ROW_PAD: f32 = 9.;
+pub const ADDRESS_PAD: f32 = 5.;
+pub const NOTE_WIDE: f32 = 520.;
+pub const SETTING_WIDE: f32 = 420.;
+/// How strong the ring around the pill's mark is.
+pub const SETUP_RING: f32 = 0.5;
 pub const SHEET_CORNER: f32 = 12.;
 
 /// "Setting up your workspace": the laptop in the middle, 490 across and

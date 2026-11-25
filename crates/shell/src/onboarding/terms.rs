@@ -20,6 +20,7 @@ use ui::{motion, AppContext as _, Context, RenderImage};
 
 use super::laptop::{self, Scene};
 use super::props::Props;
+use super::rewind::Land;
 use super::stage::Drawn;
 use super::{Onboarding, FRAME};
 
@@ -108,7 +109,12 @@ fn draw(scene: Option<&Scene>, props: Option<&Props>, last: f32, t: f32, scale: 
 impl Onboarding {
     /// Seconds since "Start new account" was pressed, on the third screen.
     pub fn terms_now(&self) -> Option<f32> {
-        self.terms.map(|pressed| pressed.elapsed().as_secs_f32())
+        let pressed = self.terms?;
+        // Going back, the clock runs backward.
+        Some(match self.rewinding() {
+            Some(rewind) => rewind.now(),
+            None => pressed.elapsed().as_secs_f32(),
+        })
     }
 
     /// Jump to the end of the third screen's motion, as a test wants it.
@@ -120,12 +126,21 @@ impl Onboarding {
         cx.notify();
     }
 
-    /// "Decline": back to the two ways to start.
+    /// "Decline": what brought the terms on plays backward, to the two
+    /// ways to start.
     pub fn decline(&mut self, cx: &mut Context<Self>) {
         // Once accepted there is no going back.
-        if self.signed.is_some() {
+        if self.signed.is_some() || self.rewinding().is_some() {
             return;
         }
+        if let Some(t) = self.terms_now() {
+            self.rewind_to((t.min(at::END), 0., 0.), Land::Start, cx);
+        }
+    }
+
+    /// Declined, and everything is back where it came from: the two ways
+    /// to start.
+    pub(super) fn declined(&mut self, cx: &mut Context<Self>) {
         self.terms = None;
         for frame in [&mut self.clipboard, &mut self.pen] {
             if let Some(old) = frame.take() {

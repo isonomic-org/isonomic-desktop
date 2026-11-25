@@ -23,6 +23,7 @@ use ui::onboarding::passkey::{self as design, at};
 use ui::onboarding::terms;
 use ui::{motion, AppContext as _, Context, RenderImage};
 
+use super::rewind::Land;
 use super::stage::{self, Display, Drawn};
 use super::{Onboarding, FRAME};
 
@@ -170,15 +171,28 @@ impl Onboarding {
         cx.notify();
     }
 
-    /// "Previous step": back to the terms, as they were before they were
-    /// accepted.
+    /// "Previous step": the screen's coming on plays backward, the
+    /// clipboard and the pen come back, the signing is undone, and the
+    /// terms are as they were before they were accepted.
     pub fn previous_step(&mut self, cx: &mut Context<Self>) {
-        if self.asking.is_some() || self.flow.is_some() {
+        if self.asking.is_some() || self.flow.is_some() || self.rewinding().is_some() {
             return;
         }
-        let (Some(_), Some(t)) = (self.passkey.take(), self.terms_now()) else {
+        let (Some(started), Some(signed), Some(t)) = (self.passkey, self.signed, self.terms_now())
+        else {
             return;
         };
+        let from = t.min(started + at::END);
+        let returned = signed + terms::signs::CLIPBOARD_LEAVES;
+        self.rewind_to((from, returned, signed), Land::Terms, cx);
+    }
+
+    /// The terms are as they were before they were accepted.
+    pub(super) fn unsign(&mut self, cx: &mut Context<Self>) {
+        let Some(t) = self.terms_now() else {
+            return;
+        };
+        self.passkey = None;
         self.signed = None;
         if let Some(old) = self.seal_frame.take() {
             cx.drop_image(old.image, None);

@@ -143,6 +143,9 @@ pub const SIGNATURE_LINE: f32 = 1.1;
 /// The order of events, in seconds from the press on "Accept and
 /// continue". One thing at a time.
 pub mod signs {
+    /// Going back, the signing is undone this many times as fast as it
+    /// was done.
+    pub const UNDO_RATE: f32 = 4.;
     /// The pages lift by their corner and curl back off the last page.
     pub const LIFT: f32 = 1.;
     /// The pen goes to the signature's start, writes it, and goes back.

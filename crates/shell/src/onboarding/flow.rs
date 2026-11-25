@@ -227,6 +227,9 @@ impl Onboarding {
         else {
             return;
         };
+        if self.rewinding().is_some() {
+            return;
+        }
         self.asking = Some(t);
         cx.notify();
         cx.spawn(async move |view, cx| {

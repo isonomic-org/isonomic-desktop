@@ -90,7 +90,7 @@ impl Onboarding {
             return;
         };
         // Not until the screen has come to rest.
-        if t < at::END {
+        if t < at::END || self.rewinding().is_some() {
             return;
         }
         self.signed = Some(t);

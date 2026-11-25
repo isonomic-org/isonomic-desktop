@@ -8,6 +8,7 @@
 use ui::assets::IconName;
 use ui::component::spinner::Spinner;
 use ui::component::{Icon, Sizable as _, Size};
+use ui::onboarding::passkey::{self as fourth};
 use ui::onboarding::steps::{self as design, at};
 use ui::onboarding::terms::{self as shared};
 use ui::onboarding::{self as page};
@@ -171,7 +172,11 @@ impl Onboarding {
             )
             .child(
                 div()
-                    .max_w(px(if step.ruled { 784. } else { 560. }))
+                    .max_w(px(if step.ruled {
+                        fourth::CONTENT.2
+                    } else {
+                        fourth::HEAD
+                    }))
                     .text_size(px(sub))
                     .line_height(px(sub_line))
                     .text_color(shared::quiet())
@@ -185,14 +190,14 @@ impl Onboarding {
             .px(px(shared::PAD))
             .flex()
             .flex_col()
-            .gap(px(24.))
+            .gap_6()
             .border_color(page::hairline())
             .child(
                 div()
                     .w_full()
                     .flex()
                     .items_start()
-                    .gap(px(24.))
+                    .gap_6()
                     .child(titles)
                     .children(add),
             )
@@ -264,7 +269,7 @@ impl Onboarding {
             .absolute()
             .size_full()
             .rounded(page::corner())
-            .bg(design::dim().opacity(0.4 * solid))
+            .bg(design::dim().opacity(design::SHEET_DIM * solid))
             // Nothing under the sheet can be pressed.
             .occlude()
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -277,37 +282,40 @@ impl Onboarding {
                     .rounded(px(design::SHEET_CORNER))
                     .bg(page::page())
                     .opacity(solid)
-                    .p(px(28.))
+                    .h(px(tall))
+                    .px(px(design::SHEET_PAD.0))
+                    .pt(px(design::SHEET_PAD.0))
+                    .pb(px(design::SHEET_PAD.1))
                     .flex()
                     .flex_col()
                     .items_center()
-                    .gap(px(12.))
+                    .gap(px(design::SHEET_GAP))
                     .child(
                         Icon::from(IconName::FingerprintRecognition)
-                            .size(px(40.))
+                            .size(px(design::SHEET_ICON))
                             .text_color(page::ink()),
                     )
                     .child(
                         div()
-                            .text_size(px(16.))
-                            .line_height(px(22.))
+                            .text_size(px(design::SHEET_TITLE.0))
+                            .line_height(px(design::SHEET_TITLE.1))
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(page::ink())
                             .child("Isonomic"),
                     )
                     .child(
                         div()
-                            .text_size(px(13.))
-                            .line_height(px(19.))
+                            .text_size(px(design::SHEET_TEXT.0))
+                            .line_height(px(design::SHEET_TEXT.1))
                             .text_color(shared::body())
                             .child("Create a passkey for \u{201c}isonomic.com\u{201d}"),
                     )
-                    .child(div().py(px(6.)).child(Spinner::new()))
+                    .child(Spinner::new().with_size(Size::Size(px(design::SHEET_SPINNER))))
                     .child(
                         div()
                             .font_family(shared::SERIF)
-                            .text_size(px(14.))
-                            .line_height(px(20.))
+                            .text_size(px(design::SHEET_STATUS.0))
+                            .line_height(px(design::SHEET_STATUS.1))
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(page::ink())
                             .child("Looking for your face\u{2026}"),
@@ -397,10 +405,10 @@ impl Onboarding {
                     .top(px(pill_top + below(pill_top) * (1. - pill_risen)))
                     .w(px(pill_wide))
                     .h(px(pill_tall))
-                    .px(px(6.))
+                    .px_1p5()
                     .flex()
                     .items_center()
-                    .gap(px(10.))
+                    .gap_2p5()
                     .rounded(px(pill_tall / 2.))
                     .border_1()
                     .border_color(page::hairline())
@@ -418,7 +426,7 @@ impl Onboarding {
                             .justify_center()
                             .rounded_full()
                             .border_1()
-                            .border_color(design::accent().opacity(0.5))
+                            .border_color(design::accent().opacity(design::SETUP_RING))
                             .child(
                                 div()
                                     .size(px(design::SETUP_MARK.1))

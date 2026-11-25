@@ -31,6 +31,7 @@ mod logos;
 mod passkey;
 mod passkey_view;
 mod props;
+mod rewind;
 mod signature;
 mod signing;
 mod signing_view;
@@ -81,6 +82,9 @@ pub struct Onboarding {
     sound: Option<Sound>,
     /// When "Start new account" was pressed: the third screen's clock.
     terms: Option<Instant>,
+    /// That clock running backward, while a press on "Decline" or
+    /// "Previous step" is played.
+    rewind: Option<rewind::Rewind>,
     /// The clipboard's and the pen's models, once read.
     props: Option<Arc<Props>>,
     /// Their latest frames. They rest as the last ones drawn.
@@ -180,6 +184,7 @@ impl Onboarding {
             props: None,
             clipboard: None,
             pen: None,
+            rewind: None,
             signed: None,
             handed_over: false,
             seal: None,
