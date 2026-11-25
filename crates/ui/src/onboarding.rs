@@ -87,11 +87,14 @@ pub mod terms;
 /// The order of events, in seconds from the first frame. One thing at a
 /// time: each step starts as the one before it lands.
 pub mod at {
-    /// The mark's intro runs first (its own 1.5 s), then it rests a beat.
-    pub const MARK_LEAVES: f32 = 1.5 + 0.3;
-    /// How long the mark's sound takes to fade out. It is silent by the
-    /// time the mark leaves the centre.
-    pub const SOUND_FADE: f32 = 0.25;
+    /// The mark's sound plays from the first frame, at its own speed and
+    /// to its own end. The recording opens with 0.3 s of quiet, and its
+    /// chord lands 0.9 s after its first note: the mark's intro (its own
+    /// 1.5 s) starts with the first note, so the four lock on the chord.
+    pub const MARK_STARTS: f32 = 0.3;
+    /// The mark stays in the centre while the chord rings, and leaves as
+    /// it dies away.
+    pub const MARK_LEAVES: f32 = 3.0;
     /// The mark turns and shrinks into its corner.
     pub const MARK_TRAVEL: f32 = 0.8;
     /// The laptop leaves the bottom edge once the mark has landed.

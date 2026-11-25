@@ -14,6 +14,8 @@ use ui::{
 };
 
 use super::flow_bodies::{held, outlined};
+use super::flow_view::TUCKED;
+use super::stage::Drawn;
 use super::{flow, passkey, Onboarding};
 
 const TITLE: &str = "Create your account with Face ID";
@@ -51,7 +53,12 @@ impl Onboarding {
                 .bg(design::light().opacity(fill))
         });
         let canvas = design::SEAL_FRAME * design::SEAL_CANVAS;
-        let seal = self.seal_frame.as_ref().map(|frame| {
+        // Under its panel it isn't drawn: going back, the panel leaves.
+        let out = |frame: &&Drawn| {
+            let drawn_for = self.passkey_at(frame.at).unwrap_or(p);
+            passkey::flight(drawn_for).0 > TUCKED
+        };
+        let seal = self.seal_frame.as_ref().filter(out).map(|frame| {
             // Placed by the time its frame was drawn for.
             let drawn_for = self.passkey_at(frame.at).unwrap_or(p);
             let (arrived, _) = passkey::flight(drawn_for);

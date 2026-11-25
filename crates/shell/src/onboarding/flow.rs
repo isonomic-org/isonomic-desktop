@@ -317,7 +317,8 @@ impl Onboarding {
                     break;
                 }
                 let began = Instant::now();
-                let (shown, drawn_for) = (g + lead, now + lead);
+                let shown = super::stage::snap(g + lead);
+                let drawn_for = now + shown - g;
                 let ends = at::LAPTOP_CENTRES + at::CENTRE;
                 if let (true, Some(scene)) = (shown >= at::LAPTOP_CENTRES && last < ends, scene) {
                     let (_, turn) = centring(shown);

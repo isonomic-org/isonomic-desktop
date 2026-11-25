@@ -23,6 +23,9 @@ use super::flow_bodies::{held, outlined};
 use super::steps::{self, STEPS};
 use super::Onboarding;
 
+/// How far out from under its panel a piece is before it is drawn.
+pub(super) const TUCKED: f32 = 0.002;
+
 /// How far below its place something starts so that it is under the
 /// window's bottom edge.
 fn below(top: f32) -> f32 {
@@ -133,9 +136,14 @@ impl Onboarding {
             }
         };
         let (whole, card) = (placed(f), placed(f - at::CARD_FOLLOWS));
+        // Under the panel it comes out from, it isn't drawn: going back,
+        // the panel leaves, and would leave it showing there.
+        let out = |f: f32| leaving || flow::arrived(f) > TUCKED;
+        let (whole_out, card_out) = (out(f), out(f - at::CARD_FOLLOWS));
         let (under, over): (Vec<_>, Vec<_>) = sprites
             .into_iter()
             .flatten()
+            .filter(|sprite| if sprite.slips { card_out } else { whole_out })
             .partition(|sprite| slip.tucked || !sprite.slips);
         div()
             .absolute()

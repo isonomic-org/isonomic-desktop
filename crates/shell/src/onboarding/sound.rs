@@ -1,9 +1,11 @@
 // Copyright 2026 Anud Inc.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The mark's sound: the brand's own recording, played once as the mark's
-//! intro starts and faded out before the mark leaves the centre. It is the system's player that plays it, at the volume the
-//! person has set; where there is no such player the intro is silent.
+//! The mark's sound: the brand's own recording, played once from the
+//! window's first frame, at its own speed and to its own end. The mark's
+//! intro is timed to it (`ui::onboarding::at`). It is the system's player
+//! that plays it, at the volume the person has set; where there is no
+//! such player the intro is silent.
 
 /// The recording, as the brand folder holds it: two channels, 48 kHz.
 const RECORDING: &[u8] = include_bytes!("../../../../assets/onboarding/isonomic-logo-sound.wav");
@@ -27,21 +29,6 @@ impl Sound {
     pub fn load() -> Option<Self> {
         let _ = RECORDING;
         None
-    }
-
-    /// Set how loud it plays, from silent at 0 to the recording's own level
-    /// at 1.
-    pub fn set_level(&self, level: f32) {
-        #[cfg(target_os = "macos")]
-        self.player.setVolume(level.clamp(0., 1.));
-        #[cfg(not(target_os = "macos"))]
-        let _ = level;
-    }
-
-    /// Stop it where it is.
-    pub fn stop(&self) {
-        #[cfg(target_os = "macos")]
-        self.player.stop();
     }
 
     /// Play it from its start. It plays on without being waited for.

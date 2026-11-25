@@ -58,8 +58,10 @@ use sound::Sound;
 use stage::Drawn;
 use ui::component::input::InputState;
 
-/// The shortest time between two of the laptop's frames.
-const FRAME: Duration = Duration::from_millis(16);
+/// The shortest time between asking for two frames. A little under the
+/// screen's sixtieth of a second: handing a frame to the window takes the
+/// rest.
+const FRAME: Duration = Duration::from_millis(13);
 
 /// What the person chose: to recover an account, on "Get started", or a
 /// new one, once they have finished the last step.
@@ -85,6 +87,10 @@ pub struct Onboarding {
     /// That clock running backward, while a press on "Decline" or
     /// "Previous step" is played.
     rewind: Option<rewind::Rewind>,
+    /// Have that screen's 3D frames been drawn ahead, and was "Start new
+    /// account" pressed before they were?
+    warmed: bool,
+    wants_terms: bool,
     /// The clipboard's and the pen's models, once read.
     props: Option<Arc<Props>>,
     /// Their latest frames. They rest as the last ones drawn.
@@ -159,6 +165,12 @@ fn computer_name() -> String {
 
 impl EventEmitter<Chosen> for Onboarding {}
 
+impl Drop for Onboarding {
+    fn drop(&mut self) {
+        stage::forget();
+    }
+}
+
 impl Onboarding {
     pub fn new(cx: &mut Context<Self>) -> Self {
         // Read the model while the mark plays.
@@ -185,6 +197,8 @@ impl Onboarding {
             clipboard: None,
             pen: None,
             rewind: None,
+            warmed: false,
+            wants_terms: false,
             signed: None,
             handed_over: false,
             seal: None,
@@ -234,6 +248,8 @@ impl Onboarding {
     /// Jump to the end of the motion, as a test or a returning person would
     /// want it.
     pub fn skip(&mut self, cx: &mut Context<Self>) {
+        // A test doesn't wait for frames drawn ahead.
+        self.warmed = true;
         let end = Duration::from_secs_f32(at::END + 1.);
         self.started = Some(Instant::now().checked_sub(end).unwrap_or_else(Instant::now));
         cx.notify();
@@ -253,44 +269,67 @@ impl Onboarding {
         }
     }
 
-    /// The sound belongs to the mark's intro alone: fade it out so it is
-    /// silent as the mark leaves the centre, then stop it.
-    fn fade_sound(&self, cx: &mut Context<Self>) {
-        cx.spawn(async move |view, cx| {
-            let fades_at = at::MARK_LEAVES - at::SOUND_FADE;
-            cx.background_executor()
-                .timer(Duration::from_secs_f32(fades_at))
-                .await;
-            loop {
-                let Ok(left) = view.update(cx, |view, _| {
-                    let left = 1. - (view.now() - fades_at) / at::SOUND_FADE;
-                    if let Some(sound) = &view.sound {
-                        if left > 0. {
-                            sound.set_level(left);
-                        } else {
-                            sound.stop();
-                        }
-                    }
-                    left
-                }) else {
-                    return;
-                };
-                if left <= 0. {
-                    return;
-                }
-                cx.background_executor().timer(FRAME).await;
-            }
-        })
-        .detach();
-    }
-
     /// Start the clock and the laptop's frames. Called at the first draw.
     fn start(&mut self, cx: &mut Context<Self>) {
         self.started = Some(Instant::now());
         if let Some(sound) = &self.sound {
             sound.play();
-            self.fade_sound(cx);
         }
+        // While the mark plays, the laptop's flight is drawn ahead, and
+        // then what "Start new account" sets going.
+        cx.spawn(async move |view, cx| {
+            let (scale, scene, props) = loop {
+                let Ok((scale, scene, props)) = view.update(cx, |view, _| {
+                    (view.scale, view.scene.clone(), view.props.clone())
+                }) else {
+                    return;
+                };
+                if let (true, Some(scene), Some(props)) = (scale > 0., scene, props) {
+                    break (scale, scene, props);
+                }
+                cx.background_executor()
+                    .timer(Duration::from_millis(30))
+                    .await;
+            };
+            let began = Instant::now();
+            let flight = scene.clone();
+            cx.background_spawn(async move {
+                let ends = at::LAPTOP_RISES + at::LAPTOP_FLIGHT;
+                stage::ahead(|| {
+                    for now in stage::ticks(at::LAPTOP_RISES - 0.25, ends) {
+                        laptop::draw(&flight, now, scale);
+                    }
+                });
+            })
+            .await;
+            // The next screen's are drawn once this one's motion is over.
+            loop {
+                let Ok(now) = view.update(cx, |view, _| view.now()) else {
+                    return;
+                };
+                if now >= at::END {
+                    break;
+                }
+                cx.background_executor()
+                    .timer(Duration::from_secs_f32(at::END - now))
+                    .await;
+            }
+            cx.background_spawn(async move {
+                stage::ahead(|| terms::warm(Some(&scene), Some(&props), scale));
+            })
+            .await;
+            reports::log::line(&format!(
+                "onboarding: the first screens' frames were drawn ahead in {:.1} s",
+                began.elapsed().as_secs_f32()
+            ));
+            let _ = view.update(cx, |view, cx| {
+                view.warmed = true;
+                if std::mem::take(&mut view.wants_terms) {
+                    view.begin_terms(cx);
+                }
+            });
+        })
+        .detach();
         cx.spawn(async move |view, cx| {
             // The first frame is drawn a little ahead of the flight.
             let lead = at::LAPTOP_RISES - 0.25;
@@ -314,7 +353,7 @@ impl Onboarding {
                 let began = Instant::now();
                 let last = now >= flight_ends;
                 // Drawn for when it will be on screen.
-                let shown_at = (now + lead).min(flight_ends);
+                let shown_at = stage::snap((now + lead).min(flight_ends));
                 let image = cx
                     .background_spawn(async move { laptop::draw(&scene, shown_at, scale) })
                     .await;

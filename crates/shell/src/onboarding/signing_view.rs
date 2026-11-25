@@ -10,6 +10,8 @@ use ui::{
     canvas, div, img, motion, point, px, IntoElement, ParentElement as _, PathBuilder, Styled as _,
 };
 
+use super::flow_view::TUCKED;
+use super::stage::Drawn;
 use super::{signature, signing, terms, Onboarding};
 
 impl Onboarding {
@@ -18,23 +20,29 @@ impl Onboarding {
     pub(super) fn props_layer(&self, t: f32) -> impl IntoElement {
         let (left, top, wide, tall) = design::CLIPBOARD;
         let margin = (design::CLIPBOARD_CANVAS - 1.) / 2.;
-        let clipboard = self.clipboard.as_ref().map(|frame| {
-            let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
-            // It comes out from under the content, and leaves by the left
-            // edge.
-            let (gone, _) = self.signing_at(frame.at).map_or((0., 0.), |s| {
-                signing::leaving(s, signs::CLIPBOARD_LEAVES, signs::LEAVE)
+        // Under the content they aren't drawn: going back, it leaves.
+        let out = |starts: f32| move |frame: &&Drawn| terms::flight(frame.at, starts).0 > TUCKED;
+        let clipboard = self
+            .clipboard
+            .as_ref()
+            .filter(out(at::CLIPBOARD_FLIES))
+            .map(|frame| {
+                let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
+                // It comes out from under the content, and leaves by the left
+                // edge.
+                let (gone, _) = self.signing_at(frame.at).map_or((0., 0.), |s| {
+                    signing::leaving(s, signs::CLIPBOARD_LEAVES, signs::LEAVE)
+                });
+                let from = design::SIDEBAR + design::TUCK;
+                img(frame.image.clone())
+                    .absolute()
+                    .left(px(motion::between(from, left, arrived)
+                        - wide * margin
+                        - (left + wide) * gone))
+                    .top(px(top - tall * margin))
+                    .w(px(wide * design::CLIPBOARD_CANVAS))
+                    .h(px(tall * design::CLIPBOARD_CANVAS))
             });
-            let from = design::SIDEBAR + design::TUCK;
-            img(frame.image.clone())
-                .absolute()
-                .left(px(motion::between(from, left, arrived)
-                    - wide * margin
-                    - (left + wide) * gone))
-                .top(px(top - tall * margin))
-                .w(px(wide * design::CLIPBOARD_CANVAS))
-                .h(px(tall * design::CLIPBOARD_CANVAS))
-        });
 
         // The signature: as much as is written, where the lifted pages
         // leave the last one bare. They are where the clipboard's frame
@@ -78,7 +86,7 @@ impl Onboarding {
         });
 
         let (left, top, wide, tall) = design::PEN;
-        let pen = self.pen.as_ref().map(|frame| {
+        let pen = self.pen.as_ref().filter(out(at::PEN_FLIES)).map(|frame| {
             let (arrived, _) = terms::flight(frame.at, at::PEN_FLIES);
             let (gone, _) = self.signing_at(frame.at).map_or((0., 0.), |s| {
                 signing::leaving(s, signs::PEN_LEAVES, signs::PEN_LEAVE)

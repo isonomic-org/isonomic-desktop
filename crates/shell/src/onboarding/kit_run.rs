@@ -232,7 +232,14 @@ impl Onboarding {
             )) => {
                 let from =
                     shared::SIDEBAR + shared::TUCK - (design::CENTRE.0 - design::CANVAS.0 / 2.);
-                (from * (1. - flow::arrived(f)), 1.)
+                // Under its panel it has no width: it isn't drawn.
+                let arrived = flow::arrived(f);
+                let narrow = if arrived > super::flow_view::TUCKED {
+                    1.
+                } else {
+                    0.
+                };
+                (from * (1. - arrived), narrow)
             }
             Some((
                 Flow {
@@ -247,6 +254,13 @@ impl Onboarding {
             }
             _ => (0., 1.),
         }
+    }
+
+    /// Is the padlock out from under the panel at `t`? Under it, it isn't
+    /// drawn: going back, the panel leaves.
+    pub(super) fn lock_out(&self, t: f32) -> bool {
+        self.confirming(t)
+            .is_none_or(|s| motion::progress(s, at::LOCK_COMES, at::LOCK_FLIGHT) > 0.)
     }
 
     /// How far the padlock still is from its place at `t`, in points to
@@ -283,7 +297,7 @@ impl Onboarding {
             }
         }
         let lead = self.easel.as_ref().map_or(0., |easel| easel.lead);
-        let at = self.terms_now().map(|t| t + lead);
+        let at = self.terms_now().map(|t| super::stage::snap(t + lead));
         let holder = at.and_then(|at| self.kit_pose(at));
         let lock = at.and_then(|at| self.lock_clip(at));
         // Whatever has gone from the sidebar is let go.

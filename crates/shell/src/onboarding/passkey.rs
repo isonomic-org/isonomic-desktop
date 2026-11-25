@@ -77,6 +77,15 @@ impl Seal {
     }
 }
 
+impl Seal {
+    /// Draw every frame of its flight, ahead of it.
+    pub fn warm(&self, scale: f32) {
+        for p in stage::ticks(at::SEAL_FLIES - 0.05, at::SEAL_FLIES + at::FLIGHT + 0.05) {
+            self.draw(flight(p).1, scale);
+        }
+    }
+}
+
 /// How far in the seal is `p` seconds in (0 to 1), and the turn it has
 /// left to make, in degrees.
 pub fn flight(p: f32) -> (f32, f32) {
@@ -127,7 +136,8 @@ impl Onboarding {
                 };
                 let ends = at::SEAL_FLIES + at::FLIGHT;
                 let began = Instant::now();
-                let (shown, drawn_for) = (p + lead, at_time + lead);
+                let shown = stage::snap(p + lead);
+                let drawn_for = at_time + shown - p;
                 let due = shown >= at::SEAL_FLIES - 0.05 && last < ends;
                 if let (true, Some(seal)) = (due, seal) {
                     let image = cx

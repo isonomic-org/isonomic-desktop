@@ -17,7 +17,7 @@ use ui::onboarding::terms::{self as design, at, signs};
 use ui::{motion, AppContext as _, Context, RenderImage};
 
 use super::props::Props;
-use super::stage::Drawn;
+use super::stage::{self, Drawn};
 use super::{signature, Chosen, Onboarding, FRAME};
 
 /// How far the pages are lifted `s` seconds in, from 0 (lying flat) to 1.
@@ -76,6 +76,15 @@ fn draw(props: &Props, last: f32, s: f32, scale: f32) -> [Option<Arc<RenderImage
     [clipboard, pen]
 }
 
+/// Draw every frame of the signing, ahead of it.
+pub(super) fn warm(props: &Props, scale: f32) {
+    let mut last = f32::MIN;
+    for s in stage::ticks(0., signs::DONE) {
+        draw(props, last, s, scale);
+        last = s;
+    }
+}
+
 impl Onboarding {
     /// Seconds since "Accept and continue" was pressed, at `t` on the
     /// third screen's clock.
@@ -95,6 +104,12 @@ impl Onboarding {
         }
         self.signed = Some(t);
         cx.notify();
+        // While it signs, the seal's flight is drawn ahead.
+        if let Some(seal) = self.seal.clone() {
+            let scale = self.scale;
+            cx.background_spawn(async move { stage::ahead(|| seal.warm(scale)) })
+                .detach();
+        }
         cx.spawn(async move |view, cx| {
             let mut last = f32::MIN;
             let mut lead = 1. / 60.;
@@ -110,7 +125,8 @@ impl Onboarding {
                     break;
                 }
                 let began = Instant::now();
-                let (shown, drawn_for) = (s + lead, at + lead);
+                let shown = stage::snap(s + lead);
+                let drawn_for = at + shown - s;
                 let frames = cx
                     .background_spawn(
                         async move { props.map(|props| draw(&props, last, shown, scale)) },

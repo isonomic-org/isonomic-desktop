@@ -22,7 +22,7 @@ use ui::{AppContext as _, Context, RenderImage};
 use super::laptop::{self, Scene};
 use super::passkey::{self, Seal};
 use super::props::Props;
-use super::stage::Drawn;
+use super::stage::{self, Drawn};
 use super::{signing, terms, Onboarding, FRAME};
 
 /// Where the clock stops, and what is there.
@@ -171,7 +171,7 @@ impl Onboarding {
                     break;
                 }
                 let began = Instant::now();
-                let shown = (t - lead).max(to);
+                let shown = stage::snap((t - lead).max(to));
                 let frames = cx
                     .background_spawn(async move {
                         let (scene, props, seal) = &models;

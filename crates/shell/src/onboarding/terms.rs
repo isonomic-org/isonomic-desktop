@@ -21,8 +21,8 @@ use ui::{motion, AppContext as _, Context, RenderImage};
 use super::laptop::{self, Scene};
 use super::props::Props;
 use super::rewind::Land;
-use super::stage::Drawn;
-use super::{Onboarding, FRAME};
+use super::stage::{self, Drawn};
+use super::{signing, Onboarding, FRAME};
 
 /// How far the laptop is on its way to the sidebar at `t` (0 to 1), and
 /// the turn it has left to make, in degrees.
@@ -106,6 +106,19 @@ fn draw(scene: Option<&Scene>, props: Option<&Props>, last: f32, t: f32, scale: 
     }
 }
 
+/// The longest a press on "Start new account" waits for the screen's
+/// frames to be drawn ahead.
+const WAIT: Duration = Duration::from_millis(600);
+
+/// Draw every frame of the screen's coming on, ahead of it.
+pub(super) fn warm(scene: Option<&Scene>, props: Option<&Props>, scale: f32) {
+    let mut last = f32::MIN;
+    for t in stage::ticks(at::LAPTOP_MOVES - 0.05, at::PEN_FLIES + at::FLIGHT + 0.1) {
+        draw(scene, props, last, t, scale);
+        last = t;
+    }
+}
+
 impl Onboarding {
     /// Seconds since "Start new account" was pressed, on the third screen.
     pub fn terms_now(&self) -> Option<f32> {
@@ -180,6 +193,23 @@ impl Onboarding {
         if self.terms.is_some() || !self.settled() {
             return;
         }
+        // Its frames are still being drawn ahead: it starts when they are
+        // there, or after a moment if they are slow to come.
+        if !self.warmed && !std::mem::replace(&mut self.wants_terms, true) {
+            cx.spawn(async move |view, cx| {
+                cx.background_executor().timer(WAIT).await;
+                let _ = view.update(cx, |view, cx| {
+                    if std::mem::take(&mut view.wants_terms) {
+                        view.warmed = true;
+                        view.begin_terms(cx);
+                    }
+                });
+            })
+            .detach();
+        }
+        if !self.warmed {
+            return;
+        }
         let pressed = Instant::now();
         self.terms = Some(pressed);
         // The resting laptop's frame is now on this screen's clock, not yet
@@ -205,7 +235,7 @@ impl Onboarding {
                 };
                 let began = Instant::now();
                 // Drawn for when it will be on screen.
-                let shown_at = t + lead;
+                let shown_at = stage::snap(t + lead);
                 let frames = cx
                     .background_spawn(async move {
                         draw(scene.as_deref(), props.as_deref(), last, shown_at, scale)
@@ -241,6 +271,16 @@ impl Onboarding {
                 // The signing draws the props' frames from its press on.
                 let signing = view.update(cx, |view, _| view.signed.is_some());
                 if t >= at::PEN_FLIES + at::FLIGHT || signing.unwrap_or(true) {
+                    // At rest: the signing is drawn ahead.
+                    let Ok((Some(props), scale)) =
+                        view.update(cx, |view, _| (view.props.clone(), view.scale))
+                    else {
+                        return;
+                    };
+                    cx.background_spawn(
+                        async move { stage::ahead(|| signing::warm(&props, scale)) },
+                    )
+                    .detach();
                     break;
                 }
                 // No faster than the screen shows them.

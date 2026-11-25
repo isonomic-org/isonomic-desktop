@@ -39,6 +39,7 @@ impl Onboarding {
             .lock_frame
             .as_ref()
             .zip(self.kit.as_ref())
+            .filter(|_| self.lock_out(t))
             .map(|((frame, _), kit)| {
                 let (wide, tall) = design::LOCK_CANVAS;
                 let (across, below) = kit.lock_place();

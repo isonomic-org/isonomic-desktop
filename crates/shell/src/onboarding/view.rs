@@ -179,7 +179,10 @@ impl Render for Onboarding {
         }
 
         // The mark: its intro, then the turn into the corner.
-        let frame = logo::frame_at(std::time::Duration::from_secs_f32(now));
+        // The intro starts with the sound's first note.
+        let frame = logo::frame_at(std::time::Duration::from_secs_f32(
+            (now - at::MARK_STARTS).max(0.),
+        ));
         let gone = motion::ease(
             motion::CARRY,
             motion::progress(now, at::MARK_LEAVES, at::MARK_TRAVEL),
