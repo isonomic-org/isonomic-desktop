@@ -153,6 +153,11 @@ pub const KIT_NOTE: &str =
     "Generated 2 Aug 2026 \u{b7} Account 0x7A3f\u{2026}9C21 \u{b7} Store it away from this machine";
 /// The words asked back, by their place in the kit.
 pub const ASKED: [usize; 3] = [4, 11, 19];
+pub const CONFIRM_CAPTION: &str = "ISONOMIC RECOVERY KIT \u{b7} ENTER WORDS 4, 11 AND 19";
+pub const CONFIRM_NOTE: (&str, &str) = (
+    "Check against your saved kit, not your memory",
+    "Look at the copy you printed, saved or engraved. If a word doesn\u{2019}t match, go back and save the kit again before you continue.",
+);
 
 pub const MODEL_TABS: [&str; 5] = ["All models", "Chat", "Reasoning", "Multimodal", "Utility"];
 /// Each model, what it is for, and whether it starts switched on.

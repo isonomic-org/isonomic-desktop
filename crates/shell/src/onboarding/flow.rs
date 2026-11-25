@@ -16,6 +16,7 @@
 
 use std::time::Instant;
 
+use ui::onboarding::kit::at as kit_at;
 use ui::onboarding::steps::{self as design, at};
 use ui::{motion, AppContext as _, Context};
 
@@ -137,12 +138,14 @@ impl Onboarding {
     }
 
     /// How long a step's art takes to come to rest after the rest of the
-    /// step has: on "Your account exists." the card follows the wallet.
+    /// step has: on "Your account exists." the card follows the wallet,
+    /// and on "Save your recovery kit" the holder opens.
     fn lingers(flow: Flow) -> f32 {
-        if flow.step == steps::CREATED {
-            at::CARD_FOLLOWS
-        } else {
-            0.
+        match flow.step {
+            steps::CREATED => at::CARD_FOLLOWS,
+            // The holder opens after it has come.
+            steps::KIT => kit_at::OPENS + kit_at::OPEN - at::END,
+            _ => 0.,
         }
     }
 
@@ -208,13 +211,13 @@ impl Onboarding {
         if !self.settled_flow() {
             return;
         }
+        if flow.step == steps::CONFIRM {
+            // Not before its three words are typed back.
+            self.confirm_words(t, cx);
+            return;
+        }
         if flow.step + 1 < STEPS.len() {
-            self.flow = Some(Flow {
-                step: flow.step + 1,
-                started: t,
-                forward: true,
-            });
-            cx.notify();
+            self.advance(t, cx);
             return;
         }
         self.finishing = Some(t);
@@ -270,6 +273,21 @@ impl Onboarding {
         .detach();
     }
 
+    /// Bring the next step on at `t`.
+    pub(super) fn advance(&mut self, t: f32, cx: &mut Context<Self>) {
+        let Some(flow) = self.flow.filter(|flow| flow.step + 1 < STEPS.len()) else {
+            return;
+        };
+        self.flow = Some(Flow {
+            step: flow.step + 1,
+            started: t,
+            forward: true,
+        });
+        self.confirmed = None;
+        self.wants_words = flow.step + 1 == steps::CONFIRM;
+        cx.notify();
+    }
+
     /// A step's "Previous step": the step before, as it rests.
     pub fn back_step(&mut self, cx: &mut Context<Self>) {
         let (Some(flow), Some(t), None) = (self.flow, self.terms_now(), self.finishing) else {
@@ -283,6 +301,8 @@ impl Onboarding {
             started: t,
             forward: false,
         });
+        self.unconfirm();
+        self.wants_words = flow.step == steps::CONFIRM + 1;
         cx.notify();
     }
 
@@ -299,6 +319,14 @@ impl Onboarding {
         }
         if self.finishing.is_some() {
             self.hand_over(cx);
+        }
+        // The confirmed kit is locked at once.
+        if let (Some(_), Some(t), Some(steps::CONFIRM)) = (
+            self.confirmed,
+            self.terms_now(),
+            self.flow.map(|flow| flow.step),
+        ) {
+            self.advance(t, cx);
         }
         // The sheet is gone at once, not faded.
         self.answered = None;

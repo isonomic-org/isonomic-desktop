@@ -76,6 +76,7 @@ pub fn button_glow() -> Vec<BoxShadow> {
     ]
 }
 
+pub mod kit;
 pub mod passkey;
 pub mod steps;
 pub mod terms;

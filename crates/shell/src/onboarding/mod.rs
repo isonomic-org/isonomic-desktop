@@ -23,6 +23,9 @@ mod art;
 mod flow;
 mod flow_bodies;
 mod flow_view;
+mod kit;
+mod kit_run;
+mod kit_view;
 mod laptop;
 mod logos;
 mod passkey;
@@ -43,8 +46,8 @@ use std::time::{Duration, Instant};
 
 use ui::onboarding::{self as design, at};
 use ui::{
-    App, AppContext as _, Bounds, Context, Entity, EventEmitter, WindowBackgroundAppearance,
-    WindowBounds, WindowOptions,
+    App, AppContext as _, Bounds, Context, Entity, EventEmitter, FocusHandle,
+    WindowBackgroundAppearance, WindowBounds, WindowOptions,
 };
 
 use laptop::Scene;
@@ -103,6 +106,25 @@ pub struct Onboarding {
     models: [bool; 8],
     links: [bool; 8],
     residency: [bool; 3],
+    /// The recovery kit: its models, once read; the holder's and the
+    /// padlock's latest frames, each with how it lies in it; whether
+    /// a frame of theirs is being drawn, and how long the last took; the three words typed back, which of
+    /// them is being typed, and which the last press found wrong; when a
+    /// wrong word shook the holder and when the right words were
+    /// confirmed, on the third screen's clock; and the keyboard's focus
+    /// for the words, with whether it is still to be taken.
+    kit: Option<Arc<kit::Kit>>,
+    kit_frame: Option<(Drawn, kit::Pose)>,
+    lock_frame: Option<(Drawn, f32)>,
+    kit_drawing: bool,
+    kit_lead: f32,
+    typed: [String; 3],
+    typing: usize,
+    wrong: [bool; 3],
+    shaken: Option<f32>,
+    confirmed: Option<f32>,
+    words_focus: FocusHandle,
+    wants_words: bool,
 }
 
 impl EventEmitter<Chosen> for Onboarding {}
@@ -118,6 +140,8 @@ impl Onboarding {
             let seal = cx.background_spawn(async { Seal::load() }).await;
             let _ = view.update(cx, |view, _| view.seal = seal.ok().map(Arc::new));
             let _ = view.update(cx, |_, cx| Onboarding::load_art(cx));
+            let kit = cx.background_spawn(async { kit::Kit::load() }).await;
+            let _ = view.update(cx, |view, _| view.kit = kit.ok().map(Arc::new));
         })
         .detach();
         Self {
@@ -143,6 +167,18 @@ impl Onboarding {
             models: steps::MODEL_LIST.map(|(_, _, on)| on),
             links: steps::LINK_LIST.map(|(_, _, on)| on),
             residency: steps::RESIDENCY.map(|(_, _, on)| on),
+            kit: None,
+            kit_frame: None,
+            lock_frame: None,
+            kit_drawing: false,
+            kit_lead: 1. / 60.,
+            typed: Default::default(),
+            typing: 0,
+            wrong: [false; 3],
+            shaken: None,
+            confirmed: None,
+            words_focus: cx.focus_handle(),
+            wants_words: false,
         }
     }
 

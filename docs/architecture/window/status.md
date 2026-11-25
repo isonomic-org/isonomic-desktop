@@ -4,6 +4,17 @@ Newest first.
 
 Older entries: `history-5.md`, then `history-4.md`, then `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-24 · The recovery kit's holder, its padlock, and the words typed back
+
+- **What it is** (`shell::onboarding::kit`, `kit_run`, `kit_view`; sizes and timings in `ui::onboarding::kit`): the devices repository's titanium holder and padlock, drawn in 3D, in place of the design's two flat pictures. The holder is two plates on a hinge with the kit's 24 words on letter tiles (their first four letters, as the panel has them).
+- **"Save your recovery kit":** the holder comes out from under the panel closed, turning over as every step's art does; it opens; then its tiles lift and turn into place one after another. "Continue" waits for it to open.
+- **"Confirm your recovery kit":** the holder turns its back, so its words can't be read. The panel is the design's grid ("08b"): the 24 words, with 4, 11 and 19 to type back. A click on one of the three, or the step coming on, gives them the keyboard; Tab moves between them and Return presses "Continue".
+- **A wrong word** shakes the holder, rings its cell in red and says which word it was. Capital letters and the spaces around a word don't matter.
+- **The right three:** the holder closes with its mark up and its loops toward the person, the padlock comes out from under the panel, its body snaps up onto its shackle, and after a moment they turn over and leave by the left edge as "Turn on local AI models" comes on.
+- **Drawn at the screen's own pace:** a frame is asked for at each draw of the window when how the holder or the padlock lies has changed, one at a time, and waits on no timer.
+- **Ours, not the design's or the model's:** the mark's floor is shaded so that it shows (the file gives it the plate's own colour); the padlock lies flat under the loops, its shackle over their hole, not through it.
+- **First pass:** the typed words have no selection, no pasting and no moving the caret; the holder and the padlock leave by being drawn narrower, as the other steps' art does, not by turning in 3D.
+
 ## 2026-11-18 · The ID card lies over the wallet, then tucks into it
 
 - **"Your account exists."** had the wallet on the left and the card beside it. The wallet is now in the middle of the sidebar and the card lies over it, its top out past the wallet's mouth, not in it.

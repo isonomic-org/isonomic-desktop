@@ -6,7 +6,8 @@
 //! a 3D model the sprite is that model drawn once: the pills of "Add
 //! integrations", the wallet and the ID card from above, the drives of
 //! "Local AI models" tilted as the design has them. Where it has none
-//! yet, it is the design's own flat picture.
+//! yet, it is the design's own flat picture. The recovery kit's holder
+//! moves on its own, and is `kit`'s.
 //!
 //! This is a first pass: a sprite turns over by being drawn narrower, not
 //! by its model being drawn again.
@@ -184,14 +185,10 @@ impl Art {
         let mut art = Art {
             steps: Default::default(),
         };
-        // The design's flat pictures, each on a clear ground, at three
-        // pixels to a point.
         art.steps[steps::CREATED] = wallet_and_card();
-        art.steps[steps::KIT] = flat(
-            asset!("recovery-kit-holder.png"),
-            (123.2, 454.5, 150.7, 184.),
-        );
-        art.steps[steps::CONFIRM] = flat(asset!("recovery-kit-seal.png"), (125., 450., 150., 150.));
+        // The recovery kit's two steps share the holder, which `kit`
+        // draws. The design's flat picture, on a clear ground, at three
+        // pixels to a point:
         art.steps[steps::FINISH] = flat(asset!("menu-bar.png"), (60., 460., 304., 56.));
         // The drives, the middle one nearest; and the pills likewise.
         let [gemma, hugging_face, mistral, microsoft, qwen] = design::DRIVES;
@@ -229,7 +226,11 @@ mod tests {
     #[test]
     fn every_step_has_its_art() {
         let art = Art::load();
-        assert!(art.steps.iter().all(|sprites| !sprites.is_empty()));
+        for (step, sprites) in art.steps.iter().enumerate() {
+            // The recovery kit's holder is drawn by `kit`.
+            let kit = step == steps::KIT || step == steps::CONFIRM;
+            assert_eq!(sprites.is_empty(), kit, "{step}");
+        }
         assert_eq!(art.steps[steps::CREATED].len(), 3);
         assert!(art.steps[steps::CREATED][1].slips);
         assert_eq!(art.steps[steps::MODELS].len(), 5);

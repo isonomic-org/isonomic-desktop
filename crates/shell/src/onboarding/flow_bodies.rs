@@ -18,7 +18,7 @@ use super::logos;
 use super::steps;
 use super::Onboarding;
 
-fn card() -> Div {
+pub(super) fn card() -> Div {
     let (pad_x, pad_y) = fourth::CARD_PAD;
     div()
         .w_full()
@@ -31,7 +31,7 @@ fn card() -> Div {
         .flex_col()
 }
 
-fn text(size: (f32, f32)) -> Div {
+pub(super) fn text(size: (f32, f32)) -> Div {
     div().text_size(px(size.0)).line_height(px(size.1))
 }
 
@@ -406,41 +406,6 @@ impl Onboarding {
             .into_any_element()
     }
 
-    fn confirm(&self) -> AnyElement {
-        let (wide, tall) = design::FIELD;
-        let fields = steps::ASKED.iter().map(|place| {
-            div()
-                .flex()
-                .flex_col()
-                .gap(px(6.))
-                .child(
-                    text(fourth::ROW_TEXT)
-                        .font_weight(FontWeight::MEDIUM)
-                        .text_color(shared::body())
-                        .child(format!("Word {place}")),
-                )
-                .child(
-                    text(fourth::ROW_TITLE)
-                        .w(px(wide))
-                        .h(px(tall))
-                        .px(px(12.))
-                        .flex()
-                        .items_center()
-                        .rounded(px(shared::ACTION_CORNER))
-                        .border_1()
-                        .border_color(shared::outline())
-                        .text_color(page::ink())
-                        .child(steps::WORDS[place - 1]),
-                )
-        });
-        div()
-            .flex()
-            .flex_col()
-            .gap(px(20.))
-            .children(fields)
-            .into_any_element()
-    }
-
     fn finish(&self, cx: &mut Context<Self>) -> AnyElement {
         let rows: Vec<_> = steps::RESIDENCY
             .iter()
@@ -501,7 +466,7 @@ impl Onboarding {
         match index {
             steps::CREATED => self.created(),
             steps::KIT => self.kit(),
-            steps::CONFIRM => self.confirm(),
+            steps::CONFIRM => self.confirm(cx),
             steps::MODELS => self.list(index, &steps::MODEL_TABS, &steps::MODEL_LIST, cx),
             steps::LINKS => self.list(index, &steps::LINK_TABS, &steps::LINK_LIST, cx),
             _ => self.finish(cx),

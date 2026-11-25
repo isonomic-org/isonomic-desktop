@@ -16,7 +16,7 @@ use ui::{
 
 use super::art::Sprite;
 use super::flow::{self, Flow, Slip};
-use super::steps::STEPS;
+use super::steps::{self, STEPS};
 use super::Onboarding;
 
 /// How far below its place something starts so that it is under the
@@ -90,6 +90,14 @@ impl Onboarding {
     /// with the old and comes back with the new.
     pub(super) fn dots_through_flow(&self, t: f32) -> f32 {
         match self.flow_at(t) {
+            // The holder stays through "Confirm your recovery kit".
+            Some((
+                Flow {
+                    step: steps::CONFIRM,
+                    ..
+                },
+                _,
+            )) => 1.,
             Some((Flow { forward: true, .. }, f)) => {
                 1. - motion::progress(f, 0., at::DOTS_FADE)
                     + motion::progress(f, at::ART_ARRIVES + at::FLIGHT - 0.1, at::DOTS_FADE)
@@ -413,6 +421,8 @@ impl Onboarding {
         let mut layer = div().absolute().size_full();
         if let Some((Flow { step, forward, .. }, f)) = self.flow_at(t) {
             let moving = forward && f < at::END;
+            // The recovery kit's holder, under every panel.
+            layer = layer.children(self.kit_layer(t));
             // The step before, while this one comes on over it.
             if let (true, Some(before)) = (moving, step.checked_sub(1)) {
                 if f < at::LEAVE {
