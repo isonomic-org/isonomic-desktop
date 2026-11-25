@@ -13,15 +13,16 @@
 //!
 //! Its times are on the third screen's clock, like every later step's.
 
+use std::sync::{mpsc, Arc, Mutex};
 use std::time::Instant;
 
 use ui::onboarding::kit::{self as design, at};
 use ui::onboarding::steps::at as step;
 use ui::onboarding::terms as shared;
-use ui::{motion, AppContext as _, Context, KeyDownEvent};
+use ui::{motion, Context, KeyDownEvent, RenderImage};
 
 use super::flow::{self, Flow};
-use super::kit::{self, Pose};
+use super::kit::{self, Kit, Pose};
 use super::stage::Drawn;
 use super::steps;
 use super::Onboarding;
@@ -38,6 +39,91 @@ pub fn shake(s: f32) -> f32 {
     }
     let (far, times) = design::SHAKE;
     far * (std::f32::consts::TAU * times * share).sin() * (1. - share)
+}
+
+/// A drawing asked of the easel: the time on the third screen's clock it
+/// is for, when it was asked, the screen's pixels to a point, and how the
+/// holder and the padlock are to lie, each only if it has changed.
+struct Ask {
+    at: f32,
+    asked: Instant,
+    scale: f32,
+    holder: Option<Pose>,
+    lock: Option<f32>,
+}
+
+/// What came of it.
+pub(super) struct Done {
+    at: f32,
+    asked: Instant,
+    holder: Option<(Arc<RenderImage>, Pose)>,
+    lock: Option<(Arc<RenderImage>, f32)>,
+}
+
+/// The thread that draws the holder's and the padlock's frames, one
+/// drawing at a time. The window asks at one draw and takes what is
+/// finished at a later one, so a frame waits on nothing but the drawing
+/// itself: not on a timer, nor on the foreground thread finding a moment
+/// between two draws of a busy window.
+pub struct Easel {
+    asks: mpsc::Sender<Ask>,
+    done: Arc<Mutex<Option<Done>>>,
+    /// Is a drawing in hand?
+    busy: bool,
+    /// How long the last drawing took to come back: the next is drawn
+    /// for that far ahead.
+    lead: f32,
+}
+
+impl Easel {
+    fn start(kit: Arc<Kit>) -> Easel {
+        let (asks, asked) = mpsc::channel::<Ask>();
+        let done = Arc::new(Mutex::new(None));
+        let finished = Arc::clone(&done);
+        // It ends when the window, which holds the other end, has gone.
+        std::thread::spawn(move || {
+            while let Ok(ask) = asked.recv() {
+                let drawn = Done {
+                    at: ask.at,
+                    asked: ask.asked,
+                    holder: ask.holder.map(|pose| (kit.holder(pose, ask.scale), pose)),
+                    lock: ask.lock.map(|clip| (kit.lock(clip, ask.scale), clip)),
+                };
+                if let Ok(mut done) = finished.lock() {
+                    *done = Some(drawn);
+                }
+            }
+        });
+        Easel {
+            asks,
+            done,
+            busy: false,
+            lead: 1. / 60.,
+        }
+    }
+
+    /// The drawing in hand, if it is finished.
+    fn finished(&mut self) -> Option<Done> {
+        let done = self.done.lock().ok()?.take()?;
+        self.busy = false;
+        self.lead = done.asked.elapsed().as_secs_f32().clamp(1. / 60., 0.1);
+        Some(done)
+    }
+
+    /// Ask for a drawing, unless one is in hand.
+    fn ask(&mut self, at: f32, scale: f32, holder: Option<Pose>, lock: Option<f32>) {
+        if self.busy {
+            return;
+        }
+        let ask = Ask {
+            at,
+            asked: Instant::now(),
+            scale,
+            holder,
+            lock,
+        };
+        self.busy = self.asks.send(ask).is_ok();
+    }
 }
 
 impl Onboarding {
@@ -147,15 +233,28 @@ impl Onboarding {
         (shared::SIDEBAR + shared::TUCK - design::CENTRE.0 + design::LOCK_CANVAS.0) * (1. - came)
     }
 
-    /// Draw the holder's and the padlock's next frames if how they lie
-    /// has changed since their last. Called at every draw of the window,
-    /// so the frames keep the screen's own pace and wait on no timer; one
-    /// drawing is in hand at a time.
+    /// Take the frame the easel has finished, and ask it for the next if
+    /// how the holder or the padlock lies has changed since. Called at
+    /// every draw of the window, so the frames keep the screen's own pace.
     pub(super) fn draw_kit(&mut self, cx: &mut Context<Self>) {
-        if self.kit_drawing {
-            return;
+        if self.easel.is_none() {
+            self.easel = self.kit.clone().map(Easel::start);
         }
-        let at = self.terms_now().map(|t| t + self.kit_lead);
+        if let Some(done) = self.easel.as_mut().and_then(Easel::finished) {
+            let at = done.at;
+            if let Some((image, pose)) = done.holder {
+                if let Some((old, _)) = self.kit_frame.replace((Drawn { image, at }, pose)) {
+                    cx.drop_image(old.image, None);
+                }
+            }
+            if let Some((image, clip)) = done.lock {
+                if let Some((old, _)) = self.lock_frame.replace((Drawn { image, at }, clip)) {
+                    cx.drop_image(old.image, None);
+                }
+            }
+        }
+        let lead = self.easel.as_ref().map_or(0., |easel| easel.lead);
+        let at = self.terms_now().map(|t| t + lead);
         let holder = at.and_then(|at| self.kit_pose(at));
         let lock = at.and_then(|at| self.lock_clip(at));
         // Whatever has gone from the sidebar is let go.
@@ -173,40 +272,11 @@ impl Onboarding {
         let clipped = self.lock_frame.as_ref().map(|(_, clip)| *clip);
         let holder = holder.filter(|pose| shown != Some(*pose));
         let lock = lock.filter(|clip| clipped != Some(*clip));
-        let (Some(at), Some(kit), true) =
-            (at, self.kit.clone(), holder.is_some() || lock.is_some())
-        else {
-            return;
-        };
-        self.kit_drawing = true;
-        let scale = self.scale;
-        cx.spawn(async move |view, cx| {
-            let began = Instant::now();
-            let (holder, lock) = cx
-                .background_spawn(async move {
-                    (
-                        holder.map(|pose| (kit.holder(pose, scale), pose)),
-                        lock.map(|clip| (kit.lock(clip, scale), clip)),
-                    )
-                })
-                .await;
-            let _ = view.update(cx, |view, cx| {
-                view.kit_drawing = false;
-                view.kit_lead = began.elapsed().as_secs_f32().clamp(1. / 60., 0.1);
-                if let Some((image, pose)) = holder {
-                    if let Some((old, _)) = view.kit_frame.replace((Drawn { image, at }, pose)) {
-                        cx.drop_image(old.image, None);
-                    }
-                }
-                if let Some((image, clip)) = lock {
-                    if let Some((old, _)) = view.lock_frame.replace((Drawn { image, at }, clip)) {
-                        cx.drop_image(old.image, None);
-                    }
-                }
-                cx.notify();
-            });
-        })
-        .detach();
+        if let (Some(at), Some(easel), true) =
+            (at, self.easel.as_mut(), holder.is_some() || lock.is_some())
+        {
+            easel.ask(at, self.scale, holder, lock);
+        }
     }
 
     /// Is typed word `index` the word the kit has in that place? Capital
@@ -314,6 +384,26 @@ impl Onboarding {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_easel_draws_what_it_is_asked_one_drawing_at_a_time() {
+        let mut easel = Easel::start(Arc::new(Kit::load().unwrap()));
+        assert!(easel.finished().is_none());
+        easel.ask(1., 1., Some(Pose::CLOSED), Some(1.));
+        assert!(easel.busy);
+        // Not heard while the first is in hand.
+        easel.ask(2., 1., Some(Pose::OPEN), None);
+        let done = (0..500)
+            .find_map(|_| {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+                easel.finished()
+            })
+            .expect("the easel never finished");
+        assert_eq!(done.at, 1.);
+        assert_eq!(done.holder.map(|(_, pose)| pose), Some(Pose::CLOSED));
+        assert_eq!(done.lock.map(|(_, clip)| clip), Some(1.));
+        assert!(!easel.busy && easel.finished().is_none());
+    }
 
     #[test]
     fn a_shake_starts_and_ends_at_rest() {

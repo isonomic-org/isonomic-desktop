@@ -107,17 +107,16 @@ pub struct Onboarding {
     links: [bool; 8],
     residency: [bool; 3],
     /// The recovery kit: its models, once read; the holder's and the
-    /// padlock's latest frames, each with how it lies in it; whether
-    /// a frame of theirs is being drawn, and how long the last took; the three words typed back, which of
-    /// them is being typed, and which the last press found wrong; when a
-    /// wrong word shook the holder and when the right words were
-    /// confirmed, on the third screen's clock; and the keyboard's focus
-    /// for the words, with whether it is still to be taken.
+    /// padlock's latest frames, each with how it lies in it; the thread
+    /// that draws them; the three words typed back, which of them is being
+    /// typed, and which the last press found wrong; when a wrong word
+    /// shook the holder and when the right words were confirmed, on the
+    /// third screen's clock; and the keyboard's focus for the words, with
+    /// whether it is still to be taken.
     kit: Option<Arc<kit::Kit>>,
     kit_frame: Option<(Drawn, kit::Pose)>,
     lock_frame: Option<(Drawn, f32)>,
-    kit_drawing: bool,
-    kit_lead: f32,
+    easel: Option<kit_run::Easel>,
     typed: [String; 3],
     typing: usize,
     wrong: [bool; 3],
@@ -170,8 +169,7 @@ impl Onboarding {
             kit: None,
             kit_frame: None,
             lock_frame: None,
-            kit_drawing: false,
-            kit_lead: 1. / 60.,
+            easel: None,
             typed: Default::default(),
             typing: 0,
             wrong: [false; 3],
