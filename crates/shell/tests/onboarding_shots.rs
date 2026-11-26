@@ -120,15 +120,6 @@ impl Shots {
             view.store_kit(true, cx);
             view.save_kit_to(to, cx);
         });
-        // The file is written on a thread of its own.
-        for _ in 0..500 {
-            self.cx.run_until_parked();
-            let view = self.view.clone();
-            if self.cx.update(|cx| view.read(cx).kit_file().is_some()) {
-                break;
-            }
-            std::thread::sleep(Duration::from_millis(10));
-        }
         let _ = std::fs::remove_file(file);
     }
 

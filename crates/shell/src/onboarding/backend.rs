@@ -80,6 +80,8 @@ pub type Answer<T> = BoxFuture<'static, Result<T, String>>;
 /// `work` on a thread of its own, for what blocks on a file or the system:
 /// an answer is polled on the foreground thread, which must never wait,
 /// and the shared background threads are busy drawing onboarding's frames.
+/// Not for a backend a test runs: a test's scheduler takes no waking from
+/// a thread it doesn't know.
 pub fn off_thread<T: Send + 'static>(
     work: impl FnOnce() -> Result<T, String> + Send + 'static,
 ) -> Answer<T> {

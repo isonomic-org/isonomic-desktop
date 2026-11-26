@@ -20,7 +20,7 @@ use futures::StreamExt as _;
 use isonomic_proto::models::DownloadOutcome;
 use ui::{ClipboardItem, Context};
 
-use super::backend::{off_thread, Answer, Choices, Memory};
+use super::backend::{Answer, Choices, Memory};
 use super::engine::size;
 use super::steps;
 use super::Onboarding;
@@ -36,8 +36,9 @@ const SAID: Duration = Duration::from_secs(4);
 
 impl Onboarding {
     /// Ask the backend, and give `then` its answer, or that none came. An
-    /// answer only waits on the engine or on a thread of its own, so it
-    /// is polled here: the background threads are busy with frames.
+    /// answer only waits on the engine or on a thread of the backend's
+    /// own, so it is polled here: the background threads are busy with
+    /// frames.
     pub(super) fn ask<T: Send + 'static>(
         &mut self,
         answer: Answer<T>,
@@ -163,7 +164,13 @@ impl Onboarding {
             return;
         };
         let (document, to) = (kit.document.clone(), path.clone());
-        let written = off_thread(move || std::fs::write(to, document).map_err(|e| e.to_string()));
+        // Ahead of the frames being drawn there, which would keep it waiting.
+        let written =
+            cx.background_executor()
+                .spawn_with_priority(
+                    ui::Priority::High,
+                    async move { std::fs::write(to, document) },
+                );
         cx.spawn(async move |view, cx| {
             let written = written.await;
             let _ = view.update(cx, |view, cx| {

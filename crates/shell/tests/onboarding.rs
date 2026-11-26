@@ -159,14 +159,7 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
             let file =
                 std::env::temp_dir().join(format!("onboarding-kit-{}.json", std::process::id()));
             view.update(cx, |view, cx| view.save_kit_to(file.clone(), cx));
-            // The file is written on a thread of its own.
-            for _ in 0..500 {
-                cx.run_until_parked();
-                if view.read_with(cx, |view, _| view.kit_file().is_some()) {
-                    break;
-                }
-                std::thread::sleep(std::time::Duration::from_millis(10));
-            }
+            cx.run_until_parked();
             let saved = std::fs::read_to_string(&file).expect("the kit file");
             let _ = std::fs::remove_file(&file);
             assert!(saved.contains(onboarding::backend::SAMPLE_ID) && !saved.contains("hollow"));

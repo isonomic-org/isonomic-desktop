@@ -91,14 +91,7 @@ impl Run {
             view.store_kit(true, cx);
             view.save_kit_to(file.clone(), cx);
         });
-        // The file is written on a thread of its own.
-        for _ in 0..500 {
-            cx.run_until_parked();
-            if self.view.read_with(cx, |view, _| view.kit_file().is_some()) {
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(10));
-        }
+        cx.run_until_parked();
         let _ = std::fs::remove_file(file);
         self.click(cx, "onboarding-next");
         self.skip(cx);
