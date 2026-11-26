@@ -4,6 +4,25 @@ Newest first.
 
 Older entries: `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-25 · Onboarding works over the engine
+
+- **One thing to ask.** Everything real is asked of `onboarding::backend::Backend`: the terms kept as accepted, the Isonomic ID, its recovery kit, the local models and their downloads, whether Isonomic starts at login, and the choices kept at the end. The window's is `engine::EngineBackend`, over the shell's client, the Capsule's settings and the login agent; `backend::Sample` answers with the design's samples, for tests and the headless pictures. `onboarding::open` takes the backend.
+- **Pins.** SDK `123d0b4` (Isonomic UI `6e0c4a5`) and Chat `67150eb`; a release needs the engine at `07f1831` or later, for the recovery kit's calls. The self-check's delete step now answers Chat's new "Delete chat?" dialog.
+- **Accept and continue** keeps `terms { version, accepted_at }` in the Capsule's settings, under `isonomic`.
+- **Continue with Face ID** asks the engine for the ID (`identity.get`, which makes it on a new Capsule). The sheet stays up its time and until the ID is here. A refusal takes the sheet down and is said between the step's two buttons, in the engine's own words, and the press can be made again. No passkey is made and Face ID is not asked for: the sheet is drawn, and the keys are the engine's.
+- **Your account exists.** shows the ID, and "Copy" copies it.
+- **Save your recovery kit** asks for the kit when the step comes on (`identity.kit_export`, `person_asked: true`) and shows its 24 words. "Save kit file" asks where and writes the kit's document, which never holds the words (`Isonomic Recovery Kit.json`). "Continue" waits for the kit, its file and the tick. "Print" is gone, as approved for V1. The words are never logged and never put on the pasteboard; they are let go with the window.
+- **Confirm your recovery kit** checks the three words against the real ones, then tells the engine (`identity.kit_saved`) before the holder closes. A refusal holds the step.
+- **Turn on local AI models.** The engine lists only the models a Mac has, so the list is the one it would start with (`models.recommended`) and whatever is installed, each with its size and licence. Under the engine's memory floor a note says so and no switch can be put on. A model switched on is fetched by "Setting up your workspace".
+- **Integrations** are kept as choices; nothing connects yet.
+- **Finish.** "Start Isonomic at login" is the login agent's switch, and stays off where a build has no agent (run from a source tree). The other two switches are kept as choices only.
+- **Setting up your workspace** keeps the choices (`onboarding` in the settings), starts each download, and follows the first to its end, with how far it is under the pill and "Continue while it downloads" (the download is the engine's). A failed download is said for four seconds, then onboarding goes on; Chat offers the model again.
+- **Calls never block a frame.** An answer waits only on the engine, so it is polled on the foreground thread; what blocks (a settings file, the login agent, the kit's file) runs on a thread of its own (`backend::off_thread`). The shared background threads are busy with frames: on them, saving the kit's file waited over three seconds in the development build. A call gives up after 30 s.
+- **Words changed from the design, because the real kit made them untrue:** the kit step's lead and its note (the words and the file together restore the ID; keep them apart), the confirm step's note (a written copy, not a printed one), the ID's caption and the line under it, and the kit's small print.
+- **Still the design's words, and not true yet:** the passkey, the secure enclave and its syncing; the smart account; the four "workspace root" rows; "This Mac · Touch ID"; the Finish step's notes on what starts. "Why no password?", "Add another passkey", "Import model", "Custom integration", "Learn more" and "Recover existing account" do nothing: the first five have nothing behind them, and recovery (`identity.kit_restore`) has no screens designed.
+- **Checked.** `tests/onboarding_backend.rs`: the ID made, a refused ID said and tried again, a kit that does not come, a refused `kit_saved`, the choices kept and the models fetched, a Mac short of memory. Run on the Intel Mac against the engine at `07f1831` on a scratch Capsule with its keys in memory: the ID made, the kit exported and its file written, the words confirmed, the recommended model (1.3 GB) downloading with its progress said. The login agent was not touched. Pictures of the refusals: `ONBOARDING_SHOTS_TROUBLE=1` with `ONBOARDING_SHOTS`.
+- **Not yet:** the holder's engraved letters are the model's, not the kit's; the engine has no list of models to install, so a new Mac is offered one.
+
 ## 2026-11-25 · A piece turns the way it goes; no hairline round the moving laptop
 
 - **Turning.** A piece that goes left or right turns about its upright line, that way; one that goes up or down turns head over heels. Was: the laptop went head over heels on its way left to the sidebar and right to the middle, the pen tumbled end over end as it came and went sideways, and the ID card turned about its upright line as it lifted. Now: the laptop turns left on its way to the sidebar and right on its way to the middle (`laptop::Flip`; still head over heels as it comes up from the bottom edge), the pen turns about its upright line, and the ID card flips over backward as it lifts, then slides straight down into the wallet (`flow::Slip::flat`). The wallet, the seal, the clipboard, the holder, the drives and the pills already turned sideways as they went sideways. Going back plays each the other way.
@@ -61,21 +80,3 @@ Older entries: `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.m
 - **The locked kit:** past "Confirm your recovery kit" the kit stays locked. Going back to that step shows it closed with its padlock on, and "Continue" goes on without asking for the words again. Going back out of it unlocks it first: the padlock's body drops, it goes back under the panel, and the holder opens with its back turned, before the rest plays backward.
 - **From "Your account exists."** back to "Create your account with Face ID" likewise; the seal comes back in from the left edge.
 - **Not yet:** "Previous step" on "Create your account with Face ID" and "Decline" on the terms still go back at once.
-
-## 2026-11-24 · Onboarding ends in Chat, not in the old first run
-
-- **Was:** when onboarding handed over, the app's window opened on the old first run (Capsule, Memory, Isonomic ID, Local model), which onboarding replaces.
-- **Now:** when onboarding was shown, the app's window marks the Capsule as set up and opens Chat (`isonomic://chat/home`) as soon as the engine is connected. The old first run is not shown after onboarding.
-- **Still there:** the old first run's code, for the self-check alone, which has no onboarding and drives it by its ids. It goes when the self-check drives onboarding instead.
-- **Not done by anything now:** the memory check against V1's floor and the first model's download were the old first run's. Onboarding's own steps have nothing behind them yet, so a model is downloaded only when an app asks the window for one (`Shell::install_model`).
-
-## 2026-11-24 · The recovery kit's holder, its padlock, and the words typed back
-
-- **What it is** (`shell::onboarding::kit`, `kit_run`, `kit_view`; sizes and timings in `ui::onboarding::kit`): the devices repository's titanium holder and padlock, drawn in 3D, in place of the design's two flat pictures. The holder is two plates on a hinge with the kit's 24 words on letter tiles (their first four letters, as the panel has them).
-- **"Save your recovery kit":** the holder comes out from under the panel closed, turning over as every step's art does; it opens; then its tiles lift and turn into place one after another. "Continue" waits for it to open.
-- **"Confirm your recovery kit":** the holder turns its back, so its words can't be read. The panel is the design's grid ("08b"): the 24 words, with 4, 11 and 19 to type back. A click on one of the three, or the step coming on, gives them the keyboard; Tab moves between them and Return presses "Continue".
-- **A wrong word** shakes the holder, rings its cell in red and says which word it was. Capital letters and the spaces around a word don't matter.
-- **The right three:** the holder closes with its mark up and its loops toward the person, the padlock comes out from under the panel, its body snaps up onto its shackle, and after a moment they turn over and leave by the left edge as "Turn on local AI models" comes on.
-- **Drawn at the screen's own pace:** a thread of their own draws the holder's and the padlock's frames (`kit_run::Easel`). The window asks for one at a draw, when how they lie has changed, and takes it at a later draw, so a frame waits on no timer and on no free moment of the foreground thread.
-- **Ours, not the design's or the model's:** the mark's floor is shaded so that it shows (the file gives it the plate's own colour); the padlock lies flat under the loops, its shackle over their hole, not through it.
-- **First pass:** the typed words have no selection, no pasting and no moving the caret; the holder and the padlock leave by being drawn narrower, as the other steps' art does, not by turning in 3D.

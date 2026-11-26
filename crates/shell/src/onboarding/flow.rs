@@ -10,10 +10,10 @@
 //! right, and the step's art turns over as it comes out from under it.
 //! "Previous step" plays the same backward.
 //!
-//! This is a first pass with nothing behind it: no Face ID is asked for,
-//! nothing is created, switched on, connected or saved, and the values
-//! shown are the design's samples. Its times are on the third screen's
-//! clock.
+//! "Continue with Face ID" makes the person's ID through the backend
+//! (`calls`), and each step after it shows or keeps what is real. No
+//! passkey is made and Face ID is not asked for: the sheet is drawn, and
+//! the keys are the engine's. Its times are on the third screen's clock.
 
 use std::time::Instant;
 
@@ -233,18 +233,43 @@ impl Onboarding {
             return;
         }
         self.asking = Some(t);
+        self.trouble = None;
         cx.notify();
+        // The sheet stays up as long as the system's would, and until the
+        // ID is made.
+        self.ask(
+            self.backend.create_account(),
+            cx,
+            move |view, made, cx| match made {
+                Ok(account) => {
+                    view.account = Some(account);
+                    view.face_id_answered(t, cx);
+                }
+                Err(said) if view.asking == Some(t) => {
+                    view.asking = None;
+                    view.troubled(said);
+                }
+                Err(_) => {}
+            },
+        );
         cx.spawn(async move |view, cx| {
             cx.background_executor()
                 .timer(std::time::Duration::from_secs_f32(at::ASKING))
                 .await;
-            let _ = view.update(cx, |view, cx| {
-                if view.asking == Some(t) {
-                    view.answer_face_id(cx);
-                }
-            });
+            let _ = view.update(cx, |view, cx| view.face_id_answered(t, cx));
         })
         .detach();
+    }
+
+    /// The sheet asked at `t` goes, once it has been up its time and the
+    /// ID is here.
+    fn face_id_answered(&mut self, t: f32, cx: &mut Context<Self>) {
+        let shown = self
+            .terms_now()
+            .is_some_and(|now| now + 0.05 >= t + at::ASKING);
+        if self.asking == Some(t) && self.account.is_some() && shown {
+            self.answer_face_id(cx);
+        }
     }
 
     /// The sheet's "Cancel".
@@ -265,13 +290,16 @@ impl Onboarding {
             forward: true,
             back: false,
         });
+        self.load_models(cx);
         cx.notify();
     }
 
     /// Is the step's forward button waiting on the person? On "Save your
-    /// recovery kit" it is, until the kit is ticked as stored.
+    /// recovery kit" it is, until the kit is here, its file is saved and
+    /// it is ticked as stored.
     pub(super) fn held_back(&self) -> bool {
-        self.flow.is_some_and(|flow| flow.step == steps::KIT) && !self.stored
+        self.flow.is_some_and(|flow| flow.step == steps::KIT)
+            && !(self.stored && self.recovery.is_some() && self.kit_file.is_some())
     }
 
     /// Tick the kit as stored somewhere safe, or not.
@@ -302,6 +330,8 @@ impl Onboarding {
             return;
         }
         self.finishing = Some(t);
+        self.trouble = None;
+        self.set_up(cx);
         cx.notify();
         cx.spawn(async move |view, cx| {
             // The laptop turns over on its way to the middle: its frames
@@ -354,7 +384,10 @@ impl Onboarding {
                     cx.background_executor().timer(spare).await;
                 }
             }
-            let _ = view.update(cx, |view, cx| view.hand_over(cx));
+            let _ = view.update(cx, |view, cx| {
+                view.setup_shown = true;
+                view.arrive(cx);
+            });
         })
         .detach();
     }
@@ -374,6 +407,12 @@ impl Onboarding {
         self.locked |= flow.step == steps::CONFIRM;
         self.confirmed = None;
         self.wants_words = flow.step + 1 == steps::CONFIRM;
+        self.trouble = None;
+        match flow.step + 1 {
+            steps::KIT => self.fetch_kit(cx),
+            steps::MODELS => self.load_models(cx),
+            _ => {}
+        }
         cx.notify();
     }
 
@@ -397,6 +436,7 @@ impl Onboarding {
             back: true,
             ..flow
         });
+        self.trouble = None;
         cx.notify();
     }
 
@@ -438,6 +478,22 @@ impl Onboarding {
 
     /// Flip switch `index` of the list on step `step`.
     pub(super) fn flip(&mut self, step: usize, index: usize, cx: &mut Context<Self>) {
+        // "Start Isonomic at login" stays as it is where this build can't.
+        if step == steps::FINISH && index == 0 && self.backend.starts_at_login().is_none() {
+            return;
+        }
+        // A model this Mac can't run, or already has, stays as it is.
+        if step == steps::MODELS
+            && self.catalog.as_ref().is_none_or(|catalog| {
+                catalog.memory != super::backend::Memory::Enough
+                    || catalog
+                        .models
+                        .get(index)
+                        .is_none_or(|model| model.installed)
+            })
+        {
+            return;
+        }
         let switches: &mut [bool] = match step {
             steps::MODELS => &mut self.models,
             steps::LINKS => &mut self.links,

@@ -2,6 +2,24 @@
 
 Moved from `status.md` on 2026-11-25. Newest first. Older still: `history-5.md`.
 
+## 2026-11-24 · Onboarding ends in Chat, not in the old first run
+
+- **Was:** when onboarding handed over, the app's window opened on the old first run (Capsule, Memory, Isonomic ID, Local model), which onboarding replaces.
+- **Now:** when onboarding was shown, the app's window marks the Capsule as set up and opens Chat (`isonomic://chat/home`) as soon as the engine is connected. The old first run is not shown after onboarding.
+- **Still there:** the old first run's code, for the self-check alone, which has no onboarding and drives it by its ids. It goes when the self-check drives onboarding instead.
+- **Not done by anything now:** the memory check against V1's floor and the first model's download were the old first run's. Onboarding's own steps have nothing behind them yet, so a model is downloaded only when an app asks the window for one (`Shell::install_model`).
+
+## 2026-11-24 · The recovery kit's holder, its padlock, and the words typed back
+
+- **What it is** (`shell::onboarding::kit`, `kit_run`, `kit_view`; sizes and timings in `ui::onboarding::kit`): the devices repository's titanium holder and padlock, drawn in 3D, in place of the design's two flat pictures. The holder is two plates on a hinge with the kit's 24 words on letter tiles (their first four letters, as the panel has them).
+- **"Save your recovery kit":** the holder comes out from under the panel closed, turning over as every step's art does; it opens; then its tiles lift and turn into place one after another. "Continue" waits for it to open.
+- **"Confirm your recovery kit":** the holder turns its back, so its words can't be read. The panel is the design's grid ("08b"): the 24 words, with 4, 11 and 19 to type back. A click on one of the three, or the step coming on, gives them the keyboard; Tab moves between them and Return presses "Continue".
+- **A wrong word** shakes the holder, rings its cell in red and says which word it was. Capital letters and the spaces around a word don't matter.
+- **The right three:** the holder closes with its mark up and its loops toward the person, the padlock comes out from under the panel, its body snaps up onto its shackle, and after a moment they turn over and leave by the left edge as "Turn on local AI models" comes on.
+- **Drawn at the screen's own pace:** a thread of their own draws the holder's and the padlock's frames (`kit_run::Easel`). The window asks for one at a draw, when how they lie has changed, and takes it at a later draw, so a frame waits on no timer and on no free moment of the foreground thread.
+- **Ours, not the design's or the model's:** the mark's floor is shaded so that it shows (the file gives it the plate's own colour); the padlock lies flat under the loops, its shackle over their hole, not through it.
+- **First pass:** the typed words have no selection, no pasting and no moving the caret; the holder and the padlock leave by being drawn narrower, as the other steps' art does, not by turning in 3D.
+
 ## 2026-11-18 · The ID card lies over the wallet, then tucks into it
 
 - **"Your account exists."** had the wallet on the left and the card beside it. The wallet is now in the middle of the sidebar and the card lies over it, its top out past the wallet's mouth, not in it.

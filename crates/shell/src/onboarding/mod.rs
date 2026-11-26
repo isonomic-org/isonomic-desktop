@@ -6,7 +6,7 @@
 //! close, shrink or grow it by. It opens before the app's window does, and
 //! hands over when the person has chosen how to start.
 //!
-//! So far it holds the first two screens as one continuous motion: the
+//! It opens on the first two screens as one continuous motion: the
 //! mark plays its intro in the centre with its sound, turns and shrinks
 //! into its corner,
 //! the laptop somersaults up from the bottom edge as its display lights,
@@ -20,8 +20,12 @@
 //! it will be shown at.
 
 mod art;
+pub mod backend;
+mod calls;
+pub mod engine;
 mod flow;
 mod flow_bodies;
+mod flow_lists;
 mod flow_view;
 mod kit;
 mod kit_run;
@@ -32,6 +36,7 @@ mod passkey;
 mod passkey_view;
 mod props;
 mod rewind;
+mod setup_view;
 mod signature;
 mod signing;
 mod signing_view;
@@ -51,6 +56,7 @@ use ui::{
     WindowBounds, WindowOptions,
 };
 
+use backend::Backend;
 use laptop::Scene;
 use passkey::Seal;
 use props::Props;
@@ -114,7 +120,7 @@ pub struct Onboarding {
     answered: Option<f32>,
     flow: Option<flow::Flow>,
     finishing: Option<f32>,
-    models: [bool; 8],
+    models: Vec<bool>,
     links: [bool; 8],
     residency: [bool; 3],
     /// The two lists' chosen tabs and their search boxes, which are made
@@ -148,6 +154,32 @@ pub struct Onboarding {
     words_stale: bool,
     /// What this Mac is called, for "Setting up your workspace".
     device: ui::SharedString,
+    /// What answers for the engine and this Mac, and what the last call
+    /// that failed said, shown under the step's buttons.
+    backend: Arc<dyn Backend>,
+    trouble: Option<ui::SharedString>,
+    /// The person's ID, once made, and whether it was copied.
+    account: Option<backend::Account>,
+    copied: bool,
+    /// The recovery kit, once the engine gave it; whether it is being
+    /// asked for; where its file was saved; and whether the engine has
+    /// been told the words were typed back, or is being told.
+    recovery: Option<backend::Kit>,
+    kit_asked: bool,
+    kit_file: Option<std::path::PathBuf>,
+    kit_kept: bool,
+    kit_keeping: bool,
+    /// The models this Mac may run, once listed; whether they are being
+    /// asked for; and what went wrong if they couldn't be.
+    catalog: Option<backend::Catalog>,
+    catalog_asked: bool,
+    catalog_trouble: Option<ui::SharedString>,
+    /// "Setting up your workspace": what is said under its pill, and
+    /// whether that went wrong; whether its work is done; and whether its
+    /// screen has played.
+    setup: Option<(ui::SharedString, bool)>,
+    set_up_done: bool,
+    setup_shown: bool,
 }
 
 /// The name this Mac was given, or "This Mac" when it can't be read.
@@ -172,7 +204,13 @@ impl Drop for Onboarding {
 }
 
 impl Onboarding {
+    /// Onboarding over the design's samples, for a test or a drawing.
     pub fn new(cx: &mut Context<Self>) -> Self {
+        Self::over(Arc::new(backend::Sample::default()), cx)
+    }
+
+    /// Onboarding over `backend`.
+    pub fn over(backend: Arc<dyn Backend>, cx: &mut Context<Self>) -> Self {
         // Read the model while the mark plays.
         cx.spawn(async move |view, cx| {
             let scene = cx.background_spawn(async { Scene::load() }).await;
@@ -209,12 +247,16 @@ impl Onboarding {
             answered: None,
             flow: None,
             finishing: None,
-            models: steps::MODEL_LIST.map(|(_, _, on)| on),
-            links: steps::LINK_LIST.map(|(_, _, on)| on),
-            residency: steps::RESIDENCY.map(|(_, _, on)| on),
+            models: Vec::new(),
+            links: [false; 8],
+            residency: [
+                backend.starts_at_login().unwrap_or(false),
+                steps::RESIDENCY[1].2,
+                steps::RESIDENCY[2].2,
+            ],
             tabs: [0; 2],
             search: None,
-            stored: true,
+            stored: false,
             kit: None,
             kit_frame: None,
             lock_frame: None,
@@ -230,6 +272,21 @@ impl Onboarding {
             words_stale: false,
             wants_words: false,
             device: computer_name().into(),
+            backend,
+            trouble: None,
+            account: None,
+            copied: false,
+            recovery: None,
+            kit_asked: false,
+            kit_file: None,
+            kit_kept: false,
+            kit_keeping: false,
+            catalog: None,
+            catalog_asked: false,
+            catalog_trouble: None,
+            setup: None,
+            set_up_done: false,
+            setup_shown: false,
         }
     }
 
@@ -403,10 +460,14 @@ pub fn window_options(cx: &App) -> WindowOptions {
 
 /// Open onboarding. When the person has accepted the terms for a new
 /// account the window goes and `next` runs, which opens the app's window.
-pub fn open(cx: &mut App, next: impl FnOnce(&mut App) + 'static) -> Option<Entity<Onboarding>> {
+pub fn open(
+    cx: &mut App,
+    backend: Arc<dyn Backend>,
+    next: impl FnOnce(&mut App) + 'static,
+) -> Option<Entity<Onboarding>> {
     let mut next = Some(next);
     let opened = ui::open_window(window_options(cx), cx, |window, cx| {
-        let view = cx.new(|cx| Onboarding::new(cx).with_sound());
+        let view = cx.new(|cx| Onboarding::over(backend, cx).with_sound());
         let handle = window.window_handle();
         cx.subscribe(&view, move |_, choice: &Chosen, cx| {
             // Recovering an account has no screens yet.

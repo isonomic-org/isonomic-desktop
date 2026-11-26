@@ -125,6 +125,7 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
     click(cx, "onboarding-face-id");
     assert!(shown(cx, window, "onboarding-face-id-sheet"));
     view.update(cx, |view, cx| view.skip_flow(cx));
+    cx.run_until_parked();
     for step in [
         "onboarding-created",
         "onboarding-kit",
@@ -151,6 +152,24 @@ fn a_button_says_what_was_chosen(cx: &mut TestAppContext) {
             view.update(cx, |view, cx| view.skip_flow(cx));
             assert!(shown(cx, window, step) && !shown(cx, window, "onboarding-confirm"));
             view.update(cx, |view, cx| view.store_kit(true, cx));
+            // Nor until its file is saved: the words alone restore nothing.
+            click(cx, "onboarding-next");
+            view.update(cx, |view, cx| view.skip_flow(cx));
+            assert!(shown(cx, window, step) && !shown(cx, window, "onboarding-confirm"));
+            let file =
+                std::env::temp_dir().join(format!("onboarding-kit-{}.json", std::process::id()));
+            view.update(cx, |view, cx| view.save_kit_to(file.clone(), cx));
+            // The file is written on a thread of its own.
+            for _ in 0..500 {
+                cx.run_until_parked();
+                if view.read_with(cx, |view, _| view.kit_file().is_some()) {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            let saved = std::fs::read_to_string(&file).expect("the kit file");
+            let _ = std::fs::remove_file(&file);
+            assert!(saved.contains(onboarding::backend::SAMPLE_ID) && !saved.contains("hollow"));
         }
         if step == "onboarding-confirm" {
             // Not past it until the kit's three words are typed back.

@@ -18,8 +18,10 @@
 extern crate ui as gpui;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 
+use shell::onboarding::backend::{Memory, Sample};
 use shell::onboarding::{self, Chosen, Onboarding};
 use ui::test::TestWindowExt as _;
 use ui::{AnyWindowHandle, AppContext as _, Entity, HeadlessAppContext};
@@ -28,6 +30,7 @@ struct Shots {
     cx: HeadlessAppContext,
     window: AnyWindowHandle,
     view: Entity<Onboarding>,
+    sample: Arc<Sample>,
     folder: PathBuf,
     taken: usize,
 }
@@ -45,6 +48,8 @@ impl Shots {
         })
         .ok()?;
         cx.update(ui::init);
+        let sample = Arc::new(Sample::default());
+        let backend = Arc::clone(&sample);
         let (window, view) = cx
             .update(|cx| {
                 let options = ui::WindowOptions {
@@ -52,7 +57,9 @@ impl Shots {
                     show: false,
                     ..onboarding::window_options(cx)
                 };
-                ui::open_window(options, cx, |_, cx| cx.new(Onboarding::new))
+                ui::open_window(options, cx, |_, cx| {
+                    cx.new(|cx| Onboarding::over(backend, cx))
+                })
             })
             .ok()?;
         cx.capture_screenshot(window).ok()?;
@@ -60,6 +67,7 @@ impl Shots {
             cx,
             window,
             view,
+            sample,
             folder,
             taken: 0,
         })
@@ -103,6 +111,70 @@ impl Shots {
 }
 
 impl Shots {
+    /// Tick the kit as stored and save its file, as its step asks.
+    fn keep_kit(&mut self) {
+        let file =
+            std::env::temp_dir().join(format!("onboarding-shots-kit-{}.json", std::process::id()));
+        let to = file.clone();
+        self.act(|view, cx| {
+            view.store_kit(true, cx);
+            view.save_kit_to(to, cx);
+        });
+        // The file is written on a thread of its own.
+        for _ in 0..500 {
+            self.cx.run_until_parked();
+            let view = self.view.clone();
+            if self.cx.update(|cx| view.read(cx).kit_file().is_some()) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let _ = std::fs::remove_file(file);
+    }
+
+    /// `ONBOARDING_SHOTS_TROUBLE` is set: pictures of what is shown when
+    /// the engine refuses, or this Mac is short of memory, instead of the
+    /// screens at rest.
+    fn troubles(mut self) {
+        const SAYS: &str =
+            "The key store did not let Isonomic save your ID. Unlock it and try again.";
+        self.sample.with_memory(Memory::Short {
+            has: 8 << 30,
+            needs: 16 << 30,
+        });
+        self.act(|view, cx| view.skip(cx));
+        self.act(|view, cx| view.choose(Chosen::NewAccount, cx));
+        self.act(|view, cx| view.skip_terms(cx));
+        self.act(|view, cx| view.accept(cx));
+        self.act(|view, cx| view.skip_signing(cx));
+        self.act(|view, cx| view.skip_passkey(cx));
+        self.sample.refuse("create_account", SAYS);
+        self.act(|view, cx| view.continue_with_face_id(cx));
+        self.shot("id-refused");
+        self.sample.recover();
+        self.sample.refuse("recovery_kit", SAYS);
+        self.act(|view, cx| view.continue_with_face_id(cx));
+        self.act(|view, cx| view.skip_flow(cx));
+        self.act(|view, cx| view.next_step(cx));
+        self.act(|view, cx| view.skip_flow(cx));
+        self.shot("kit-refused");
+        self.sample.recover();
+        self.act(|view, cx| view.fetch_kit(cx));
+        self.shot("kit-unsaved");
+        self.keep_kit();
+        self.shot("kit-saved");
+        self.act(|view, cx| view.next_step(cx));
+        self.act(|view, cx| view.skip_flow(cx));
+        self.act(|view, cx| view.fill_words(cx));
+        self.sample.refuse("kit_saved", SAYS);
+        self.act(|view, cx| view.next_step(cx));
+        self.shot("kit-not-kept");
+        self.sample.recover();
+        self.act(|view, cx| view.next_step(cx));
+        self.act(|view, cx| view.skip_flow(cx));
+        self.shot("models-short-of-memory");
+    }
+
     /// `ONBOARDING_SHOTS_BACK` is set: pictures of "Decline" and of
     /// "Previous step" on the fourth screen under way, about two a second,
     /// instead of the screens at rest.
@@ -144,6 +216,9 @@ fn main() {
     if std::env::var_os("ONBOARDING_SHOTS_BACK").is_some() {
         return shots.going_back();
     }
+    if std::env::var_os("ONBOARDING_SHOTS_TROUBLE").is_some() {
+        return shots.troubles();
+    }
     shots.act(|view, cx| view.skip(cx));
     shots.shot("get-started");
     shots.act(|view, cx| view.choose(Chosen::NewAccount, cx));
@@ -158,6 +233,9 @@ fn main() {
     shots.shot("face-id-sheet");
     for step in ["created", "kit", "confirm"] {
         shots.act(|view, cx| view.skip_flow(cx));
+        if step == "kit" {
+            shots.keep_kit();
+        }
         shots.shot(step);
         shots.act(|view, cx| view.next_step(cx));
     }

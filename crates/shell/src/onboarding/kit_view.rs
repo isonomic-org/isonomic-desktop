@@ -77,7 +77,7 @@ impl Onboarding {
                 .child(
                     text(fourth::ROW_TITLE)
                         .text_color(fourth::faint())
-                        .child(steps::WORDS[place - 1]),
+                        .child(self.word(place)),
                 )
                 .into_any_element();
         };
@@ -109,7 +109,7 @@ impl Onboarding {
     /// "Confirm your recovery kit": the kit's 24 words, three of them to
     /// type back.
     pub(super) fn confirm(&self) -> AnyElement {
-        let cells = (1..=steps::WORDS.len())
+        let cells = (1..=steps::WORD_COUNT)
             .map(|place| self.word_cell(place))
             .collect();
         let wrong = self.wrong.iter().position(|wrong| *wrong);

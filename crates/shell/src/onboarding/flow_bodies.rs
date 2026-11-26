@@ -3,29 +3,24 @@
 
 //! What is in each later step's panel, under its heading. Every control
 //! is Isonomic UI's: its buttons, switches, tabs, inputs, checkbox, tags
-//! and alerts. A first pass: the switches, the tabs, the checkbox and the
-//! connect buttons flip, and nothing else here does anything yet.
+//! and alerts. What they show and keep is the backend's (`calls`); the two
+//! lists are in `flow_lists`.
 
 use ui::assets::IconName;
-use ui::component::button::{Button, ButtonVariants as _};
+use ui::component::button::Button;
 use ui::component::checkbox::Checkbox;
-use ui::component::input::Input;
-use ui::component::link::Link;
-use ui::component::switch::Switch;
-use ui::component::tab::{Tab, TabBar};
 use ui::component::tag::Tag;
-use ui::component::{Icon, Sizable as _, Size};
+use ui::component::{Disableable as _, Icon, Size};
 use ui::onboarding::kit::{self as grid};
 use ui::onboarding::passkey::{self as fourth};
 use ui::onboarding::steps::{self as design};
 use ui::onboarding::terms::{self as shared};
 use ui::onboarding::{self as page};
 use ui::{
-    div, img, px, AnyElement, Context, Div, ElementId, FontWeight, InteractiveElement as _,
-    IntoElement, MouseButton, ParentElement as _, SharedString, Styled as _,
+    div, px, AnyElement, Context, Div, ElementId, FontWeight, InteractiveElement as _, IntoElement,
+    MouseButton, ParentElement as _, SharedString, Styled as _,
 };
 
-use super::logos;
 use super::steps;
 use super::Onboarding;
 
@@ -93,7 +88,7 @@ pub(super) fn outlined(
 /// is laid out here, with the library's icon.
 pub(super) fn note(
     id: &'static str,
-    (title, words): (&'static str, &'static str),
+    (title, words): (impl Into<SharedString>, impl Into<SharedString>),
 ) -> impl IntoElement {
     let (pad_x, pad_y) = fourth::CARD_PAD;
     div()
@@ -124,18 +119,18 @@ pub(super) fn note(
                     text(design::NOTE_TITLE)
                         .font_weight(FontWeight::SEMIBOLD)
                         .text_color(page::ink())
-                        .child(title),
+                        .child(title.into()),
                 )
                 .child(
                     text(design::NOTE_TEXT)
                         .text_color(fourth::faint())
-                        .child(words),
+                        .child(words.into()),
                 ),
         )
 }
 
 /// A name with a line about it under it.
-fn named(name: &'static str, about: &'static str) -> Div {
+pub(super) fn named(name: impl Into<SharedString>, about: impl Into<SharedString>) -> Div {
     div()
         .flex_1()
         .flex()
@@ -145,9 +140,13 @@ fn named(name: &'static str, about: &'static str) -> Div {
             text(fourth::ROW_TITLE)
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(page::ink())
-                .child(name),
+                .child(name.into()),
         )
-        .child(text(design::SMALL).text_color(fourth::faint()).child(about))
+        .child(
+            text(design::SMALL)
+                .text_color(fourth::faint())
+                .child(about.into()),
+        )
 }
 
 /// A row of the kit's words, four across.
@@ -167,164 +166,7 @@ pub(super) fn word_rows(cells: Vec<AnyElement>) -> Vec<Div> {
 }
 
 impl Onboarding {
-    /// A switch, which flips when pressed.
-    fn switch(
-        &self,
-        step: usize,
-        index: usize,
-        on: bool,
-        cx: &mut Context<Self>,
-    ) -> impl IntoElement {
-        held(
-            Switch::new(("onboarding-switch", step * 16 + index))
-                .large()
-                .checked(on)
-                .on_click(cx.listener(move |view, _: &bool, _, cx| view.flip(step, index, cx))),
-        )
-    }
-
-    /// "Connect", or "Connected" once pressed.
-    fn connect(&self, index: usize, on: bool, cx: &mut Context<Self>) -> impl IntoElement {
-        let id = ("onboarding-connect", index);
-        let button = if on {
-            Button::new(id)
-                .primary()
-                .icon(icon(IconName::Check))
-                .icon_size(Size::Size(px(design::ICON)))
-                .label("Connected")
-        } else {
-            Button::new(id).outline().label("Connect")
-        };
-        held(
-            button
-                .h(px(design::CONNECT))
-                .px(px(design::CONNECT_PAD))
-                .on_click(cx.listener(move |view, _, _, cx| view.flip(steps::LINKS, index, cx))),
-        )
-    }
-
-    /// What a list step has in its header, beside and under its heading:
-    /// the button beside it, and its tabs with their search box.
-    pub(super) fn header_extras(&self, step: usize, cx: &mut Context<Self>) -> Option<(Div, Div)> {
-        let (which, add, names): (usize, _, &'static [&'static str]) = match step {
-            steps::MODELS => (0, "Import model", &steps::MODEL_TABS),
-            steps::LINKS => (1, "Custom integration", &steps::LINK_TABS),
-            _ => return None,
-        };
-        let tabs = TabBar::new(("onboarding-tabs", which))
-            .segmented()
-            .selected_index(self.tabs[which])
-            .children(names.iter().map(|name| Tab::new().label(*name)))
-            .on_click(cx.listener(move |view, chosen: &usize, _, cx| {
-                view.tabs[which] = *chosen;
-                cx.notify();
-            }));
-        let search = self.search.as_ref().map(|search| {
-            div().flex_1().child(
-                Input::new(&search[which])
-                    .prefix(icon(IconName::Search))
-                    .min_h(px(design::BUTTON)),
-            )
-        });
-        let filters = div()
-            .w_full()
-            .flex()
-            .items_center()
-            .gap_3()
-            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-            .child(div().flex_none().child(tabs))
-            .children(search);
-        Some((
-            held(outlined(
-                ("onboarding-add", which),
-                add,
-                Some(IconName::Plus),
-            )),
-            filters,
-        ))
-    }
-
-    /// A list of things to switch on or connect.
-    fn list(
-        &self,
-        step: usize,
-        rows: &'static [(&'static str, &'static str, bool)],
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let (which, kinds, nothing) = if step == steps::MODELS {
-            (0, &steps::MODEL_KINDS, "No models here yet.")
-        } else {
-            (1, &steps::LINK_KINDS, "No integrations here yet.")
-        };
-        let sought = self
-            .search
-            .as_ref()
-            .map_or_else(Default::default, |search| search[which].read(cx).value());
-        let shown: Vec<_> = rows
-            .iter()
-            .enumerate()
-            .filter(|(index, (name, about, _))| {
-                steps::listed(kinds[*index], self.tabs[which], &sought, (name, about))
-            })
-            .collect();
-        if shown.is_empty() {
-            let says = if sought.trim().is_empty() {
-                nothing.to_owned()
-            } else {
-                format!("Nothing matches \u{201c}{}\u{201d}.", sought.trim())
-            };
-            return text(shared::ACTION_LABEL)
-                .w_full()
-                .py(px(design::EMPTY_PAD))
-                .flex()
-                .justify_center()
-                .text_color(fourth::faint())
-                .child(says)
-                .into_any_element();
-        }
-        let rows = shown.into_iter().map(|(index, (name, about, _))| {
-            let control = if step == steps::MODELS {
-                self.switch(step, index, self.models[index], cx)
-                    .into_any_element()
-            } else {
-                self.connect(index, self.links[index], cx)
-                    .into_any_element()
-            };
-            div()
-                .w_full()
-                .h(px(design::ROW))
-                .flex()
-                .items_center()
-                .gap(px(design::LOGO_GAP))
-                .border_b_1()
-                .border_color(page::hairline())
-                .child(
-                    img(logos::logo(step, index))
-                        .flex_none()
-                        .size(px(design::LOGO)),
-                )
-                .child(named(name, about))
-                .child(
-                    Link::new(("onboarding-learn", step * 16 + index))
-                        .flex_none()
-                        .text_size(px(shared::ACTION_LABEL.0))
-                        .line_height(px(shared::ACTION_LABEL.1))
-                        .text_color(shared::quiet())
-                        // Underlined only when pointed at, as the design has it.
-                        .text_decoration_0()
-                        .child("Learn more"),
-                )
-                .child(control)
-        });
-        div()
-            .w_full()
-            .flex()
-            .flex_col()
-            .children(rows)
-            .into_any_element()
-    }
-
-    fn created(&self) -> AnyElement {
+    fn created(&self, cx: &mut Context<Self>) -> AnyElement {
         let root = steps::ROOT.iter().enumerate().map(|(index, (what, how))| {
             let row = div()
                 .w_full()
@@ -357,9 +199,7 @@ impl Onboarding {
             .child(
                 card()
                     .bg(design::field())
-                    .child(caption(
-                        "SMART ACCOUNT (ERC-4337) \u{b7} BASE + ISONOMIC L2",
-                    ))
+                    .child(caption("ISONOMIC ID \u{b7} MADE ON THIS MAC"))
                     .child(
                         // The address, with its button in its box.
                         div()
@@ -379,9 +219,20 @@ impl Onboarding {
                                     .flex_1()
                                     .font_family(shared::MONO)
                                     .text_color(page::ink())
-                                    .child(steps::ADDRESS),
+                                    .child(
+                                        self.account
+                                            .as_ref()
+                                            .map_or_else(String::new, |account| account.id.clone()),
+                                    ),
                             )
-                            .child(held(outlined("onboarding-copy", "Copy", None))),
+                            .child(held(
+                                outlined(
+                                    "onboarding-copy",
+                                    if self.copied { "Copied" } else { "Copy" },
+                                    None,
+                                )
+                                .on_click(cx.listener(|view, _, _, cx| view.copy_id(cx))),
+                            )),
                     )
                     .child(
                         text(design::SMALL)
@@ -392,7 +243,7 @@ impl Onboarding {
             )
             .child(
                 card()
-                    .child(caption("THIS ADDRESS IS THE WORKSPACE ROOT"))
+                    .child(caption("THIS ID IS THE WORKSPACE ROOT"))
                     .children(root),
             )
             .child(
@@ -441,10 +292,8 @@ impl Onboarding {
     }
 
     fn kit(&self, cx: &mut Context<Self>) -> AnyElement {
-        let cells = steps::WORDS
-            .iter()
-            .enumerate()
-            .map(|(index, word)| {
+        let cells = (1..=steps::WORD_COUNT)
+            .map(|place| {
                 div()
                     .flex_1()
                     .h(px(grid::CELL))
@@ -459,26 +308,47 @@ impl Onboarding {
                     .child(
                         text(fourth::ROW_TEXT)
                             .text_color(fourth::faint())
-                            .child(format!("{}.", index + 1)),
+                            .child(format!("{place}.")),
                     )
-                    .child(text(fourth::ROW_TITLE).text_color(page::ink()).child(*word))
+                    .child(
+                        text(fourth::ROW_TITLE)
+                            .text_color(page::ink())
+                            .child(self.word(place)),
+                    )
                     .into_any_element()
             })
             .collect();
+        let under = match (&self.recovery, self.kit_asked) {
+            (Some(kit), _) => format!(
+                "{} \u{b7} Keep the words and the kit file apart, away from this Mac",
+                steps::short(&kit.id)
+            ),
+            (None, true) => {
+                "Asking Isonomic\u{2019}s engine for your recovery kit\u{2026}".to_owned()
+            }
+            (None, false) => "Your recovery kit isn\u{2019}t here yet.".to_owned(),
+        };
+        let again = (self.recovery.is_none() && !self.kit_asked).then(|| {
+            held(
+                outlined("onboarding-kit-again", "Try again", None)
+                    .on_click(cx.listener(|view, _, _, cx| view.fetch_kit(cx))),
+            )
+        });
+        let (says, mark) = match self.kit_file {
+            Some(_) => ("Kit file saved", IconName::Check),
+            None => ("Save kit file", IconName::Download),
+        };
+        let save = outlined("onboarding-save-kit", says, Some(mark))
+            .disabled(self.recovery.is_none())
+            .on_click(cx.listener(|view, _, _, cx| view.save_kit(cx)));
         div()
             .w_full()
             .flex()
             .flex_col()
             .gap_2()
-            .child(caption(
-                "ISONOMIC RECOVERY KIT \u{b7} WORKSPACE MASTER KEY \u{b7} 24 WORDS",
-            ))
+            .child(caption("ISONOMIC RECOVERY KIT \u{b7} 24 WORDS"))
             .children(word_rows(cells))
-            .child(
-                text(design::SMALL)
-                    .text_color(fourth::faint())
-                    .child(steps::KIT_NOTE),
-            )
+            .child(text(design::SMALL).text_color(fourth::faint()).child(under))
             .child(
                 div()
                     .w_full()
@@ -496,16 +366,8 @@ impl Onboarding {
                             })),
                     )
                     .child(div().flex_1())
-                    .child(held(outlined(
-                        "onboarding-print",
-                        "Print",
-                        Some(IconName::Printer),
-                    )))
-                    .child(held(outlined(
-                        "onboarding-pdf",
-                        "Save as PDF",
-                        Some(IconName::Download),
-                    ))),
+                    .children(again)
+                    .child(held(save)),
             )
             .child(note("onboarding-kit-note", steps::KIT_WARNING))
             .into_any_element()
@@ -523,9 +385,17 @@ impl Onboarding {
                     .items_start()
                     .gap_3()
                     .border_color(page::hairline())
-                    .child(named(name, about).max_w(px(design::SETTING_WIDE)))
+                    .child(named(*name, *about).max_w(px(design::SETTING_WIDE)))
                     .child(div().flex_1())
-                    .child(self.switch(steps::FINISH, index, self.residency[index], cx));
+                    .child(self.switch(
+                        steps::FINISH,
+                        index,
+                        (
+                            self.residency[index],
+                            index == 0 && self.backend.starts_at_login().is_none(),
+                        ),
+                        cx,
+                    ));
                 if index == 0 {
                     row
                 } else {
@@ -546,11 +416,11 @@ impl Onboarding {
     /// The body of step `index`'s panel.
     pub(super) fn body(&self, index: usize, cx: &mut Context<Self>) -> AnyElement {
         match index {
-            steps::CREATED => self.created(),
+            steps::CREATED => self.created(cx),
             steps::KIT => self.kit(cx),
             steps::CONFIRM => self.confirm(),
-            steps::MODELS => self.list(index, &steps::MODEL_LIST, cx),
-            steps::LINKS => self.list(index, &steps::LINK_LIST, cx),
+            steps::MODELS => self.models_list(cx),
+            steps::LINKS => self.links_list(cx),
             _ => self.finish(cx),
         }
     }

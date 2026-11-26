@@ -332,7 +332,8 @@ impl Onboarding {
     /// Is typed word `index` the word the kit has in that place? Capital
     /// letters and the spaces around it don't matter.
     fn matches(&self, index: usize) -> bool {
-        self.typed[index].trim().to_lowercase() == steps::WORDS[steps::ASKED[index] - 1]
+        let word = self.word(steps::ASKED[index]);
+        !word.is_empty() && self.typed[index].trim().to_lowercase() == word
     }
 
     /// Have the three words been confirmed?
@@ -363,6 +364,24 @@ impl Onboarding {
                 self.wants_words = true;
             }
             cx.notify();
+            return;
+        }
+        // The engine is told the kit is saved before the holder closes.
+        if !self.kit_kept {
+            if !std::mem::replace(&mut self.kit_keeping, true) {
+                self.trouble = None;
+                self.ask(self.backend.kit_saved(), cx, |view, kept, cx| {
+                    view.kit_keeping = false;
+                    match (kept, view.terms_now()) {
+                        (Ok(()), Some(now)) => {
+                            view.kit_kept = true;
+                            view.confirm_words(now, cx);
+                        }
+                        (Ok(()), None) => view.kit_kept = true,
+                        (Err(said), _) => view.troubled(said),
+                    }
+                });
+            }
             return;
         }
         self.confirmed = Some(t);
@@ -404,7 +423,7 @@ impl Onboarding {
 
     /// Type the three words as the kit has them, as a test wants it.
     pub fn fill_words(&mut self, cx: &mut Context<Self>) {
-        self.typed = steps::ASKED.map(|place| steps::WORDS[place - 1].to_owned());
+        self.typed = steps::ASKED.map(|place| self.word(place));
         self.wrong = [false; 3];
         self.words_stale = true;
         cx.notify();

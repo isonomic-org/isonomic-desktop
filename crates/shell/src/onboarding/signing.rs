@@ -103,6 +103,7 @@ impl Onboarding {
             return;
         }
         self.signed = Some(t);
+        self.keep_terms(cx);
         cx.notify();
         // While it signs, the seal's flight is drawn ahead.
         if let Some(seal) = self.seal.clone() {

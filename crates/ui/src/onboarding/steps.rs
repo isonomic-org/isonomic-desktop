@@ -121,6 +121,8 @@ pub const SHEET_CORNER: f32 = 12.;
 pub const SETUP_LAPTOP: f32 = 490.;
 pub const SETUP_NAME: (f32, f32, f32, f32) = (440., 397., 400., 24.);
 pub const SETUP_PILL: (f32, f32, f32, f32) = (480., 437., 320., 44.);
+/// What is said under the pill: how wide it may be, and how far under.
+pub const SETUP_SAYS: (f32, f32) = (480., 14.);
 /// The pill's mark and its spinner, and the colour of both.
 pub const SETUP_MARK: (f32, f32) = (32., 12.);
 pub fn accent() -> Hsla {

@@ -10,78 +10,25 @@ extern crate ui as gpui;
 mod engine_notices;
 mod problems;
 mod self_check;
+mod setup;
 mod window_size;
 
 use std::sync::Arc;
 
 use engine_link::agent::LoginAgent;
 use engine_link::settings::FileSettings;
-use engine_link::setup::Capsule;
 use engine_link::{EngineLink, LinkConfig};
-use futures::future::BoxFuture;
-use futures::stream::BoxStream;
 use futures::StreamExt as _;
 use isonomic_app::{Registration, SettingsStore};
-use isonomic_client::Client;
-use isonomic_proto::models::{DownloadProgress, Recommendation};
-use isonomic_proto::HardwareProfile;
+use setup::FirstRunSetup;
 use shell::apps::AppHost;
-use shell::downloads;
-use shell::first_run::{self, Setup};
 use shell::menubar::LoginToggle;
+use shell::onboarding::backend::Backend;
+use shell::onboarding::engine::EngineBackend;
 use shell::{lifecycle, menubar, Shell};
 use ui::{AppContext as _, KeyBinding, Menu, MenuItem};
 
 ui::actions!(isonomic, [Quit, Hide, Acknowledgements]);
-
-/// First run through the engine client and the Capsule's marker.
-struct FirstRunSetup {
-    client: Client,
-    capsule: Capsule,
-}
-
-impl Setup for FirstRunSetup {
-    fn profile(&self) -> BoxFuture<'static, Result<HardwareProfile, String>> {
-        first_run::profile_from(&self.client)
-    }
-
-    fn recommended(&self) -> BoxFuture<'static, Result<Recommendation, String>> {
-        downloads::recommended(&self.client)
-    }
-
-    fn installed(&self, model: &str) -> BoxFuture<'static, Result<bool, String>> {
-        downloads::installed(&self.client, model)
-    }
-
-    fn model_name(&self, model: &str) -> BoxFuture<'static, Option<String>> {
-        let (client, model) = (self.client.clone(), model.to_string());
-        Box::pin(async move {
-            let models = client.models().list().await.ok()?;
-            // Named as Chat names it: without the quantisation tag.
-            models
-                .into_iter()
-                .find(|m| m.id == model)
-                .map(|m| conversation_model::display_name(&m.name))
-        })
-    }
-
-    fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>> {
-        downloads::download(&self.client, model)
-    }
-
-    fn cancel_download(&self, model: &str) -> BoxFuture<'static, Result<(), String>> {
-        downloads::cancel(&self.client, model)
-    }
-
-    fn identity(&self) -> BoxFuture<'static, Result<String, String>> {
-        first_run::identity_from(&self.client)
-    }
-
-    fn finish(&self) -> BoxFuture<'static, Result<(), String>> {
-        let capsule = self.capsule.clone();
-        Box::pin(async move { capsule.mark_set_up().map_err(|e| e.to_string()) })
-    }
-}
 
 /// App settings in the Capsule, through the engine link.
 struct CapsuleSettings(FileSettings);
@@ -282,6 +229,15 @@ fn main() {
         // opens when they start. A self-check drives the app's window by
         // its ids, so it goes straight there.
         let onboard = check.is_none() && !state.set_up;
+        // Onboarding works over the engine, the Capsule's settings and
+        // the login agent.
+        let onboarding = onboard.then(|| {
+            let login = agent
+                .clone()
+                .map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
+            let settings = Arc::clone(&settings);
+            Arc::new(EngineBackend::new(client.clone(), settings, login)) as Arc<dyn Backend>
+        });
         let open_app = move |cx: &mut ui::App| {
             let options = lifecycle::window_options(cx, remembered);
             let live = client.live();
@@ -464,10 +420,9 @@ fn main() {
             let login = agent.map(|agent| Arc::new(AtLogin(agent)) as Arc<dyn LoginToggle>);
             menubar::install(client, link.client().live(), login, cx);
         };
-        if onboard {
-            shell::onboarding::open(cx, open_app);
-        } else {
-            open_app(cx);
+        match onboarding {
+            Some(backend) => drop(shell::onboarding::open(cx, backend, open_app)),
+            None => open_app(cx),
         }
     });
 }

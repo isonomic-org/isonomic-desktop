@@ -226,6 +226,7 @@ impl Onboarding {
                         Onboarding::previous_step,
                         cx,
                     ))
+                    .children(self.trouble_line())
                     .child(self.action(
                         "onboarding-face-id",
                         "Continue with Face ID",

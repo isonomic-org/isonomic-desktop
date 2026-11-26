@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! The words of onboarding's later steps, from the design ("Onboarding
-//! 0.4"). This is a first pass with nothing behind it: every value here
-//! is the design's sample, not this machine's.
+//! 0.4"). The ID, the kit's words and the models shown are the backend's;
+//! the samples kept here (`WORDS`, `MODEL_LIST`) are what
+//! `backend::Sample` answers with, for tests and drawings.
 
 /// A step: what the stepper says for it, what its panel is headed, and
 /// its two footer buttons.
@@ -75,7 +76,7 @@ pub const STEPS: [Step; 6] = [
         "onboarding-kit",
         RECOVERY,
         "Save your recovery kit",
-        "These 24 words are a data-recovery key, not an account seed. Your account is recoverable through your passkey; your encrypted data is not \u{2014} unless you keep these words.",
+        "These 24 words and the kit file together bring your Isonomic ID back on another computer. Write the words down and save the file somewhere else: neither works alone.",
         true,
         "Continue",
     ),
@@ -128,8 +129,7 @@ pub const STEPS: [Step; 6] = [
     ),
 ];
 
-pub const ADDRESS: &str = "0x7A3f2b19E4c8D05fAe61B7d3C42a90118Be59C21";
-pub const ADDRESS_NOTE: &str = "Counterfactual \u{2014} the contract deploys on your first transaction, with gas sponsored by the paymaster. Same address on Base and the Isonomic L2.";
+pub const ADDRESS_NOTE: &str = "Made on this Mac, with its keys in this Mac\u{2019}s key store. It is yours in every Isonomic app, and your recovery kit carries it to another computer.";
 pub const ROOT: [(&str, &str); 4] = [
     ("App licences & subscriptions", "ERC-1155 on Base"),
     ("Node registration", "NodeRegistry on Isonomic L2"),
@@ -141,22 +141,22 @@ pub const ROOT: [(&str, &str); 4] = [
 ];
 
 pub const KIT_WARNING: (&str, &str) = (
-    "Account recovery and data recovery are different problems",
-    "Move to a new Apple device and your passkey follows. Lose your platform account and the account is recoverable through guardian modules \u{2014} but the workspace key is not. Without these words, that data is gone.",
+    "Keep the words and the kit file apart",
+    "Anyone holding both can take your ID. The file alone can\u{2019}t, and Isonomic never saves the words: write them down now. Restoring on another computer spends this kit and gives you a new one.",
 );
 pub const WORDS: [&str; 24] = [
     "orbit", "crane", "velvet", "hollow", "ladder", "survey", "bamboo", "glide", "ancient",
     "pepper", "ribbon", "fossil", "timber", "quantum", "mixture", "harbor", "jewel", "lunar",
     "sketch", "brave", "cotton", "empower", "ripple", "oxygen",
 ];
-pub const KIT_NOTE: &str =
-    "Generated 2 Aug 2026 \u{b7} Account 0x7A3f\u{2026}9C21 \u{b7} Store it away from this machine";
+/// How many words a kit has.
+pub const WORD_COUNT: usize = 24;
 /// The words asked back, by their place in the kit.
 pub const ASKED: [usize; 3] = [4, 11, 19];
 pub const CONFIRM_CAPTION: &str = "ISONOMIC RECOVERY KIT \u{b7} ENTER WORDS 4, 11 AND 19";
 pub const CONFIRM_NOTE: (&str, &str) = (
-    "Check against your saved kit, not your memory",
-    "Look at the copy you printed, saved or engraved. If a word doesn\u{2019}t match, go back and save the kit again before you continue.",
+    "Check against your written copy, not your memory",
+    "Look at the copy you wrote down or engraved. If a word doesn\u{2019}t match, go back and write the kit down again before you continue.",
 );
 
 pub const MODEL_TABS: [&str; 5] = ["All models", "Chat", "Reasoning", "Multimodal", "Utility"];
@@ -197,6 +197,20 @@ pub const MODEL_LIST: [(&str, &str, bool); 8] = [
 pub const MODEL_KINDS: [usize; 8] = [1, 1, 3, 4, 4, 4, 2, 1];
 pub const LINK_KINDS: [usize; 8] = [3, 3, 1, 3, 3, 2, 2, 3];
 
+/// An ID cut short for a line of small print: its start and its end.
+pub fn short(id: &str) -> String {
+    let letters: Vec<char> = id.chars().collect();
+    if letters.len() <= 28 {
+        return id.to_owned();
+    }
+    let (start, end) = (&letters[..16], &letters[letters.len() - 6..]);
+    format!(
+        "{}\u{2026}{}",
+        start.iter().collect::<String>(),
+        end.iter().collect::<String>()
+    )
+}
+
 /// Is a row of kind `kind`, called `name` and described by `about`, in
 /// the list when tab `tab` is chosen and `sought` is in the search box?
 /// The first tab is everything; the search looks in both lines, whatever
@@ -214,38 +228,29 @@ pub const LINK_TABS: [&str; 5] = [
     "Productivity",
     "Browser tools",
 ];
-pub const LINK_LIST: [(&str, &str, bool); 8] = [
+pub const LINK_LIST: [(&str, &str); 8] = [
     (
         "Linear",
         "Streamline software projects, sprints, tasks, and bug tracking.",
-        true,
     ),
-    ("Figma", "Embed file previews in projects.", true),
-    (
-        "GitHub",
-        "Link pull requests and automate workflows.",
-        false,
-    ),
+    ("Figma", "Embed file previews in projects."),
+    ("GitHub", "Link pull requests and automate workflows."),
     (
         "Zapier",
         "Build custom automations and integrations with other apps.",
-        false,
     ),
-    ("Notion", "Embed notion pages and notes in projects.", false),
+    ("Notion", "Embed notion pages and notes in projects."),
     (
         "Loom",
         "Boost your team\u{2019}s productivity with async video collaboration and recording.",
-        false,
     ),
     (
         "Mailchimp",
         "Grow your business an all-in-one marketing & email marketing platform.",
-        false,
     ),
     (
         "Dropbox",
         "Seamlessly connect your team\u{2019}s cloud files and storage with current projects.",
-        false,
     ),
 ];
 
@@ -274,6 +279,13 @@ pub const AFTER: (&str, &str) = (
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_long_id_is_cut_short_and_a_short_one_is_not() {
+        let long = "did:iso:c6eeabb1d5d2823a365417297615ace4cf5dc74d1ea9f6cfa261b63b77b75353";
+        assert_eq!(short(long), "did:iso:c6eeabb1\u{2026}b75353");
+        assert_eq!(short("isonomic:7Q4K-M2XD-9PLV"), "isonomic:7Q4K-M2XD-9PLV");
+    }
 
     #[test]
     fn a_list_shows_what_its_tab_and_its_search_ask_for() {
