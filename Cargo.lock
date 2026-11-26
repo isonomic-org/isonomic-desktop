@@ -3888,6 +3888,10 @@ dependencies = [
  "harness-host",
  "isonomic-client",
  "isonomic-proto",
+ "isonomic-words",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
  "tokio",
 ]
 
@@ -4022,6 +4026,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "isonomic-words"
+version = "0.0.1"
+dependencies = [
+ "sha2 0.10.9",
 ]
 
 [[package]]
