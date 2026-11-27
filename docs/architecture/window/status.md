@@ -2,178 +2,81 @@
 
 Newest first.
 
-## 2026-11-16 · SDK a6276aa and Chat 60b8fbd: the quiet composer
+Older entries: `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
 
-- **Pins:** `SDK_REF` a6276aa (Isonomic UI 2b8a583) and `CHAT_REF` 60b8fbd move together. Chat's composers now focus quietly, with no blue, and are 96 high when empty. Search reads "Esc", and the four-point star sits by the greeting.
-- **The quiet focus look:** Isonomic UI offers it on the prompt composer only (`set_quiet_focus`). The window draws no composer or text input of its own; all of them are Chat's. So nothing in the window takes it.
+## 2026-11-25 · Onboarding works over the engine
 
-## 2026-11-16 · Chat d413d78
+- **One thing to ask.** Everything real is asked of `onboarding::backend::Backend`: the terms kept as accepted, the Isonomic ID, its recovery kit, the local models and their downloads, whether Isonomic starts at login, and the choices kept at the end. The window's is `engine::EngineBackend`, over the shell's client, the Capsule's settings and the login agent; `backend::Sample` answers with the design's samples, for tests and the headless pictures. `onboarding::open` takes the backend.
+- **Pins.** SDK `123d0b4` (Isonomic UI `6e0c4a5`) and Chat `67150eb`; a release needs the engine at `07f1831` or later, for the recovery kit's calls. The self-check's delete step now answers Chat's new "Delete chat?" dialog.
+- **Accept and continue** keeps `terms { version, accepted_at }` in the Capsule's settings, under `isonomic`.
+- **Continue with Face ID** asks the engine for the ID (`identity.get`, which makes it on a new Capsule). The sheet stays up its time and until the ID is here. A refusal takes the sheet down and is said between the step's two buttons, in the engine's own words, and the press can be made again. No passkey is made and Face ID is not asked for: the sheet is drawn, and the keys are the engine's.
+- **Your account exists.** shows the ID, and "Copy" copies it.
+- **Save your recovery kit** asks for the kit when the step comes on (`identity.kit_export`, `person_asked: true`) and shows its 24 words. "Save kit file" asks where and writes the kit's document, which never holds the words (`Isonomic Recovery Kit.json`). "Continue" waits for the kit, its file and the tick. "Print" is gone, as approved for V1. The words are never logged and never put on the pasteboard; they are let go with the window.
+- **Confirm your recovery kit** checks the three words against the real ones, then tells the engine (`identity.kit_saved`) before the holder closes. A refusal holds the step.
+- **Turn on local AI models.** The engine lists only the models a Mac has, so the list is the one it would start with (`models.recommended`) and whatever is installed, each with its size and licence. Under the engine's memory floor a note says so and no switch can be put on. A model switched on is fetched by "Setting up your workspace".
+- **Integrations** are kept as choices; nothing connects yet.
+- **Finish.** "Start Isonomic at login" is the login agent's switch, and stays off where a build has no agent (run from a source tree). The other two switches are kept as choices only.
+- **Setting up your workspace** keeps the choices (`onboarding` in the settings), starts each download, and follows the first to its end, with how far it is under the pill and "Continue while it downloads" (the download is the engine's). A failed download is said for four seconds, then onboarding goes on; Chat offers the model again.
+- **Calls never block a frame.** An answer waits only on the engine, so it is polled on the foreground thread; what blocks on a settings file or the login agent runs on a thread of its own (`backend::off_thread`), and the kit's file is written on the background threads ahead of everything else. Those threads are busy with frames: in turn behind them, saving the kit's file waited over three seconds in the development build. A call gives up after 30 s.
+- **Words changed from the design, because the real kit made them untrue:** the kit step's lead and its note (the words and the file together restore the ID; keep them apart), the confirm step's note (a written copy, not a printed one), the ID's caption and the line under it, and the kit's small print.
+- **Still the design's words, and not true yet:** the passkey, the secure enclave and its syncing; the smart account; the four "workspace root" rows; "This Mac · Touch ID"; the Finish step's notes on what starts. "Why no password?", "Add another passkey", "Import model", "Custom integration", "Learn more" and "Recover existing account" do nothing: the first five have nothing behind them, and recovery (`identity.kit_restore`) has no screens designed.
+- **Checked.** `tests/onboarding_backend.rs`: the ID made, a refused ID said and tried again, a kit that does not come, a refused `kit_saved`, the choices kept and the models fetched, a Mac short of memory. Run on the Intel Mac against the engine at `07f1831` on a scratch Capsule with its keys in memory: the ID made, the kit exported and its file written, the words confirmed, the recommended model (1.3 GB) downloading with its progress said. The login agent was not touched. Pictures of the refusals: `ONBOARDING_SHOTS_TROUBLE=1` with `ONBOARDING_SHOTS`.
+- **Not yet:** the holder's engraved letters are the model's, not the kit's; the engine has no list of models to install, so a new Mac is offered one.
 
-- **Pins:** `CHAT_REF` d413d78 (each reply keeps its own text state; deletes hold across reloads; `loads_finished()`). `SDK_REF` stays at 8f21cb6. See verification's step 13.
+## 2026-11-25 · A piece turns the way it goes; no hairline round the moving laptop
 
-## 2026-11-16 · The window opens at 1440 × 900 and remembers its size; the model named as Chat names it
+- **Turning.** A piece that goes left or right turns about its upright line, that way; one that goes up or down turns head over heels. Was: the laptop went head over heels on its way left to the sidebar and right to the middle, the pen tumbled end over end as it came and went sideways, and the ID card turned about its upright line as it lifted. Now: the laptop turns left on its way to the sidebar and right on its way to the middle (`laptop::Flip`; still head over heels as it comes up from the bottom edge), the pen turns about its upright line, and the ID card flips over backward as it lifts, then slides straight down into the wallet (`flow::Slip::flat`). The wallet, the seal, the clipboard, the holder, the drives and the pills already turned sideways as they went sideways. Going back plays each the other way.
+- **The hairline.** While the laptop moved, a hairline showed along the right and bottom edges of its picture. Moving, it is drawn at half the detail and stretched, and a stretched picture's outermost pixels take a little of whatever lies beside it in the window's memory. Its picture is now shown a point short all round (`laptop::shown`); the canvas is clear there. Seen in captures of the release build before; not in the one moving frame caught after.
+- **A frame's picture is let go once.** With frames kept, the same picture can come twice running (two moments on one tick, a piece at rest); it was let go from the window's memory while still shown. `stage::put` lets the last one go only when the new one is another picture.
+- **device3d: depth in perspective.** Depth was blended evenly across a triangle, which is wrong in perspective: turned about its upright line, the laptop's display showed a black parallelogram, the lid behind it coming through the middle of the display's two large triangles. The inverse of depth is blended now (`render::fill_band`), which is exact for a flat face.
 
-- **Opening size:** the design's 1440 × 900 (`tokens::window_size`), fitted to the screen's visible area when that is smaller. On the 13-inch Mac that's about 1440 × 875. At 1100 × 720, Chat's 720-wide column nearly filled the content area.
-- **Remembered:** the size the person leaves the window at is kept in the Capsule's `settings/window.json`, written off the foreground thread when the size changes, and used at the next launch, still fitted to the screen.
-- **First run names the model as Chat does:** with `conversation_model::display_name`, so "Qwen3.5 2B", without the quantisation tag.
-- **Pins:** `SDK_REF` 8f21cb6 (Isonomic UI 527d955) and `CHAT_REF` 99f310a (every QA id) move together.
+## 2026-11-25 · The mark's intro keeps time with its sound; 3D frames are kept and drawn ahead
 
-## 2026-11-16 · Icons draw; first run reads as progress; the full pass explains itself
+- **The mark and its sound.** Was: the intro started on the first frame, but the recording opens with 0.3 s of quiet, so the four locked 0.3 s before the chord; and the sound was faded out at 1.55 s and stopped at 1.8 s of its 4.2 s, as the mark left. Now: the sound plays at its own speed to its own end, the intro starts with its first note (`at::MARK_STARTS`), so the lock lands on the chord, and the mark stays in the centre while the chord rings and leaves at 3.0 s (`at::MARK_LEAVES`). The intro's own keyframes are untouched. Everything after moves later by the same 1.2 s.
+- **Going back no longer leaves a piece showing.** A piece that has gone back under its panel isn't drawn (`flow_view::TUCKED`): the ID card and the wallet, the drives and the pills, the seal, the clipboard and the pen, the holder and the padlock. Before, the panel then slid away and left it sitting there.
+- **Frames are kept.** `stage::frame` keeps what it draws, by what was drawn (model, camera, poses, size, light), up to 384 MB, oldest out first, and forgets it all when onboarding closes. Every loop asks for frames on the screen's ticks (`stage::snap`, sixty a second), so a moment asked for twice is the same frame: a move that has played plays backward, or again, without being drawn.
+- **Frames are drawn ahead.** While the mark plays, the laptop's flight and the terms' coming on are drawn (`terms::warm`); when the terms rest, the signing (`signing::warm`); while it signs, the seal's flight (`Seal::warm`). A press on "Start new account" before its frames are there waits for them, 0.6 s at most.
+- **Measured on the 2020 Intel MacBook Pro, development build:** the first screens' 270 frames are drawn ahead in 3.7 s; the laptop's flight showed 65 of its 99 frames, 54 before. The development build draws the window itself unoptimised, so it is slower than what ships; the test app can be opened from the release build (`UI-Test/open-release.sh`).
+- **Not yet:** the kit's holder is drawn as it plays, not ahead (its frames are kept once drawn); frames are swapped by a timer, not by the screen's own refresh.
 
-- **No icon drew, in every build so far.** The window created its app without Isonomic UI's asset source (`ui::application()` with no `.with_assets(..)`). Every icon was an SVG with no file behind it, so its space was drawn empty: the rail's buttons, the sidebar rows, Send, and the actions under a reply. The app now registers `ui::assets::AllAssets`.
-  - **Every self-check now checks it:** the app's asset source must serve a known icon, else the check fails at once.
-  - **The check build also counts pixels:** it counts the pixels the rail's Home icon draws, and fails at zero.
-  - **Fonts weren't affected:** `ui::init` registers them.
-- **First run:**
-  - **The stepper:** only finished steps are filled, each with a check mark. The step being worked on and the ones after it are not, so it reads as progress instead of four filled circles.
-  - **The Isonomic ID** is shortened in the middle (16 characters, an ellipsis, then the last 8), so it stays inside the card. The copy button beside it copies the whole ID.
-  - **The model** is named as the engine names it for a person (`models.list`'s `name`, through the new `Setup::model_name`), not by its id, falling back to the id.
-- **The full pass:**
-  - **Step 10 opens the picker safely.** It looks for the picker's trigger before clicking it. The test helper's `click` panics on an id it can't find, which ended the run on the Mac with no line for steps 10 and 11. A missing id is now that step's FAIL, with its reason.
-  - **The relaunch gets its state again:** it was missing only because that run died first.
-- **Pins:** `SDK_REF` a3ac3bf and `CHAT_REF` 90ddc05 (Chat's wordmark by the brand rule, the sans greeting, and `chat-row-menu-<session id>`) move together.
-- **Tested:** the window's asset source serves the icons; the ID shortening.
+## 2026-11-25 · Onboarding's edge cases, and a second design pass
 
-## 2026-11-16 · The wordmark in the sans: the brand rule
+- **"Save your recovery kit"** can't be left forward until the kit is ticked as stored: "Continue" is disabled and `next_step` holds (`Onboarding::held_back`, `store_kit`).
+- **The words typed back** may have capitals and spaces around them, as the screen says (`kit_run::fits`). A wrong word is red whether or not it has the keyboard, and takes the keyboard so it can be put right. With nothing typed, the line under the grid asks for the words instead of calling word 4 wrong.
+- **The lists** show what their tab and their search box ask for (`steps::listed`, `MODEL_KINDS`, `LINK_KINDS`), and say so when that is nothing.
+- **"Setting up your workspace"** cuts a long name short with an ellipsis.
+- **Tested in `tests/onboarding.rs`:** "Cancel" on the Face ID sheet and asking again; the unticked kit; words with capitals and spaces; a wrong word, then put right.
+- **Design pass:** the notes are a grey card with the 20 px "i" centred beside the text (laid out here with the library's icon, because the library's alert pins its icon to the top at its own size); the kit's grid has the design's 187-wide cells with 12 between; "Learn more" is underlined only when pointed at; button icons are 20; the holder is the design's size (181 tall, open) with bright faces and a lighter frame; a step with no rule starts 22 under its heading.
+- **Not done:** "Recover existing account" still leads nowhere, since recovery has no screens; Escape doesn't dismiss the Face ID sheet; the primary colour is the library theme's near-black where the design has navy.
 
-- **The rule (Omar):** no serif wordmark. "Isonomic" is set in the sans, Regular, and a product word after it in the sans, Light.
-- **First run** now draws Isonomic UI's `Wordmark` component (`ui::extra::wordmark::Wordmark::new()`), at 20 px (`tokens::wordmark_size`). The window no longer names the serif anywhere.
-- **Nowhere else** does the window draw the name. The window title and the Isonomic menu are the system's own text.
-- **`crates/ui`** re-exports the SDK's `extra` (`isonomic-app` with the `extra` feature).
-- **Pins:** `SDK_REF` is a3ac3bf (Isonomic UI a1b30e1, with the `Wordmark` component and the sans in Light), moved together with Chat's commit on it.
+## 2026-11-25 · "Decline" and the Face ID screen's "Previous step" play backward
 
-## 2026-11-16 · The wordmark in the serif; the recovering engine's message
+- **Was:** "Decline" on the terms and "Previous step" on "Create your account with Face ID" showed the screen before at once.
+- **Now:** both play what brought the screen on backward (`onboarding::rewind`). Everything on those screens is placed by the third screen's clock, so going back is that clock running backward: `Onboarding::terms_now` reads it from the rewind while one runs, the 3D pieces are drawn again for each time it passes, and what it goes back past is put back (`Onboarding::passed`). No button is heard until it lands.
+- **"Decline":** the clipboard and the pen go back under the content, the stepper drops, the content slides off to the right, the laptop turns back to the middle, and the title, the pill and the link come back.
+- **"Previous step":** the seal goes back under its panel and the panel slides off; the clipboard and the pen come back in from the left; then the signing is undone four times as fast as it was done (`signs::UNDO_RATE`): the pages lift, the signature is unwritten, the pages settle. The terms can be accepted again.
+- **Also:** "Learn more" in the two lists is the library's `Link`; the Face ID sheet has the design's sizes; the shell's onboarding panels have no raw sizes left (the spacing scale, or `ui::onboarding` tokens); the kit's words are typed into their inputs in `tests/onboarding.rs`.
+- **Checked how:** the tests land both; `ONBOARDING_SHOTS_BACK=1` with `ONBOARDING_SHOTS` draws both and shows each lands on the right screen. The headless window runs a rewind to its end in one step, so the motion itself is still to be watched in the window.
+- **Known, in the library:** buttons, switches, checkboxes and tabs show the arrow, not the pointing hand, when pointed at; only links show the hand. `Link` is always underlined, where the design's "Learn more" is not.
 
-- **Pins:** `SDK_REF` 1f28327 (Isonomic UI 0a8f39d, which bundles the serif) and `CHAT_REF` 8262fc8 move together.
-- **First run's wordmark** is drawn in the theme's `serif_font_family`, at 20 / 28 and medium weight, the bundled serif's heaviest, as Chat's sidebar draws its own. It was in the interface sans, a deviation recorded at the time because there was no serif.
-- **The set-aside notice follows the engine's new message** (isonomic-capsule #73). The window recognises it by its opening, "The list of apps and chats could not be read", and still by the older opening from an engine before it. It shows the message as it stands, with its counts of chats recovered and approvals kept.
-  - Home's title for it is now "Isonomic recovered what it could". "Apps must be approved again" is no longer always true, and the engine's message says which.
-- **Tested:** the recovering engine's message with its counts is shown as it stands.
+## 2026-11-25 · Onboarding's controls are Isonomic UI's, and a design pass
 
-## 2026-11-16 · The engine's set-aside notice, and its standard error moves
+- **Was:** onboarding drew its own buttons, switches, tabs, search boxes, checkbox, badges, notes and the three boxes the kit's words are typed back in, and several had no icon.
+- **Now:** every control is the library's (`ui::component`): `Button` (with the design's icons: arrows, plus, check, printer, download, add, fingerprint), `Switch`, `TabBar`, `Input`, `Checkbox`, `Tag`, `Alert`, `Spinner` and `Link`. What is still drawn here is layout and art only: cards, rows, the stepper, the Face ID sheet's frame, and the 3D pieces.
+- **The words typed back** are three `Input`s. Letters only, twelve at most (`kit_run::fits`); Tab and Enter are the input's own. The view keeps what is typed (`Onboarding::word_event`) and writes it back to the inputs when it is filled in for a test or held after confirming.
+- **"Get started"** follows the design as it is now: the laptop is 300 across at (490, 150), the title is under it, one pill ("Start new account"), and "Recover existing account" is a link under the pill.
+- **"Setting up your workspace"** shows this Mac's own name (`scutil --get ComputerName`, or "This Mac"), and its pill has the design's mark and a spinner.
+- **The stepper** has six steps, as the design has: the recovery kit's two screens are one step.
+- **Smaller things from the pass:** card padding counts the border; the address card has no gaps between its lines; "Active" is the pale green badge with a dot; notes are the grey card, not the blue one; the words not asked for are faint; list headers have the add button beside the title and the tabs and search under it.
+- **How it was checked:** `ONBOARDING_SHOTS=<folder> cargo test -p shell --test onboarding_shots` draws every screen at rest to a PNG without a window on screen, for laying beside the design. The timer-driven 3D pieces are not in those pictures.
+- **Differs from the design, on purpose:** the tabs are the library's segmented tabs (grey bar, white chosen tab) where the design draws an outlined bar; the spinner is the library's.
+- **Not yet:** raw sizes in the shell's onboarding panels still to move into `ui::onboarding` tokens.
 
-- **When the engine sets the registry aside:** a damaged list of approved apps is set aside at start (isonomic-capsule #72). Home then shows the engine's message as a plain warning, not an error, titled "Apps must be approved again". The text is the engine's own: "… Apps must be approved again. Their data and files are kept; chats from before are in the set-aside copy and are not shown."
-- **How the window learns it:** the engine says it only in its log. Once connected, the window reads the latest run's lines in `logs/engine.log` (and `engine.log.1`, for a rotated log), off the foreground thread (`engine_notices`).
-- **Shown once:** each incident appears once. The message names its timestamped set-aside file, so `settings/seen-engine-notices` remembers what has been shown.
-- **Home's notices have their own titles:** they were all titled "Move Isonomic to Applications", including the crash-loop guard's, which now reads "Isonomic opened without its apps". Several can show at once.
-- **Standard error moves:** the engine now writes its own `logs/engine.log` once it accepts the Capsule. The engine's standard error goes to `logs/engine.stderr`, from the window (`EngineBinary`) and from the login agent's plist (`StandardErrorPath`). An installed agent is rewritten at the next launch, since its plist's content changed.
-- **The window's "engine stopped" message** quotes the last line of whichever of the two files was written last.
-- **The gate and its report** read both the engine's standard error and the Capsule's `logs/engine.log`.
-- **Tested:** only the latest run's message counts; each incident is shown once, and a new one is shown again; the engine-link tests pass with the new path.
+## 2026-11-24 · "Previous step" plays a step's coming on backward
 
-## 2026-11-16 · SDK 4947e43 and Chat 5692f70: each report has its own id
-
-- **Pins:** `SDK_REF` 4947e43 (Isonomic UI ecd21d1) and `CHAT_REF` 5692f70 (Chat's last design rows) move together. The window reads no `PaletteCommand::icon`, the one change that isn't additive.
-- **The id:**
-  - A report written now carries its own random `id`, from the shared crate's `Report::new`. The sender sends that id, in the document and in `Idempotency-Key`.
-  - A report kept from before gets `send::derived_id`: the first 128 bits of the SHA-256 of the Capsule's id and the file's name without `.json`. That's the same 32 hex form as the SDK's ids.
-  - The SHA-256 stays, rather than the SDK helper's FNV-1a, so two reports from one Mac share nothing a receiver could link.
-  - The receiver's contract says 32 hex characters.
-- **Tested:**
-  - a report's own id is used;
-  - an older one gets a derived id in the SDK's form;
-  - derived ids are stable for one report and differ between reports.
-
-## 2026-11-16 · Problem reports, part 3: the sender (Omar agreed to sending; the host isn't chosen)
-
-- **Where:** one URL from the build's configuration. A release compiles in `ISONOMIC_REPORTS_URL`, and optionally `ISONOMIC_REPORTS_KEY`, sent as `Authorization: Bearer`. A test build may set the same names when it runs, and those win. It must be `https://`; plain `http://` goes only to this Mac's loopback. With no URL, nothing is offered and nothing is sent, as before. `settings/reports.json` no longer has a `destination`.
-- **What:** an HTTPS `POST` of exactly the bytes Show report displays: the kept document, plus its `id`, plus `isonomic_id` only when the box was ticked. Both are added outside the scrubbed fields. The id is also in `Idempotency-Key`.
-  - The id is the SHA-256 of the Capsule's id and the kept file's name: stable for one report, and not linkable across reports.
-  - It switches to the SDK's helper once format 1 carries an `id`.
-- **Behaviour:**
-  - Ask each time stays the default.
-  - Send posts once, and the person sees "Sent" or "Couldn't send; kept on this Mac".
-  - After a network error or a 5xx, the window tries again quietly: 30 s, doubling to an hour, for a day.
-  - A 4xx is never tried again.
-  - A 2xx deletes the kept file.
-  - Send automatically posts every kept report quietly, never with the person's ID.
-- **Its own runtime:** the sender runs on a one-thread runtime of its own (`reports::send::HttpSender`), not the engine link's. It uses the HTTPS client the dependency tree already built, with the system's root certificates.
-- **The setting** reads "Reports you send go to <host>." once there is a destination.
-- **The receiver's contract:** [report-receiver.md](report-receiver.md). It covers the method, the headers, the document, the answers, the 64 KiB limit, repeats by `id`, and to answer 503, not 429.
-- **Never logged:** a body. The window log gets status codes and error kinds only.
-- **Deviations:**
-  - Retries live in the running window. After a quit, an unsent report is asked about again (Ask each time) or sent again (Send automatically) at the next launch.
-  - The person sees only the first attempt's outcome; a later success is quiet.
-- **Pins:** `CHAT_REF` is f928be5 (search shows when each chat was last active), on the same SDK, 72aca92.
-- **Tested:**
-  - against a local server on the loopback: the request line, the exact body, `Content-Type`, `Authorization` and `Idempotency-Key`; 201 sent; 400 refused; 503 and no server worth retrying; an oversized body refused before sending;
-  - which URLs are allowed; the wait sequence and giving up after a day; ids stable for one report and different between reports;
-  - in the shell: Send posts what Show report shows and deletes the file; a network error, then success after the wait; a 4xx never retried; Send automatically sends quietly without the person's ID.
-## 2026-11-16 · The rail and first run after design 0.2
-
-Reference: isonomic-chat `docs/design/v0.2/screens/app-shell.md` (the collapsed rail) and `first-run-and-system-states.md` (onboarding).
-
-- **Rail:** the design's collapsed rail. It is 56 wide, with the sidebar fill and a 1 px right border, 12 above and below, 8 at the sides, and 4 between its buttons. Each button is a 28 px ghost icon button (`tokens::rail_button`). It was already 56 wide, filled and bordered; the buttons were the default size, 8 apart.
-- **First run:** the design's onboarding page.
-  - On the muted page fill (the sidebar colour): the "Isonomic" wordmark, then the stepper, then one card holding the steps, 16 apart and centred.
-  - The card is 600 wide (`tokens::card_width`) and white, with a 1 px border, a 16 radius, 28 padding, 14 between its children and a medium shadow.
-  - The Capsule line now carries the intro sentence.
-- **Deviations, recorded:**
-  - **One card, every step:** the design draws one step per card. Here all four stay in the one card, so the person keeps seeing their ID while the model downloads. The design has no screen for this window's steps.
-  - **No card title:** "Welcome to Isonomic" repeated the wordmark right above it. Dropping it keeps the tallest state (a download in progress) above the footer.
-  - **Continue stays in the pinned footer,** not the card's own button row as drawn. The steps can be taller than the window, and Continue must never scroll away (the build 96 fix).
-  - **The wordmark is the interface sans,** as Chat's is. Isonomic UI has no display serif token.
-  - **Home:** the design has no frame for the window's Home, so it is unchanged.
-- **Tested:**
-  - the wordmark and card are shown;
-  - at the window's opening size (1100 × 720), the tallest step's Cancel clears the pinned footer (at the opening size it ends 24 px above the footer);
-  - the rail's keyboard and scroll tests pass at the new size.
-
-## 2026-11-16 · SDK 72aca92 and Chat 561e853: the design options
-
-- **Pins:**
-  - `SDK_REF` 72aca92 brings Isonomic UI 4f1207b, with the options Chat needs to match the design.
-  - `CHAT_REF` 561e853 applies them: focusable sidebar rows, the comfortable composer with round Send and Stop, the search palette and the model picker.
-  - They move together. One copy each of Isonomic UI, the harness and `isonomic-reports` is built.
-- **The library's three breaking changes don't reach the window.** It builds no `PaletteCommand`, matches no `PopupMenuItem::Item` by its fields, and has no impl of its own on `IconName`. Nothing in the window changed.
-- **Tested:** fmt, clippy and the full suite, including the Chat tab and the self-check's keys against Chat's shell.
-
-## 2026-11-16 · The self-check presses Chat's shortcuts
-
-- **What it presses:** after the prompt check (turn, stop, continue), the self-check sends Chat's design 0.2 shortcuts through the window's own key dispatch (`dispatch_keystroke`), as a keyboard would:
-  - the design's sidebar toggle (`cmd-.`), then Chat's second toggle (`cmd-b`) to put it back. On macOS, `cmd-.` also means cancel;
-  - from a new chat (`cmd-shift-o`), the next chat (`alt-down`), which should open the first chat in the sidebar.
-- **What it prints:**
-  - `keys: cmd-. toggled the sidebar: yes|no`
-  - `keys: cmd-b toggled the sidebar back: yes|no`
-  - `keys: alt-down opened the next chat: yes|no`
-  Neither changes PASS or FAIL. Each key has 5 s to show its effect.
-- **No clash:** the window binds only `cmd-q` and `cmd-w`. Chat binds `cmd-shift-o`, `cmd-.`, `cmd-b`, `cmd-k`, `alt-up` and `alt-down` in its own key context.
-- **Pins:** `SDK_REF` aea8ba1 (Isonomic UI 66e93d3, with the run status bar aligned to the design, and the reports crate unchanged from fedba7d) and `CHAT_REF` 37f034c move together. Chat 37f034c is its design audit (58fe2d3) plus first run without a restart, versions on a real engine and the second sidebar key.
-- **Code:** `self_check.rs` became `self_check/mod.rs`, with the shortcuts in `self_check/keys.rs`.
-- **Tested headless:** against Chat's shell with its sample chats, both keys work through the window's dispatch.
-
-## 2026-11-16 · Problem reports on the SDK's shared crate (SDK fedba7d)
-
-- **`isonomic-reports`:** the window's problem reports now use the crate the engine uses too: format 1, the scrubber, and the backtrace helpers.
-  - **Deleted here:** this repo's `scrub.rs`, `frames` and `short_path`, and the format types. The `reports` crate re-exports the shared ones, so call sites didn't change.
-  - **Kept here:** the store, the setting, the panic hook and containment, the hang watchdog, the crash-loop guard and the window log.
-  - **Renamed:** `System.macos` is now `os_version`. Format 1's key stays `system.macos`.
-- **The scrubber, from fedba7d:**
-  - quoted text of any length becomes `[text removed]`;
-  - a person's ID in either form becomes `[id removed]`;
-  - key-like runs become `[key removed]`.
-- **The Isonomic ID:** when the notice's box is ticked, the window adds the ID as a top-level `isonomic_id`, outside the scrubbed fields. It is never in a kept file.
-- **`WindowRequest::Report`:** an app's `AppContext::report(Problem { summary, detail })` is queued like `InstallModel`. The shell writes it as an `app_error`, with the app's id and its manifest's version, through the same writer as the panic hook, off the foreground thread. Then it shows the notice. A self-check has no reports, so it drops them.
-- **Pins:** `SDK_REF` is fedba7d (Isonomic UI b4c9670 and the harness unchanged since abe8fe4). `CHAT_REF` stays fa3886f, which builds against this SDK checkout.
-- **Tested:** an app's report going through the window's queue, written as `app_error` with a home path turned to `~` and a token removed, and asked about. The existing report, notice and hook tests pass on the shared crate.
-
-## 2026-11-16 · The engine's problem reports, and the key rule
-
-- **The engine's reports reach the same notice.** The engine writes format 1 into the same `reports/pending/` (isonomic-capsule #61). Its titles:
-  - `panic` from `engine`: "The Isonomic engine quit unexpectedly";
-  - `service_failed`: "The database stopped working", "The cache stopped working", or "The <name> service stopped working";
-  - `model_server_failed`: "The local model stopped working".
-- **When they're asked about:**
-  - at launch, like the window's own reports;
-  - while the window is open: at once when the engine's status shows a degraded service, and again 3 s (`tokens::report_rescan_delay`) after any status change (`Shell::review_on_status`).
-- **Why the second look:** the engine writes its report after its own watch sees the failure, so the file can follow the status. A review is one directory read and never asks about a report twice.
-- **No file-system watch:** it would add a dependency to cover what the second look already does.
-- **Scrubber rule from the engine:** a run of 24 or more key characters with at least 6 digits becomes `[key removed]`, covering tokens, digests and the person's ID. The rule and its test cases are the engine's, word for word, so the two scrubbers match until both move to the SDK's shared crate.
-- **Pins:** `SDK_REF` abe8fe4 (Isonomic UI b4c9670) and `CHAT_REF` fa3886f move together, so one copy of Isonomic UI is built. Chat brings its run status bar, no attaching, newest-first list order, prompt editing, and Try again with versions.
-- **Tested:**
-  - the titles and the scrubber's key cases;
-  - a `service_failed` written while open, asked about when the service turns degraded;
-  - a report written after the status change, asked about at the second look.
-
-Older entries: [history-3.md](history-3.md), then [history-2.md](history-2.md), then [history.md](history.md).
+- **Was:** "Previous step" on the later steps showed the step before at once, at rest.
+- **Now:** the step being left plays its coming on backward (`flow::Flow::back`): its art turns over and goes back under its panel, the panel slides off to the right, the stepper's words change back, and the step before's art comes back in from the left edge. The step before is there when that ends (`Onboarding::land`), and no button is heard until then.
+- **What each step's art does backward:** the ID card comes out of the wallet and lies over it again; the holder's tiles turn back, it closes and goes under the panel; on "Confirm your recovery kit" it turns to face the person again.
+- **The locked kit:** past "Confirm your recovery kit" the kit stays locked. Going back to that step shows it closed with its padlock on, and "Continue" goes on without asking for the words again. Going back out of it unlocks it first: the padlock's body drops, it goes back under the panel, and the holder opens with its back turned, before the rest plays backward.
+- **From "Your account exists."** back to "Create your account with Face ID" likewise; the seal comes back in from the left edge.
+- **Not yet:** "Previous step" on "Create your account with Face ID" and "Decline" on the terms still go back at once.

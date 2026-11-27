@@ -1,0 +1,112 @@
+// Copyright 2026 Anud Inc.
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+//! The third screen's props as drawn: the clipboard, the signature being
+//! written on its last page, and the pen. Each drawn frame is placed by
+//! the time it was drawn for.
+
+use ui::onboarding::terms::{self as design, at, signs};
+use ui::{
+    canvas, div, img, motion, point, px, IntoElement, ParentElement as _, PathBuilder, Styled as _,
+};
+
+use super::flow_view::TUCKED;
+use super::stage::Drawn;
+use super::{signature, signing, terms, Onboarding};
+
+impl Onboarding {
+    /// The clipboard, the signature and the pen, at `t` on the third
+    /// screen's clock.
+    pub(super) fn props_layer(&self, t: f32) -> impl IntoElement {
+        let (left, top, wide, tall) = design::CLIPBOARD;
+        let margin = (design::CLIPBOARD_CANVAS - 1.) / 2.;
+        // Under the content they aren't drawn: going back, it leaves.
+        let out = |starts: f32| move |frame: &&Drawn| terms::flight(frame.at, starts).0 > TUCKED;
+        let clipboard = self
+            .clipboard
+            .as_ref()
+            .filter(out(at::CLIPBOARD_FLIES))
+            .map(|frame| {
+                let (arrived, _) = terms::flight(frame.at, at::CLIPBOARD_FLIES);
+                // It comes out from under the content, and leaves by the left
+                // edge.
+                let (gone, _) = self.signing_at(frame.at).map_or((0., 0.), |s| {
+                    signing::leaving(s, signs::CLIPBOARD_LEAVES, signs::LEAVE)
+                });
+                let from = design::SIDEBAR + design::TUCK;
+                img(frame.image.clone())
+                    .absolute()
+                    .left(px(motion::between(from, left, arrived)
+                        - wide * margin
+                        - (left + wide) * gone))
+                    .top(px(top - tall * margin))
+                    .w(px(wide * design::CLIPBOARD_CANVAS))
+                    .h(px(tall * design::CLIPBOARD_CANVAS))
+            });
+
+        // The signature: as much as is written, where the lifted pages
+        // leave the last one bare. They are where the clipboard's frame
+        // has them.
+        let lifted = self
+            .signing_at(self.clipboard.as_ref().map_or(t, |frame| frame.at))
+            .map_or(0., signing::lift);
+        let written = self
+            .signing_at(t)
+            .map(signing::written)
+            .filter(|share| *share > 0. && lifted > 0.);
+        let signed = written.zip(self.props.clone()).map(|(share, props)| {
+            canvas(
+                |_, _, _| (),
+                move |bounds, _, window, _| {
+                    let place = |on_line: (f32, f32)| {
+                        let (x, y) = props.signature_point(on_line);
+                        point(
+                            bounds.origin.x + px(left + wide / 2. + x),
+                            bounds.origin.y + px(top + tall / 2. + y),
+                        )
+                    };
+                    for pair in signature::written(share).windows(2) {
+                        if !pair
+                            .iter()
+                            .all(|on_line| props.signature_bare(*on_line, lifted))
+                        {
+                            continue;
+                        }
+                        let mut line = PathBuilder::stroke(px(design::SIGNATURE_LINE));
+                        line.move_to(place(pair[0]));
+                        line.line_to(place(pair[1]));
+                        if let Ok(line) = line.build() {
+                            window.paint_path(line, design::signature());
+                        }
+                    }
+                },
+            )
+            .absolute()
+            .size_full()
+        });
+
+        let (left, top, wide, tall) = design::PEN;
+        let pen = self.pen.as_ref().filter(out(at::PEN_FLIES)).map(|frame| {
+            let (arrived, _) = terms::flight(frame.at, at::PEN_FLIES);
+            let (gone, _) = self.signing_at(frame.at).map_or((0., 0.), |s| {
+                signing::leaving(s, signs::PEN_LEAVES, signs::PEN_LEAVE)
+            });
+            // Its picture is still while it writes, so it goes by the clock.
+            let (reach_x, reach_y) = self.signing_at(t).map_or((0., 0.), |s| self.pen_reach(s));
+            let rest = left + (wide - design::PEN_CANVAS) / 2.;
+            img(frame.image.clone())
+                .absolute()
+                .left(px(motion::between(design::SIDEBAR, rest, arrived)
+                    + reach_x
+                    - (rest + design::PEN_CANVAS) * gone))
+                .top(px(top + (tall - design::PEN_CANVAS) / 2. + reach_y))
+                .size(px(design::PEN_CANVAS))
+        });
+        div()
+            .absolute()
+            .size_full()
+            .children(clipboard)
+            .children(signed)
+            .children(pen)
+    }
+}

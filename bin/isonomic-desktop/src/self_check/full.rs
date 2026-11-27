@@ -386,6 +386,12 @@ pub async fn chat_list(
     .await?;
 
     menu(window, &third, "delete", cx)?;
+    // Delete asks first; Enter is its "Delete".
+    until_within(cx, chat, "the delete asked about", UI_STEP, |s, _| {
+        s.confirming_delete().is_some()
+    })
+    .await?;
+    press(window, "enter", cx)?;
     until_within(cx, chat, "the deleted chat gone", UI_STEP, |s, _| {
         !s.sessions().iter().any(|x| x.id == third)
     })
