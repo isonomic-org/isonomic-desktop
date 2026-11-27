@@ -1,9 +1,11 @@
 // Copyright 2026 Anud Inc.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The laptop on the onboarding window: its 3D model, turned and drawn a
-//! frame at a time off the foreground thread. It is the model on every
-//! screen: at rest it stays as its last drawn frame.
+//! The computer on the onboarding window: the 3D model of the Mac the
+//! window is on (`machine`), turned and drawn a frame at a time off the
+//! foreground thread. It is the model on every screen: at rest it stays as
+//! its last drawn frame. The design draws a laptop, and the names here
+//! keep that word.
 
 use std::sync::Arc;
 
@@ -11,12 +13,9 @@ use device3d::{Camera, Framing, Model, Transform};
 use ui::onboarding::{self as design, at};
 use ui::{div, img, motion, px, Div, ParentElement as _, RenderImage, Styled as _};
 
+use super::machine::{self, Machine};
 use super::stage::{self, Display};
 
-static MODEL: &[u8] = include_bytes!("../../../../assets/onboarding/macbook-pro-13-2020.glb");
-
-/// The model's silver, as its colour table names it.
-const SILVER: [u8; 3] = [0xCD, 0xCE, 0xD1];
 /// The lit display's corners, as the design colours it: top left, top right,
 /// bottom left, bottom right.
 const DISPLAY: [[u8; 3]; 4] = [
@@ -36,13 +35,29 @@ pub struct Scene {
 }
 
 impl Scene {
-    /// Read the model. Slow enough to keep off the foreground thread.
+    /// Read this Mac's model. Slow enough to keep off the foreground
+    /// thread: it asks the Mac which one it is.
     pub fn load() -> Result<Scene, device3d::ModelError> {
-        let mut model = Model::read(MODEL)?;
-        model.recolour("body", SILVER);
+        Scene::of(&machine::this_mac())
+    }
+
+    /// Read the model of `machine`, in its finish.
+    pub fn of(machine: &Machine) -> Result<Scene, device3d::ModelError> {
+        let mut model = Model::read(machine.model)?;
+        for (group, colour) in machine.finish {
+            model.recolour(group, *colour);
+        }
         let camera = Camera::front(&model, Framing::LAPTOP_ELEVATION, Framing::LAPTOP);
         Ok(Scene { model, camera })
     }
+}
+
+/// The picture of `machine` at rest with its display lit, as the window
+/// shows it, for a screen with `scale` pixels to a point.
+pub fn still(machine: &Machine, scale: f32) -> Result<Arc<RenderImage>, device3d::ModelError> {
+    let scene = Scene::of(machine)?;
+    let (_, _, wide, tall) = design::LAPTOP;
+    Ok(posed(&scene, (0., Flip::Over), 1., (wide, tall), scale))
 }
 
 /// Where the flight is at `now` seconds: how far up (0 at the bottom edge,
@@ -140,6 +155,16 @@ mod tests {
     #[test]
     fn the_model_and_its_camera_load() {
         assert!(Scene::load().is_ok());
+    }
+
+    #[test]
+    fn every_mac_draws_on_the_laptop_s_canvas() {
+        for mac in machine::every() {
+            let scene = Scene::of(&mac).unwrap();
+            let (_, _, wide, tall) = design::LAPTOP;
+            let drawn = posed(&scene, (0., Flip::Over), 1., (wide, tall), 1.);
+            assert_eq!(drawn.size(0).width.0, 450, "{}", mac.enclosure);
+        }
     }
 
     #[test]

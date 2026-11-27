@@ -194,12 +194,31 @@ impl Shots {
 
 /// Not under the test harness: the Mac's platform starts only on the main
 /// thread.
+/// A picture of every Mac's model as the window shows it at rest.
+fn macs(folder: &std::path::Path) {
+    for mac in onboarding::machine::every() {
+        let still = onboarding::still(&mac, 2.).expect("the model reads");
+        let size = still.size(0);
+        let mut pixels = still.as_bytes(0).expect("one frame").to_vec();
+        // The window's pictures are blue first; a file's are red first.
+        let (reds_and_blues, _) = pixels.as_chunks_mut::<4>();
+        reds_and_blues.iter_mut().for_each(|pixel| pixel.swap(0, 2));
+        let (wide, tall) = (size.width.0 as u32, size.height.0 as u32);
+        let picture = image::RgbaImage::from_raw(wide, tall, pixels).expect("the picture's size");
+        let file = folder.join(format!("mac-{}.png", mac.enclosure));
+        picture.save(file).expect("the picture saves");
+    }
+}
+
 fn main() {
     let Some(folder) = std::env::var_os("ONBOARDING_SHOTS").map(PathBuf::from) else {
         eprintln!("skipped: ONBOARDING_SHOTS names no folder");
         return;
     };
     std::fs::create_dir_all(&folder).expect("the folder can be made");
+    if std::env::var_os("ONBOARDING_SHOTS_MACS").is_some() {
+        return macs(&folder);
+    }
     let Some(mut shots) = Shots::open(folder) else {
         eprintln!("skipped: no headless renderer here");
         return;
