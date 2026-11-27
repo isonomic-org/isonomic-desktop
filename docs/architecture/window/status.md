@@ -4,6 +4,10 @@ Newest first.
 
 Older entries: `history-7.md`, then `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-27 · Pins on harness d7d8ab6
+
+- **Pins.** SDK `acacbbb` and Chat `8893743`, both on harness `d7d8ab6`, the engine's (capsule `bd026f9`). With that harness a chat session with nothing connected is not offered the connection tools, so the small local model answers plain requests instead of saying it has no tool connected. No window code change.
+
 ## 2026-11-27 · Onboarding's models from the catalogue; its integrations connect
 
 - **Pins.** SDK `91c8d2a` (Isonomic UI `6e0c4a5`, unchanged), for `models.catalogue`, `models.remove` and `connections.*`. Chat stays at `67150eb`.
