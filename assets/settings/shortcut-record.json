@@ -1,0 +1,49 @@
+{
+ "id": "shortcut-record",
+ "kind": "dialog",
+ "name": [
+  "Shortcut",
+  "Record"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Change shortcut"
+  },
+  {
+   "k": "note",
+   "text": "Voice chat hotkey"
+  },
+  {
+   "k": "keys",
+   "keys": "⌥ Space",
+   "text": "Press the keys you want to use"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Reset to default",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 420
+}

@@ -1,0 +1,229 @@
+{
+ "id": "browser",
+ "kind": "page",
+ "name": [
+  "Browser"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Browser",
+   "sub": "Manage the built-in browser and site access"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "browser",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "icon": "globe"
+     },
+     "title": "Browser",
+     "desc": "Let Isonomic control the built-in browser"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Import…",
+     "style": "white",
+     "icon": "download",
+     "at": "lead"
+    }
+   ],
+   "title": "General"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "web-link-open-destination",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Isonomic",
+       "options": [
+        "Isonomic",
+        "Default browser",
+        "Ask every time"
+       ]
+      }
+     ],
+     "title": "Web link open destination"
+    },
+    {
+     "id": "local-url-open-destination",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Isonomic",
+       "options": [
+        "Isonomic",
+        "Default browser",
+        "Ask every time"
+       ]
+      }
+     ],
+     "title": "Local URL open destination",
+     "desc": "Where local development sites open"
+    },
+    {
+     "id": "show-full-url",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Show full URL"
+    },
+    {
+     "id": "browsing-data",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Clear browsing data",
+       "style": "white"
+      }
+     ],
+     "title": "Browsing data",
+     "desc": "History, site data, cache, and downloads"
+    },
+    {
+     "id": "annotation-screenshots",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Always include",
+       "options": [
+        "Always include",
+        "Ask",
+        "Never include"
+       ]
+      }
+     ],
+     "title": "Annotation screenshots",
+     "desc": "Help with comments but use more of your plan"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Downloads"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "location",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Change",
+       "style": "white"
+      }
+     ],
+     "title": "Location",
+     "desc": "System Downloads folder"
+    },
+    {
+     "id": "ask-where-to-save-downloads",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Ask where to save downloads"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Website permissions",
+   "sub": "Defaults and exceptions for specific websites"
+  },
+  {
+   "k": "table",
+   "head": [
+    "Site or pattern",
+    "Browsing",
+    "Downloads",
+    ""
+   ],
+   "widths": [
+    260,
+    200,
+    200,
+    24
+   ],
+   "rows": [
+    [
+     "Default",
+     "Always allow",
+     "Requires approval",
+     ""
+    ],
+    [
+     "https://github.com",
+     "Always allow",
+     "Always allow",
+     ""
+    ],
+    [
+     "https://figma.com",
+     "Always allow",
+     "Always allow",
+     ""
+    ],
+    [
+     "https://mistral.ai",
+     "Always allow",
+     "Requires approval",
+     ""
+    ]
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Developer mode"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "enable-full-cdp-access",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Enable full CDP access",
+     "desc": "Elevated risk. Lets Isonomic inspect and control sensitive browser internals."
+    }
+   ]
+  }
+ ]
+}

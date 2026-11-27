@@ -1,0 +1,197 @@
+[
+ {
+  "label": "Personal",
+  "items": [
+   {
+    "id": "general",
+    "title": "General",
+    "icon": "settings"
+   },
+   {
+    "id": "notifications",
+    "title": "Notifications",
+    "icon": "notification"
+   },
+   {
+    "id": "import",
+    "title": "Import",
+    "icon": "download"
+   },
+   {
+    "id": "profile",
+    "title": "Profile",
+    "icon": "user-avatar"
+   },
+   {
+    "id": "appearance",
+    "title": "Appearance",
+    "icon": "sun"
+   },
+   {
+    "id": "account",
+    "title": "Account",
+    "icon": "identification"
+   },
+   {
+    "id": "archived-chats",
+    "title": "Archived chats",
+    "icon": "archive"
+   },
+   {
+    "id": "parental-controls",
+    "title": "Parental controls",
+    "icon": "events"
+   },
+   {
+    "id": "trusted-contact",
+    "title": "Trusted contact",
+    "icon": "user-certification"
+   },
+   {
+    "id": "voice",
+    "title": "Voice",
+    "icon": "microphone"
+   },
+   {
+    "id": "storage",
+    "title": "Storage",
+    "icon": "data-base"
+   },
+   {
+    "id": "configuration",
+    "title": "Configuration",
+    "icon": "settings-adjust"
+   },
+   {
+    "id": "personalization",
+    "title": "Personalization",
+    "icon": "sparkles"
+   },
+   {
+    "id": "mini-pets",
+    "title": "Mini & Pets",
+    "icon": "face-satisfied"
+   },
+   {
+    "id": "keyboard-shortcuts",
+    "title": "Keyboard shortcuts",
+    "icon": "keyboard"
+   },
+   {
+    "id": "usage-billing",
+    "title": "Usage & billing",
+    "icon": "chart-bar"
+   },
+   {
+    "id": "data-controls",
+    "title": "Data controls",
+    "icon": "security"
+   }
+  ]
+ },
+ {
+  "label": "Engine",
+  "items": [
+   {
+    "id": "models",
+    "title": "Models",
+    "icon": "chip"
+   },
+   {
+    "id": "services",
+    "title": "Services",
+    "icon": "layers"
+   },
+   {
+    "id": "keys-recovery",
+    "title": "Keys & recovery",
+    "icon": "locked"
+   },
+   {
+    "id": "backups",
+    "title": "Backups",
+    "icon": "recently-viewed"
+   },
+   {
+    "id": "cells",
+    "title": "Cells",
+    "icon": "hexagon-outline"
+   }
+  ]
+ },
+ {
+  "label": "Integrations",
+  "items": [
+   {
+    "id": "plugins",
+    "title": "Plugins",
+    "icon": "plug"
+   },
+   {
+    "id": "file-viewers",
+    "title": "File viewers",
+    "icon": "document"
+   },
+   {
+    "id": "passwords",
+    "title": "Passwords",
+    "icon": "password"
+   },
+   {
+    "id": "computer-use",
+    "title": "Computer use",
+    "icon": "cursor-1"
+   },
+   {
+    "id": "appshots",
+    "title": "Appshots",
+    "icon": "camera"
+   },
+   {
+    "id": "browser",
+    "title": "Browser",
+    "icon": "globe"
+   },
+   {
+    "id": "cloud-computer",
+    "title": "Cloud computer",
+    "icon": "cloud"
+   }
+  ]
+ },
+ {
+  "label": "Coding",
+  "items": [
+   {
+    "id": "hooks",
+    "title": "Hooks",
+    "icon": "anchor"
+   },
+   {
+    "id": "connections",
+    "title": "Connections",
+    "icon": "connect"
+   },
+   {
+    "id": "cloud-environments",
+    "title": "Cloud environments",
+    "icon": "cloud-upload"
+   },
+   {
+    "id": "code-review",
+    "title": "Code Review",
+    "icon": "pull-request"
+   },
+   {
+    "id": "git",
+    "title": "Git",
+    "icon": "branch"
+   },
+   {
+    "id": "worktrees",
+    "title": "Worktrees",
+    "icon": "tree-view-alt"
+   }
+  ]
+ }
+]

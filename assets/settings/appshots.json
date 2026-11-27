@@ -1,0 +1,88 @@
+{
+ "id": "appshots",
+ "kind": "page",
+ "name": [
+  "Appshots"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Appshots"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "take-an-appshot-to-show-isonomic-your-fr",
+     "ctl": [],
+     "lead": {
+      "icon": "mac-command"
+     },
+     "title": "Take an appshot to show Isonomic your frontmost window",
+     "desc": "Appshots include visual and text content, including text scrolled offscreen"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "hotkey",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "⌘ + ⌘",
+       "options": [
+        "⌘ + ⌘",
+        "⌥ + ⌥",
+        "⌃ + ⌃",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Hotkey",
+     "desc": "Press both ⌘ keys at the same time"
+    },
+    {
+     "id": "appshot-destination",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Automatic",
+       "options": [
+        "Automatic",
+        "New chat",
+        "Current chat",
+        "Clipboard"
+       ]
+      }
+     ],
+     "title": "Appshot destination",
+     "desc": "Where appshots go when you use the hotkey"
+    },
+    {
+     "id": "use-mini-when-visible",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Use Mini when visible",
+     "desc": "When Mini isn’t visible, appshots go to your chosen destination"
+    },
+    {
+     "id": "play-sound-effect",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Play sound effect"
+    }
+   ]
+  }
+ ]
+}

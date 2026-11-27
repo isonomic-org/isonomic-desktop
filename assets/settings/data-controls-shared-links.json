@@ -1,0 +1,67 @@
+{
+ "id": "data-controls-shared-links",
+ "kind": "dialog",
+ "name": [
+  "Data controls",
+  "Shared links"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Shared links"
+  },
+  {
+   "k": "note",
+   "text": "Anyone with one of these links can view that chat."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "capsule-backup-format",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Capsule backup format",
+     "desc": "Shared Nov 3 · 12 views"
+    },
+    {
+     "id": "local-vs-hosted-models",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Local vs hosted models",
+     "desc": "Shared Oct 21 · 4 views"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Delete all links",
+     "style": "white",
+     "red": "text"
+    },
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

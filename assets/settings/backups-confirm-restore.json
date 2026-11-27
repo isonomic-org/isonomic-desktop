@@ -1,0 +1,39 @@
+{
+ "id": "backups-confirm-restore",
+ "kind": "dialog",
+ "name": [
+  "Backups",
+  "Confirm restore"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Restore this snapshot?"
+  },
+  {
+   "k": "note",
+   "text": "Isonomic restores it next to your current data, so nothing is overwritten."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Restore",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

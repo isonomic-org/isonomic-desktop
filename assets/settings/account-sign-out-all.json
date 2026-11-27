@@ -1,0 +1,40 @@
+{
+ "id": "account-sign-out-all",
+ "kind": "dialog",
+ "name": [
+  "Account",
+  "Sign out all"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Sign out of all other devices?"
+  },
+  {
+   "k": "note",
+   "text": "Every device except this Mac is signed out. They’ll need your passkey to sign back in."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Sign out all",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

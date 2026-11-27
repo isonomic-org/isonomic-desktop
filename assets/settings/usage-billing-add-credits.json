@@ -1,0 +1,69 @@
+{
+ "id": "usage-billing-add-credits",
+ "kind": "dialog",
+ "name": [
+  "Usage & billing",
+  "Add credits"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add credits"
+  },
+  {
+   "k": "note",
+   "text": "Credits cover hosted models and cloud Cells when you go past your plan."
+  },
+  {
+   "k": "controls",
+   "ctl": [
+    {
+     "c": "seg",
+     "options": [
+      "$10",
+      "$25",
+      "$50"
+     ],
+     "active": 1
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "auto-top-up",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Auto top-up",
+     "desc": "Add $25 when credits fall below $5"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add credits",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

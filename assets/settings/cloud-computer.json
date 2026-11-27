@@ -1,0 +1,87 @@
+{
+ "id": "cloud-computer",
+ "kind": "page",
+ "name": [
+  "Cloud computer"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Cloud computer",
+   "sub": "Cloud browsing settings and saved website cookies"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "General"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "cloud-cookies",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Cloud cookies",
+     "desc": "Manage cookies used by cloud sessions"
+    },
+    {
+     "id": "website-approvals",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Auto approve",
+       "options": [
+        "Ask every time",
+        "Auto approve",
+        "Auto approve known sites"
+       ]
+      }
+     ],
+     "title": "Website approvals",
+     "desc": "Whether cloud sessions ask before opening websites"
+    },
+    {
+     "id": "run-on",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Isonomic network",
+       "options": [
+        "Isonomic network",
+        "This Mac",
+        "Your own server"
+       ]
+      }
+     ],
+     "title": "Run on",
+     "desc": "Network Capsules run inside attested hardware enclaves"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add website",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Website permissions",
+   "sub": "Add sites to override the default permission"
+  },
+  {
+   "k": "empty",
+   "ctl": [],
+   "title": "No website overrides"
+  }
+ ]
+}

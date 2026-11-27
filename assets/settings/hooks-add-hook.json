@@ -1,0 +1,82 @@
+{
+ "id": "hooks-add-hook",
+ "kind": "dialog",
+ "name": [
+  "Hooks",
+  "Add hook"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add hook"
+  },
+  {
+   "k": "note",
+   "text": "Runs before Isonomic uses a tool. Exit with a non-zero code to block it."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "./scripts/check.sh \"$ISONOMIC_TOOL\"",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Run this command"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "All tools",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "All tools"
+     ]
+    }
+   ],
+   "label": "Applies to"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "30 seconds",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "30 seconds"
+     ]
+    }
+   ],
+   "label": "Timeout"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add hook",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

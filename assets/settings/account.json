@@ -1,0 +1,155 @@
+{
+ "id": "account",
+ "kind": "page",
+ "name": [
+  "Account"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Account"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "General"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "name",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "John Appleseed"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Name"
+    },
+    {
+     "id": "email",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "john@example.com"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Email"
+    },
+    {
+     "id": "plan",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Pro"
+      }
+     ],
+     "title": "Plan"
+    },
+    {
+     "id": "sign-in",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Passkey active"
+      }
+     ],
+     "title": "Sign-in",
+     "desc": "Passkey in the Secure Enclave, synced with iCloud Keychain."
+    },
+    {
+     "id": "smart-account",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "0x7A3f…9C21",
+       "mono": true
+      },
+      {
+       "c": "button",
+       "label": "Copy",
+       "style": "white",
+       "icon": "copy",
+       "at": "lead"
+      }
+     ],
+     "title": "Smart account",
+     "desc": "Counterfactual — it deploys on your first on-chain action."
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Sessions"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "macbook-pro",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "Current"
+      }
+     ],
+     "title": "MacBook Pro",
+     "desc": "This Mac · active now"
+    },
+    {
+     "id": "iphone",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Sign out",
+       "style": "white"
+      }
+     ],
+     "title": "iPhone",
+     "desc": "Last active 2 days ago"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "sign-out-of-all-other-devices",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Sign out all",
+       "style": "white"
+      }
+     ],
+     "title": "Sign out of all other devices"
+    },
+    {
+     "id": "delete-account",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Delete",
+       "style": "white",
+       "red": "text"
+      }
+     ],
+     "title": "Delete account",
+     "desc": "Revokes every device key and removes your Isonomic ID from this Mac. Capsule data stays encrypted on disk until you delete it."
+    }
+   ]
+  }
+ ]
+}

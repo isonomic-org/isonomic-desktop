@@ -1,0 +1,75 @@
+{
+ "id": "backups-restore",
+ "kind": "dialog",
+ "name": [
+  "Backups",
+  "Restore"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Restore from a backup"
+  },
+  {
+   "k": "note",
+   "text": "Pick a snapshot to restore."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "today-3-00-am",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Restore",
+       "style": "white"
+      }
+     ],
+     "title": "Today, 3:00 AM",
+     "desc": "Daily · 2.4 GB"
+    },
+    {
+     "id": "yesterday-3-00-am",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Restore",
+       "style": "white"
+      }
+     ],
+     "title": "Yesterday, 3:00 AM",
+     "desc": "Daily · 2.4 GB"
+    },
+    {
+     "id": "nov-1",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Restore",
+       "style": "white"
+      }
+     ],
+     "title": "Nov 1",
+     "desc": "Monthly · 2.2 GB"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

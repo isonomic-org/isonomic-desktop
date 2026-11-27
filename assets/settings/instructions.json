@@ -1,0 +1,35 @@
+{
+ "id": "instructions",
+ "kind": "sub",
+ "name": [
+  "Instructions"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Personalization"
+  },
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ],
+   "title": "Isonomic",
+   "sub": "Extra instructions and context for all chats"
+  },
+  {
+   "k": "textarea",
+   "text": "Answer in plain English and keep it short. Lead with the answer, then a checklist.\nUse IBM Plex in any document you create.\nAsk before installing anything outside a Cell.",
+   "tall": 320,
+   "mono": true
+  },
+  {
+   "k": "note",
+   "text": "Isonomic reads these instructions at the start of every chat."
+  }
+ ]
+}

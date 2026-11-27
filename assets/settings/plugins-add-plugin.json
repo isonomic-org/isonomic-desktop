@@ -1,0 +1,56 @@
+{
+ "id": "plugins-add-plugin",
+ "kind": "dialog",
+ "name": [
+  "Plugins",
+  "Add plugin"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add a plugin"
+  },
+  {
+   "k": "note",
+   "text": "Install a plugin from a Git repository or a local folder."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "github.com/acme/isonomic-plugin",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Repository or path"
+  },
+  {
+   "k": "note",
+   "text": "Only install plugins from people you trust. Plugins can run code on this Mac."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Install",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

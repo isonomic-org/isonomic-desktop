@@ -1,0 +1,63 @@
+{
+ "id": "cloud-computer-add-website",
+ "kind": "dialog",
+ "name": [
+  "Cloud computer",
+  "Add website"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add website"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "example.com",
+     "mono": true,
+     "wide": 392,
+     "ph": true
+    }
+   ],
+   "label": "Website"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Auto approve",
+     "logo": false,
+     "wide": 392,
+     "options": [
+      "Auto approve"
+     ]
+    }
+   ],
+   "label": "Access"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

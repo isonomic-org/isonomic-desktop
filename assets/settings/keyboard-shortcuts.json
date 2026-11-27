@@ -1,0 +1,262 @@
+{
+ "id": "keyboard-shortcuts",
+ "kind": "page",
+ "name": [
+  "Keyboard shortcuts"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Keyboard shortcuts"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "All",
+    "Chats",
+    "Navigation",
+    "Engine",
+    "Editor"
+   ],
+   "search": "Search shortcuts",
+   "active": 0
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "number-shortcuts",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "⌘1–9 for tabs",
+       "options": [
+        "⌘1–9 for tabs",
+        "⌘1–9 for chats",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Number shortcuts",
+     "desc": "Use ⌘1–9 to switch tabs and ⌃1–9 to switch chats"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "new-chat",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘N",
+       "keys": "cmd-n"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "New chat",
+     "desc": "Start a new chat"
+    },
+    {
+     "id": "new-temporary-chat",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⇧⌘N",
+       "keys": "shift-cmd-n"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "New temporary chat",
+     "desc": "A chat that won’t appear in history"
+    },
+    {
+     "id": "archive-chat",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⇧⌘A",
+       "keys": "shift-cmd-a"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Archive chat",
+     "desc": "Archive the current chat"
+    },
+    {
+     "id": "command-menu",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘K",
+       "keys": "cmd-k"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Command menu",
+     "desc": "Open the command menu"
+    },
+    {
+     "id": "search-files",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘P",
+       "keys": "cmd-p"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Search files",
+     "desc": "Search files in the current project"
+    },
+    {
+     "id": "toggle-sidebar",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⇧⌘S",
+       "keys": "shift-cmd-s"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Toggle sidebar",
+     "desc": "Show or hide the sidebar"
+    },
+    {
+     "id": "open-terminal",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌃`",
+       "keys": "ctrl-`"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Open terminal",
+     "desc": "Open the terminal panel"
+    },
+    {
+     "id": "start-or-stop-engine",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Unassigned"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Start or stop engine",
+     "desc": "Starts or stops all Capsule services"
+    },
+    {
+     "id": "open-app-store",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Unassigned"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Open App Store",
+     "desc": "Browse and install apps"
+    },
+    {
+     "id": "settings",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘,",
+       "keys": "cmd-,"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Settings",
+     "desc": "Open Settings"
+    },
+    {
+     "id": "show-keyboard-shortcuts",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘/",
+       "keys": "cmd-/"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Show keyboard shortcuts",
+     "desc": "Show the shortcuts available right now"
+    }
+   ]
+  }
+ ]
+}

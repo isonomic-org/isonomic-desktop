@@ -1,0 +1,82 @@
+{
+ "id": "keys-add-passkey",
+ "kind": "dialog",
+ "name": [
+  "Keys",
+  "Add passkey"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add a passkey"
+  },
+  {
+   "k": "note",
+   "text": "Sign in with Touch ID on another Mac, your iPhone, or a security key."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "this-mac-s-touch-id",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "Added"
+      }
+     ],
+     "lead": {
+      "icon": "laptop"
+     },
+     "title": "This Mac’s Touch ID",
+     "desc": "Already added"
+    },
+    {
+     "id": "iphone-or-ipad",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "mobile"
+     },
+     "title": "iPhone or iPad",
+     "desc": "Scan a QR code with your phone"
+    },
+    {
+     "id": "security-key",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "password"
+     },
+     "title": "Security key",
+     "desc": "USB or NFC key, like a YubiKey"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

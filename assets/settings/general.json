@@ -1,0 +1,304 @@
+{
+ "id": "general",
+ "kind": "page",
+ "name": [
+  "General"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "General"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Permissions"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "default-permissions",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Default permissions",
+     "desc": "By default, Isonomic can read and edit files in its workspace. It can ask for additional access when needed."
+    },
+    {
+     "id": "full-access",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Full access",
+     "desc": "With full access, Isonomic can edit any file on your Mac and run commands with network access without asking. This significantly increases the risk of data loss, leaks, or unexpected behavior."
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "General"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "projectless-chat-folder",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "~/Documents/Isonomic",
+       "mono": true
+      },
+      {
+       "c": "button",
+       "label": "Change",
+       "style": "white"
+      }
+     ],
+     "title": "Projectless chat folder",
+     "desc": "Where chats started outside a project store their data"
+    },
+    {
+     "id": "default-file-open-destination",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "VS Code",
+       "logo": true,
+       "wide": 122,
+       "options": [
+        "VS Code",
+        "Zed",
+        "Xcode",
+        "Finder"
+       ]
+      }
+     ],
+     "title": "Default file open destination",
+     "desc": "Where files and folders open by default"
+    },
+    {
+     "id": "language",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "English",
+       "options": [
+        "Auto-detect",
+        "English",
+        "Arabic",
+        "French",
+        "Spanish",
+        "German"
+       ]
+      }
+     ],
+     "title": "Language",
+     "desc": "Language for the app UI"
+    },
+    {
+     "id": "show-in-menu-bar",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Show in menu bar",
+     "desc": "Keep Isonomic in the menu bar when the main window is closed"
+    },
+    {
+     "id": "confirm-before-closing-a-window",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Close shortcut only",
+       "options": [
+        "Always",
+        "Close shortcut only",
+        "Never"
+       ]
+      }
+     ],
+     "title": "Confirm before closing a window",
+     "desc": "Warn when a tab-close shortcut would close the window"
+    },
+    {
+     "id": "full-view-by-default",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Full view by default",
+     "desc": "Open content tabs in full view in new chats"
+    },
+    {
+     "id": "bottom-panel",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Bottom panel",
+     "desc": "Show the bottom panel control in the app header"
+    },
+    {
+     "id": "default-terminal-location",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Bottom",
+        "Right"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Default terminal location"
+    },
+    {
+     "id": "prevent-sleep-while-running",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Prevent sleep while running",
+     "desc": "Keep your Mac awake while Isonomic is running a task"
+    },
+    {
+     "id": "start-at-login",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Start at login",
+     "desc": "Start the Isonomic engine when you log in"
+    },
+    {
+     "id": "check-for-updates-automatically",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Check for updates automatically",
+     "desc": "Download updates in the background and install on restart"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Composer"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "plain-text-composer",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Plain text composer",
+     "desc": "Keep code, Markdown, and links as literal text while writing"
+    },
+    {
+     "id": "show-context-window-usage",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Show context window usage"
+    },
+    {
+     "id": "send-shortcut",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Enter",
+       "options": [
+        "Enter",
+        "⌘ Enter"
+       ]
+      }
+     ],
+     "title": "Send shortcut",
+     "desc": "Choose whether Enter sends or adds a new line"
+    },
+    {
+     "id": "follow-up-behavior",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Queue",
+        "Steer"
+       ],
+       "active": 1
+      }
+     ],
+     "title": "Follow-up behavior",
+     "desc": "Queue follow-ups while Isonomic runs, or steer the current run. Press ⌘↩ to do the opposite once."
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Popout window"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "popout-window-hotkey",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Off"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Popout window hotkey",
+     "desc": "A global shortcut for the popout window. Leave unset to keep it off."
+    },
+    {
+     "id": "default-to-standalone-chat",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Default to standalone chat",
+     "desc": "Start new chats outside any project"
+    }
+   ]
+  }
+ ]
+}

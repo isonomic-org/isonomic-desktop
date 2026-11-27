@@ -1,0 +1,46 @@
+{
+ "id": "account-edit-name",
+ "kind": "dialog",
+ "name": [
+  "Account",
+  "Edit name"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Edit name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "John Appleseed",
+     "wide": 392
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

@@ -214,3 +214,32 @@ fn a_focused_rail_button_scrolls_into_view(cx: &mut TestAppContext) {
         "the focused button stays out of view: rail {rail:?}, last {last:?}"
     );
 }
+
+/// Settings stands in the tabs' place once it is offered and asked for,
+/// and choosing a tab puts it away.
+#[ui::test]
+fn settings_stands_in_until_a_tab_is_chosen(cx: &mut TestAppContext) {
+    let h = open(cx, 1, 600.);
+    let finds = |cx: &mut TestAppContext, id: &'static str| {
+        cx.update_window(h.window, |_, window, cx| {
+            window.render_frame(cx);
+            window.try_find(id).is_some_and(|found| found.visible())
+        })
+        .unwrap()
+    };
+    assert!(!finds(cx, "rail-settings"), "no gear until it is offered");
+    h.shell.update(cx, |shell, cx| {
+        shell.offer_settings(Arc::new(MemorySettings::default()), cx)
+    });
+    assert!(finds(cx, "rail-settings"));
+    cx.update_window(h.window, |_, window, cx| {
+        h.shell
+            .update(cx, |shell, cx| shell.show_settings(window, cx))
+    })
+    .unwrap();
+    assert!(finds(cx, "settings-page-general"));
+    // Tab to the app's button and choose it.
+    press(cx, &h, "tab enter");
+    assert!(h.shell.read_with(cx, |shell, _| shell.settings().is_none()));
+    assert!(!finds(cx, "settings-page-general"));
+}

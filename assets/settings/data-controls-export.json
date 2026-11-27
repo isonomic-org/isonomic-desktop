@@ -1,0 +1,66 @@
+{
+ "id": "data-controls-export",
+ "kind": "dialog",
+ "name": [
+  "Data controls",
+  "Export"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Export your data"
+  },
+  {
+   "k": "note",
+   "text": "Isonomic packages your chats, memories, settings, and Capsule details into a .zip on this Mac."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "include-model-files",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Include model files",
+     "desc": "Adds about 14 GB"
+    },
+    {
+     "id": "include-backups",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Include backups",
+     "desc": "Adds about 2.3 GB"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Export",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

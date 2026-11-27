@@ -1,0 +1,39 @@
+{
+ "id": "services-logs",
+ "kind": "dialog",
+ "name": [
+  "Services",
+  "Logs"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "PostgreSQL logs"
+  },
+  {
+   "k": "log",
+   "text": "14:02:11  LOG  database system is ready to accept connections\n14:02:11  LOG  autovacuum launcher started\n14:31:48  LOG  checkpoint complete: wrote 412 buffers (2.5%)\n15:01:48  LOG  checkpoint complete: wrote 96 buffers (0.6%)\n15:12:03  LOG  connection authorized: user=isonomic database=capsule"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Copy",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 680
+}

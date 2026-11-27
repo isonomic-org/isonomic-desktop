@@ -1,0 +1,227 @@
+{
+ "id": "models",
+ "kind": "page",
+ "name": [
+  "Models"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Import model",
+     "style": "white",
+     "icon": "download",
+     "at": "lead"
+    }
+   ],
+   "title": "Models",
+   "sub": "Models run on this Mac and start only when an app needs them"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Installed",
+    "Available"
+   ],
+   "search": "Search models",
+   "active": 0,
+   "counts": [
+    "4",
+    "38"
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "llama-3-1-8b-instruct",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Loaded"
+      },
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "meta"
+     },
+     "title": "Llama 3.1 8B Instruct",
+     "desc": "Chat · 4.9 GB · Q4_K_M"
+    },
+    {
+     "id": "qwen-2-5-coder-7b",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Idle"
+      },
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "qwen"
+     },
+     "title": "Qwen 2.5 Coder 7B",
+     "desc": "Code · 4.4 GB · Q4_K_M"
+    },
+    {
+     "id": "nomic-embed-text",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Idle"
+      },
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "icon": "data-vis-1"
+     },
+     "title": "nomic-embed-text",
+     "desc": "Embeddings · 274 MB"
+    },
+    {
+     "id": "whisper-large-v3",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Off"
+      },
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "lead": {
+      "logo": "openai"
+     },
+     "title": "Whisper large-v3",
+     "desc": "Speech · 3.1 GB"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Routing"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "default-chat-model",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Llama 3.1 8B",
+       "logo": true,
+       "wide": 154,
+       "options": [
+        "Llama 3.1 8B",
+        "Qwen 2.5 7B",
+        "Mistral 7B",
+        "Gemma 2 9B"
+       ]
+      }
+     ],
+     "title": "Default chat model"
+    },
+    {
+     "id": "default-code-model",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Qwen 2.5 Coder 7B",
+       "logo": true,
+       "wide": 194,
+       "options": [
+        "Qwen 2.5 Coder 7B",
+        "DeepSeek Coder V2 Lite",
+        "Codestral 22B"
+       ]
+      }
+     ],
+     "title": "Default code model"
+    },
+    {
+     "id": "allow-remote-models",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Allow remote models",
+     "desc": "Off means prompts never leave this Mac. Remote keys live in your vault and every call is logged."
+    },
+    {
+     "id": "unload-idle-models-after",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "10 minutes",
+       "options": [
+        "5 minutes",
+        "10 minutes",
+        "30 minutes",
+        "1 hour",
+        "Never"
+       ]
+      }
+     ],
+     "title": "Unload idle models after"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Memory"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "ram-gate",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "4 GB",
+       "options": [
+        "2 GB",
+        "4 GB",
+        "8 GB",
+        "16 GB"
+       ]
+      }
+     ],
+     "title": "RAM gate",
+     "desc": "Never load a model that would leave less than this much free memory"
+    },
+    {
+     "id": "hardware-profile",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Re-detect",
+       "style": "white",
+       "icon": "renew",
+       "at": "lead"
+      }
+     ],
+     "title": "Hardware profile",
+     "desc": "Standard profile · 16 GB · 10 cores"
+    }
+   ]
+  }
+ ]
+}

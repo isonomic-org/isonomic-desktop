@@ -28,7 +28,7 @@ use shell::onboarding::engine::EngineBackend;
 use shell::{lifecycle, menubar, Shell};
 use ui::{AppContext as _, KeyBinding, Menu, MenuItem};
 
-ui::actions!(isonomic, [Quit, Hide, Acknowledgements]);
+ui::actions!(isonomic, [Quit, Hide, Acknowledgements, OpenSettings]);
 
 /// App settings in the Capsule, through the engine link.
 struct CapsuleSettings(FileSettings);
@@ -189,6 +189,7 @@ fn main() {
         cx.bind_keys([
             KeyBinding::new("cmd-q", Quit, None),
             KeyBinding::new("cmd-w", Hide, None),
+            KeyBinding::new("cmd-,", OpenSettings, None),
         ]);
         let quit_client = client.clone();
         let quit_guard = Arc::clone(&guard);
@@ -246,7 +247,7 @@ fn main() {
             // Apps' window requests (installing a model) queue here until the
             // shell exists to serve them.
             let (requests, queued) = shell::install::requests();
-            let host = AppHost::new(client.clone(), settings).with_requests(requests);
+            let host = AppHost::new(client.clone(), Arc::clone(&settings)).with_requests(requests);
             let request_client = client.clone();
             let host_client = client.clone();
             let profile_client = client.clone();
@@ -262,6 +263,10 @@ fn main() {
                     })
                     .detach();
                     let mut shell = Shell::new(live, Arc::new(logs), cx);
+                    // Settings holds the design's samples until it is connected.
+                    if std::env::var_os("ISONOMIC_SETTINGS").is_some() {
+                        shell.offer_settings(Arc::clone(&settings), cx);
+                    }
                     shell.serve_requests(queued, Arc::new(request_client), cx);
                     let problems = link.problems();
                     shell
@@ -379,6 +384,12 @@ fn main() {
                     });
                 })
                 .detach();
+            });
+            let keys = shell.clone();
+            cx.on_action(move |_: &OpenSettings, cx| {
+                let _ = cx.update_window(window, |_, window, cx| {
+                    keys.update(cx, |shell, cx| shell.show_settings(window, cx))
+                });
             });
             // What the engine said at start that the person should see.
             let notice_shell = shell.clone();

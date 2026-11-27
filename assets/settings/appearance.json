@@ -1,0 +1,248 @@
+{
+ "id": "appearance",
+ "kind": "page",
+ "name": [
+  "Appearance"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Appearance"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Visual style"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "mode",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "System",
+        "Light",
+        "Dark"
+       ],
+       "active": 1
+      }
+     ],
+     "title": "Mode"
+    },
+    {
+     "id": "theme",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Isonomic",
+       "options": [
+        "Isonomic",
+        "Paper",
+        "Graphite",
+        "Sepia"
+       ]
+      }
+     ],
+     "title": "Theme"
+    },
+    {
+     "id": "accent",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Black",
+       "options": [
+        "Black",
+        "Graphite",
+        "Slate",
+        "Stone"
+       ]
+      }
+     ],
+     "title": "Accent"
+    },
+    {
+     "id": "background",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "#FFFFFF",
+       "mono": true,
+       "wide": 120
+      }
+     ],
+     "title": "Background"
+    },
+    {
+     "id": "foreground",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "#111827",
+       "mono": true,
+       "wide": 120
+      }
+     ],
+     "title": "Foreground"
+    },
+    {
+     "id": "font",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "IBM Plex Sans",
+       "options": [
+        "IBM Plex Sans",
+        "Inter",
+        "SF Pro",
+        "System default"
+       ]
+      }
+     ],
+     "title": "Font"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Reset to default",
+     "style": "white"
+    }
+   ],
+   "title": "Advanced"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "ui-font-size",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "14",
+       "wide": 64
+      },
+      {
+       "c": "text",
+       "text": "px"
+      }
+     ],
+     "title": "UI font size",
+     "desc": "Base size used across Isonomic"
+    },
+    {
+     "id": "code-font-size",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "12",
+       "wide": 64
+      },
+      {
+       "c": "text",
+       "text": "px"
+      }
+     ],
+     "title": "Code font size",
+     "desc": "Used for code across chats and diffs"
+    },
+    {
+     "id": "code-font",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "IBM Plex Mono",
+       "options": [
+        "IBM Plex Mono",
+        "JetBrains Mono",
+        "SF Mono",
+        "Menlo"
+       ]
+      }
+     ],
+     "title": "Code font"
+    },
+    {
+     "id": "reduce-motion",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "System",
+        "On",
+        "Off"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Reduce motion",
+     "desc": "Reduce animations or match your system"
+    },
+    {
+     "id": "contrast",
+     "ctl": [
+      {
+       "c": "slider",
+       "text": "60"
+      }
+     ],
+     "title": "Contrast"
+    },
+    {
+     "id": "translucent-sidebar",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Translucent sidebar"
+    },
+    {
+     "id": "diff-markers",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Colour",
+        "+/−"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Diff markers",
+     "desc": "Show changes using colour or +/− markers"
+    },
+    {
+     "id": "use-pointer-cursors",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Use pointer cursors",
+     "desc": "Show a pointer over interactive elements"
+    },
+    {
+     "id": "font-smoothing",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Font smoothing",
+     "desc": "Use native macOS font anti-aliasing"
+    }
+   ]
+  }
+ ]
+}

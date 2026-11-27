@@ -1,0 +1,98 @@
+{
+ "id": "cells-new-cell",
+ "kind": "dialog",
+ "name": [
+  "Cells",
+  "New Cell"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "New Cell"
+  },
+  {
+   "k": "note",
+   "text": "A Cell is an isolated sandbox where an agent can run code and use tools."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "research-assistant",
+     "mono": true,
+     "wide": 452,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Blank · Linux (arm64)",
+     "logo": false,
+     "wide": 452,
+     "options": [
+      "Blank · Linux (arm64)"
+     ]
+    }
+   ],
+   "label": "Template"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "2 vCPU · 4 GB",
+     "logo": false,
+     "wide": 452,
+     "options": [
+      "2 vCPU · 4 GB"
+     ]
+    }
+   ],
+   "label": "Resources"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "network-access",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Network access",
+     "desc": "Allow-list only"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Create Cell",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 500
+}

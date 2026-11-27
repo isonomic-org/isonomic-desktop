@@ -1,0 +1,121 @@
+{
+ "id": "recent-recordings",
+ "kind": "sub",
+ "name": [
+  "Recent recordings"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Voice"
+  },
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Recent recordings",
+   "sub": "Kept on this Mac for 7 days, then deleted automatically."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "dictation-notes",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Play",
+       "style": "white",
+       "icon": "play",
+       "at": "lead"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Dictation · Notes",
+     "desc": "0:42 · Today, 2:14 PM"
+    },
+    {
+     "id": "voice-chat-capsule-backup-format",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Play",
+       "style": "white",
+       "icon": "play",
+       "at": "lead"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Voice chat · Capsule backup format",
+     "desc": "6:18 · Today, 11:03 AM"
+    },
+    {
+     "id": "dictation-mail",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Play",
+       "style": "white",
+       "icon": "play",
+       "at": "lead"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Dictation · Mail",
+     "desc": "0:19 · Yesterday, 6:40 PM"
+    },
+    {
+     "id": "voice-chat-weekly-plan",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Play",
+       "style": "white",
+       "icon": "play",
+       "at": "lead"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Voice chat · Weekly plan",
+     "desc": "12:51 · Nov 11"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Retention"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "keep-recordings",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Off",
+        "7 days",
+        "30 days"
+       ],
+       "active": 1
+      }
+     ],
+     "title": "Keep recordings"
+    }
+   ]
+  }
+ ]
+}

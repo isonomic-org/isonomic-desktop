@@ -1,0 +1,52 @@
+{
+ "id": "general-chat-folder",
+ "kind": "dialog",
+ "name": [
+  "General",
+  "Chat folder"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Projectless chat folder"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "~/Documents/Isonomic",
+     "mono": true,
+     "suffix": "Choose…",
+     "wide": 412
+    }
+   ],
+   "label": "Folder"
+  },
+  {
+   "k": "note",
+   "text": "Existing chats move to the new folder."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 460
+}

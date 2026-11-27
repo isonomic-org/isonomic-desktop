@@ -1,0 +1,44 @@
+{
+ "id": "profile-upload-photo",
+ "kind": "dialog",
+ "name": [
+  "Profile",
+  "Upload photo"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Update photo"
+  },
+  {
+   "k": "note",
+   "text": "Use a square image at least 400 × 400 px. PNG or JPEG, up to 5 MB."
+  },
+  {
+   "k": "dropzone",
+   "title": "Drop an image here",
+   "text": "or click to choose a file"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Upload",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

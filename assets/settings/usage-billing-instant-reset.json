@@ -1,0 +1,39 @@
+{
+ "id": "usage-billing-instant-reset",
+ "kind": "dialog",
+ "name": [
+  "Usage & billing",
+  "Instant reset"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Reset your limits now?"
+  },
+  {
+   "k": "note",
+   "text": "Your 5-hour and weekly limits reset immediately. $4.99, charged to your payment method on file."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Buy reset · $4.99",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

@@ -1,0 +1,96 @@
+{
+ "id": "browser-import",
+ "kind": "dialog",
+ "name": [
+  "Browser",
+  "Import"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Import from another browser"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Google Chrome · Default profile",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Google Chrome · Default profile"
+     ]
+    }
+   ],
+   "label": "Browser"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "bookmarks",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Bookmarks"
+    },
+    {
+     "id": "history",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "History"
+    },
+    {
+     "id": "passwords",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Passwords"
+    },
+    {
+     "id": "cookies",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Cookies",
+     "desc": "Keeps you signed in to sites"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Import",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

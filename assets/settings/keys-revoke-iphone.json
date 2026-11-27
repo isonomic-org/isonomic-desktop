@@ -1,0 +1,40 @@
+{
+ "id": "keys-revoke-iphone",
+ "kind": "dialog",
+ "name": [
+  "Keys",
+  "Revoke iPhone"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Revoke iPhone?"
+  },
+  {
+   "k": "note",
+   "text": "iPhone can no longer sign in or unlock your Capsules."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Revoke",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

@@ -1,0 +1,39 @@
+{
+ "id": "data-controls-archive-all",
+ "kind": "dialog",
+ "name": [
+  "Data controls",
+  "Archive all"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Archive all chats?"
+  },
+  {
+   "k": "note",
+   "text": "Chats move to Archived chats. You can unarchive them any time."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Archive all",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

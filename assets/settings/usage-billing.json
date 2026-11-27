@@ -1,0 +1,144 @@
+{
+ "id": "usage-billing",
+ "kind": "page",
+ "name": [
+  "Usage & billing"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Usage & billing"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Overview",
+    "Analytics"
+   ],
+   "active": 0
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Your plan",
+   "sub": "Local inference is free. Plans cover network Capsules, hosted models, and Cells."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic-pro",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "View plans",
+       "style": "white"
+      }
+     ],
+     "title": "Isonomic Pro",
+     "desc": "$20 / month"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Plan limits",
+   "sub": "Shared across hosted models, Cells, and network Capsules"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "5-hour-limit",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "100% left"
+      }
+     ],
+     "title": "5-hour limit",
+     "desc": "Resets in 4h 20m"
+    },
+    {
+     "id": "weekly-limit",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "35% left"
+      }
+     ],
+     "title": "Weekly limit",
+     "desc": "Resets in 4d 2h"
+    },
+    {
+     "id": "reset-your-usage-limits-now",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Buy an instant reset",
+       "style": "white"
+      }
+     ],
+     "title": "Reset your usage limits now"
+    }
+   ]
+  },
+  {
+   "k": "chart",
+   "bars": [
+    25,
+    6,
+    101,
+    130,
+    107,
+    99,
+    13
+   ],
+   "title": "Recent plan usage",
+   "bands": [
+    "Nov 8",
+    "Nov 9",
+    "Nov 10",
+    "Nov 11",
+    "Nov 12",
+    "Nov 13",
+    "Nov 14"
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Credits",
+   "sub": "Keep using hosted models and Cells after you reach your limits"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "0-credits-remaining",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Add more",
+       "style": "white"
+      }
+     ],
+     "title": "0 credits remaining",
+     "desc": "Current balance"
+    },
+    {
+     "id": "automatic-reload",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Automatic reload"
+    }
+   ]
+  }
+ ]
+}

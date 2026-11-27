@@ -1,0 +1,63 @@
+{
+ "id": "browser-downloads-location",
+ "kind": "dialog",
+ "name": [
+  "Browser",
+  "Downloads location"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Downloads location"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "~/Downloads",
+     "mono": true,
+     "suffix": "Choose…",
+     "wide": 432
+    }
+   ],
+   "label": "Save downloads to"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "ask-where-to-save-each-file",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Ask where to save each file"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

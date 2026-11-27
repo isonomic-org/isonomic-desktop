@@ -1,0 +1,182 @@
+{
+ "id": "keys-recovery",
+ "kind": "page",
+ "name": [
+  "Keys & recovery"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Keys & recovery",
+   "sub": "Keys are generated and held on your devices. Isonomic cannot reset them."
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Account recovery",
+   "sub": "Your passkey syncs to your other Apple devices with iCloud Keychain"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "passkey",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Active"
+      }
+     ],
+     "title": "Passkey",
+     "desc": "Secure Enclave · synced with iCloud Keychain"
+    },
+    {
+     "id": "add-another-passkey",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Add",
+       "style": "white",
+       "icon": "add",
+       "at": "lead"
+      }
+     ],
+     "title": "Add another passkey",
+     "desc": "Use a hardware key or another platform"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Data recovery",
+   "sub": "Protects your encrypted Capsule if every device is lost"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "recovery-kit",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Saved"
+      },
+      {
+       "c": "button",
+       "label": "View",
+       "style": "white"
+      }
+     ],
+     "title": "Recovery kit",
+     "desc": "Saved Nov 14, 2026"
+    },
+    {
+     "id": "regenerate-recovery-kit",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Regenerate",
+       "style": "white"
+      }
+     ],
+     "title": "Regenerate recovery kit",
+     "desc": "Invalidates the previous kit"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Devices",
+   "sub": "Each device holds its own key, authorized by your Isonomic ID"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "macbook-pro",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "This Mac"
+      }
+     ],
+     "lead": {
+      "icon": "laptop"
+     },
+     "title": "MacBook Pro",
+     "desc": "This Mac · authorized Nov 14"
+    },
+    {
+     "id": "iphone",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Revoke",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "mobile"
+     },
+     "title": "iPhone",
+     "desc": "Authorized Nov 2"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add secret",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Vault",
+   "sub": "API keys and secrets for remote models and integrations"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "openai-api-key",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "sk-…4f2a",
+       "mono": true
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "OpenAI API key",
+     "desc": "Used only when remote models are allowed"
+    },
+    {
+     "id": "github-token",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "ghp_…9Qx1",
+       "mono": true
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "GitHub token",
+     "desc": "Used by Code Review and Git"
+    }
+   ]
+  }
+ ]
+}

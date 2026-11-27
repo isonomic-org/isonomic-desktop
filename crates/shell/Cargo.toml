@@ -39,3 +39,9 @@ tempfile.workspace = true
 [[test]]
 name = "onboarding_shots"
 harness = false
+
+# Pictures of Settings' pages and dialogs, with its own `main` for the
+# same reason.
+[[test]]
+name = "settings_shots"
+harness = false

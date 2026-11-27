@@ -1,0 +1,62 @@
+{
+ "id": "worktrees-environment",
+ "kind": "dialog",
+ "name": [
+  "Worktrees",
+  "Environment"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Setup environment"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "isonomic-desktop",
+     "mono": true,
+     "wide": 472,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "textarea",
+     "text": "cargo fetch\npnpm install --frozen-lockfile",
+     "mono": true,
+     "tall": 88,
+     "wide": 472,
+     "ph": true
+    }
+   ],
+   "label": "Setup script"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

@@ -1,0 +1,40 @@
+{
+ "id": "profile-remove-photo",
+ "kind": "dialog",
+ "name": [
+  "Profile",
+  "Remove photo"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Remove profile photo?"
+  },
+  {
+   "k": "note",
+   "text": "Your initials will show instead on shared Capsules and comments."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Remove",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

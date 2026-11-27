@@ -1,0 +1,190 @@
+{
+ "id": "voice",
+ "kind": "page",
+ "name": [
+  "Voice"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Voice"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "General"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "microphone",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "MacBook Pro Microphone",
+       "options": [
+        "MacBook Pro Microphone",
+        "AirPods Pro",
+        "Studio Display Microphone"
+       ]
+      }
+     ],
+     "title": "Microphone",
+     "desc": "Used for voice chat and dictation"
+    },
+    {
+     "id": "language",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Auto-detect",
+       "options": [
+        "Auto-detect",
+        "English",
+        "Arabic",
+        "French",
+        "Spanish",
+        "German"
+       ]
+      }
+     ],
+     "title": "Language"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Voice chat"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "voice",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Spruce",
+       "options": [
+        "Spruce",
+        "Juniper",
+        "Cove",
+        "Ember",
+        "Maple"
+       ]
+      }
+     ],
+     "title": "Voice",
+     "desc": "Voice for new voice chats"
+    },
+    {
+     "id": "speech-model",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Whisper large-v3 · local",
+       "logo": true,
+       "wide": 222,
+       "options": [
+        "Whisper large-v3 · local",
+        "Whisper small · local",
+        "Hosted · best quality"
+       ]
+      }
+     ],
+     "title": "Speech model",
+     "desc": "Runs on this Mac when a speech model is installed"
+    },
+    {
+     "id": "voice-chat-hotkey",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Off"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Voice chat hotkey",
+     "desc": "Start voice chat from anywhere on your desktop"
+    },
+    {
+     "id": "screen-context",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Screen context",
+     "desc": "Let Isonomic look at the frontmost app when you refer to what is on screen"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Dictation"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "dictate-anywhere",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Set up",
+       "style": "white"
+      }
+     ],
+     "title": "Dictate anywhere",
+     "desc": "Set up permissions to dictate in other apps"
+    },
+    {
+     "id": "dictation-shortcut",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Off"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Dictation shortcut",
+     "desc": "Hold to dictate, or double-tap for hands-free"
+    },
+    {
+     "id": "recent-recordings",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Recent recordings",
+     "desc": "Your last 20 recordings are saved on this Mac"
+    },
+    {
+     "id": "voice-dictionary",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      }
+     ],
+     "title": "Voice dictionary",
+     "desc": "Words or phrases dictation should recognize"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,164 @@
+{
+ "id": "computer-use",
+ "kind": "page",
+ "name": [
+  "Computer use"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Computer use",
+   "sub": "Manage how Isonomic uses other applications on your Mac"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Control"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "any-app",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "icon": "application"
+     },
+     "title": "Any app",
+     "desc": "Let Isonomic control apps on your Mac"
+    },
+    {
+     "id": "google-chrome",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      },
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "chrome"
+     },
+     "title": "Google Chrome",
+     "desc": "Browser extension installed"
+    },
+    {
+     "id": "microsoft-excel",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "excel"
+     },
+     "title": "Microsoft Excel",
+     "desc": "Excel add-in for additional control"
+    },
+    {
+     "id": "microsoft-word",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "word"
+     },
+     "title": "Microsoft Word",
+     "desc": "Word add-in for additional control"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "locked-use",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Locked use",
+     "desc": "Let Isonomic use your Mac while it is locked"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Always-allowed apps"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "figma",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "lead": {
+      "logo": "figma"
+     },
+     "title": "Figma"
+    },
+    {
+     "id": "google-chrome",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "lead": {
+      "logo": "chrome"
+     },
+     "title": "Google Chrome"
+    },
+    {
+     "id": "finder",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "lead": {
+      "icon": "folder"
+     },
+     "title": "Finder"
+    },
+    {
+     "id": "preview",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "lead": {
+      "icon": "image"
+     },
+     "title": "Preview"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,213 @@
+{
+ "id": "notifications",
+ "kind": "page",
+ "name": [
+  "Notifications"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Notifications"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Isonomic"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "tasks",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Tasks",
+     "desc": "Get notified when an agent or Cell finishes a task."
+    },
+    {
+     "id": "approvals",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Approvals",
+     "desc": "When an app or Cell asks for permission to act on your behalf."
+    },
+    {
+     "id": "engine-health",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push, Email",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Engine health",
+     "desc": "When a service stops, restarts, or the machine runs low on memory."
+    },
+    {
+     "id": "backups",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Email",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Backups",
+     "desc": "When a scheduled backup completes or fails."
+    },
+    {
+     "id": "shared-capsules",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push, Email",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Shared Capsules",
+     "desc": "Invitations and access requests from collaborators."
+    },
+    {
+     "id": "app-store",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "App Store",
+     "desc": "Updates for the apps you have installed."
+    },
+    {
+     "id": "product-news",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Off",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Product news",
+     "desc": "New features and releases from Isonomic."
+    },
+    {
+     "id": "usage",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Push, Email",
+       "options": [
+        "Push",
+        "Email",
+        "Push, Email",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Usage",
+     "desc": "When plan limits reset or you run low on credits."
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "macOS"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "notifications-are-off",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Open System Settings",
+       "style": "white",
+       "icon": "launch",
+       "at": "trail"
+      }
+     ],
+     "title": "Notifications are off",
+     "desc": "Turn on notifications in System Settings to use the options above."
+    },
+    {
+     "id": "notification-sound",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Default",
+       "options": [
+        "Default",
+        "Chime",
+        "Glass",
+        "Pop",
+        "None"
+       ]
+      }
+     ],
+     "title": "Notification sound",
+     "desc": "Sound for task completion, approvals, and questions."
+    },
+    {
+     "id": "badge-app-icon",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Badge app icon",
+     "desc": "Show a count on the Dock and menu bar icon."
+    }
+   ]
+  }
+ ]
+}

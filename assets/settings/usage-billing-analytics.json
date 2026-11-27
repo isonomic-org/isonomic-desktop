@@ -1,0 +1,151 @@
+{
+ "id": "usage-billing-analytics",
+ "kind": "sub",
+ "name": [
+  "Usage & billing",
+  "Analytics"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Usage & billing"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Overview",
+    "Analytics"
+   ],
+   "active": 1
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Plan usage",
+   "sub": "Share of your plan used each day"
+  },
+  {
+   "k": "chart",
+   "bars": [
+    48,
+    76,
+    89,
+    39,
+    20,
+    26,
+    95,
+    110,
+    82,
+    102,
+    130,
+    72,
+    63,
+    89
+   ],
+   "title": "Last 14 days",
+   "aside": "38% avg",
+   "bands": [
+    "Nov 1",
+    "Nov 2",
+    "Nov 3",
+    "Nov 4",
+    "Nov 5",
+    "Nov 6",
+    "Nov 7",
+    "Nov 8",
+    "Nov 9",
+    "Nov 10",
+    "Nov 11",
+    "Nov 12",
+    "Nov 13",
+    "Nov 14"
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "By model"
+  },
+  {
+   "k": "table",
+   "head": [
+    "Model",
+    "Messages",
+    "Tokens",
+    "Share"
+   ],
+   "widths": [
+    300,
+    120,
+    140,
+    128
+   ],
+   "rows": [
+    [
+     "Llama 3.1 8B · local",
+     "1,204",
+     "2.1M",
+     "46%"
+    ],
+    [
+     "Qwen 2.5 Coder 7B · local",
+     "812",
+     "3.4M",
+     "31%"
+    ]
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Activity",
+   "sub": "This month"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "messages-sent",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "2,328"
+      }
+     ],
+     "title": "Messages sent"
+    },
+    {
+     "id": "tool-calls",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "9,410"
+      }
+     ],
+     "title": "Tool calls"
+    },
+    {
+     "id": "files-edited",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "412"
+      }
+     ],
+     "title": "Files edited"
+    },
+    {
+     "id": "cell-runs",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "86"
+      }
+     ],
+     "title": "Cell runs"
+    }
+   ]
+  }
+ ]
+}

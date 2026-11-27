@@ -1,0 +1,40 @@
+{
+ "id": "configuration-reinstall-workspace",
+ "kind": "dialog",
+ "name": [
+  "Configuration",
+  "Reinstall workspace"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Reset and reinstall workspace?"
+  },
+  {
+   "k": "note",
+   "text": "Isonomic removes its managed runtimes and installs them again. Projects and chats are not touched. This takes a few minutes."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Reinstall",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

@@ -1,0 +1,107 @@
+{
+ "id": "code-review",
+ "kind": "page",
+ "name": [
+  "Code Review"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Code Review"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Preferences",
+    "Review agent"
+   ],
+   "active": 0
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "App preferences"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "open-review-links-in",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Code Review tab",
+       "options": [
+        "Code Review tab",
+        "Browser",
+        "Ask every time"
+       ]
+      }
+     ],
+     "title": "Open review links in"
+    },
+    {
+     "id": "review-provider",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "GitHub",
+       "logo": true,
+       "wide": 116,
+       "options": [
+        "GitHub",
+        "GitLab",
+        "Bitbucket"
+       ]
+      }
+     ],
+     "title": "Review provider"
+    },
+    {
+     "id": "github-instance",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "github.com",
+       "logo": true,
+       "wide": 142,
+       "options": [
+        "github.com",
+        "GitHub Enterprise Server"
+       ]
+      }
+     ],
+     "title": "GitHub instance",
+     "desc": "github.com or a connected instance"
+    },
+    {
+     "id": "repository-access",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage on GitHub",
+       "style": "white",
+       "icon": "launch",
+       "at": "trail"
+      }
+     ],
+     "title": "Repository access"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Review instructions",
+   "sub": "Added to every review you start, across all repositories"
+  },
+  {
+   "k": "textarea",
+   "text": "For example: I care most about the data model. Tell me where we might be overcomplicating things.",
+   "tall": 140,
+   "mono": false,
+   "ph": true
+  }
+ ]
+}

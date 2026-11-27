@@ -1,0 +1,67 @@
+{
+ "id": "storage-unused-models",
+ "kind": "dialog",
+ "name": [
+  "Storage",
+  "Unused models"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Unused models"
+  },
+  {
+   "k": "note",
+   "text": "Models no app has loaded in the last 30 days."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "mistral-7b-instruct",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Mistral 7B Instruct",
+     "desc": "Chat · 4.1 GB · last used Sep 2"
+    },
+    {
+     "id": "gemma-2-9b",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Gemma 2 9B",
+     "desc": "Chat · 5.4 GB · never used"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete selected",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

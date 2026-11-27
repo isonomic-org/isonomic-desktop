@@ -1,0 +1,73 @@
+{
+ "id": "linked-devices",
+ "kind": "sub",
+ "name": [
+  "Linked devices"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Profile"
+  },
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Linked devices",
+   "sub": "Devices signed in to your Isonomic account."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "macbook-pro",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "This Mac"
+      }
+     ],
+     "lead": {
+      "icon": "laptop"
+     },
+     "title": "MacBook Pro",
+     "desc": "This Mac · active now"
+    },
+    {
+     "id": "iphone-16-pro",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Sign out",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "mobile"
+     },
+     "title": "iPhone 16 Pro",
+     "desc": "Last active 2 hours ago"
+    },
+    {
+     "id": "ipad-air",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Sign out",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "tablet"
+     },
+     "title": "iPad Air",
+     "desc": "Last active Oct 30"
+    }
+   ]
+  },
+  {
+   "k": "note",
+   "text": "Signing out a device removes its copy of your passkey-protected keys."
+  }
+ ]
+}

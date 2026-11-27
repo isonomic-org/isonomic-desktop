@@ -1,0 +1,57 @@
+{
+ "id": "cloud-environments-personal-vault",
+ "kind": "sub",
+ "name": [
+  "Cloud environments",
+  "Personal vault"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Cloud environments",
+   "sub": "Repositories, tools, and settings agents need to work on your projects in the cloud"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Environments",
+    "Personal vault"
+   ],
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Search",
+     "wide": 160,
+     "ph": true
+    },
+    {
+     "c": "button",
+     "label": "Create environment",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "active": 1
+  },
+  {
+   "k": "empty",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add secret",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Your vault is empty",
+   "text": "Secrets you add here are available to every cloud environment you create."
+  },
+  {
+   "k": "note",
+   "text": "Vault secrets are encrypted with your passkey. Cloud tasks can read them but never print them in logs."
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "id": "account-edit-email",
+ "kind": "dialog",
+ "name": [
+  "Account",
+  "Edit email"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Change email"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "john@example.com",
+     "wide": 392
+    }
+   ],
+   "label": "New email",
+   "hint": "We’ll send a confirmation link. Your email changes once you open it."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Send link",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

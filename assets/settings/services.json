@@ -1,0 +1,222 @@
+{
+ "id": "services",
+ "kind": "page",
+ "name": [
+  "Services"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Restart all",
+     "style": "white",
+     "icon": "renew",
+     "at": "lead"
+    }
+   ],
+   "title": "Services",
+   "sub": "The engine supervises these for your Capsule. Apps reach them only through Isonomic."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "postgresql",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Running"
+      },
+      {
+       "c": "button",
+       "label": "Logs",
+       "style": "white",
+       "icon": "terminal",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "postgresql"
+     },
+     "title": "PostgreSQL",
+     "desc": "SQL · 16.4 · 612 MB"
+    },
+    {
+     "id": "cache-queue",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Running"
+      },
+      {
+       "c": "button",
+       "label": "Logs",
+       "style": "white",
+       "icon": "terminal",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "icon": "flash"
+     },
+     "title": "Cache & queue",
+     "desc": "Valkey 8.0 · 48 MB"
+    },
+    {
+     "id": "object-storage",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Running"
+      },
+      {
+       "c": "button",
+       "label": "Logs",
+       "style": "white",
+       "icon": "terminal",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "icon": "hard-drive"
+     },
+     "title": "Object storage",
+     "desc": "Content · 2.1 GB"
+    },
+    {
+     "id": "vector",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Stopped"
+      },
+      {
+       "c": "button",
+       "label": "Start",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "cube"
+     },
+     "title": "Vector",
+     "desc": "Starts on first use"
+    },
+    {
+     "id": "model-server",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Idle"
+      },
+      {
+       "c": "button",
+       "label": "Logs",
+       "style": "white",
+       "icon": "terminal",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "icon": "chip"
+     },
+     "title": "Model server",
+     "desc": "Starts when an app needs a model"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Startup"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "start-engine-at-login",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Start engine at login",
+     "desc": "Tier 0–1 services start; no windows open"
+    },
+    {
+     "id": "keep-running-when-the-window-closes",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Keep running when the window closes",
+     "desc": "Only Quit from the menu bar stops the engine"
+    },
+    {
+     "id": "resource-profile",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Standard",
+       "options": [
+        "Light",
+        "Standard",
+        "Performance"
+       ]
+      }
+     ],
+     "title": "Resource profile"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Diagnostics"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "engine-version",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "0.3.0",
+       "mono": true
+      }
+     ],
+     "title": "Engine version"
+    },
+    {
+     "id": "socket",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "~/.isonomic/engine.sock",
+       "mono": true
+      }
+     ],
+     "title": "Socket"
+    },
+    {
+     "id": "collect-diagnostics",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Collect",
+       "style": "white"
+      }
+     ],
+     "title": "Collect diagnostics",
+     "desc": "Bundle logs and status into a file you can share"
+    }
+   ]
+  }
+ ]
+}

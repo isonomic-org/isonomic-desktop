@@ -1,0 +1,52 @@
+{
+ "id": "storage-models-folder",
+ "kind": "dialog",
+ "name": [
+  "Storage",
+  "Models folder"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Move models folder"
+  },
+  {
+   "k": "note",
+   "text": "Models stay usable while they move. Pick a drive with at least 20 GB free."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "/Volumes/Studio SSD/Isonomic/Models",
+     "mono": true,
+     "suffix": "Choose…",
+     "wide": 432
+    }
+   ],
+   "label": "New location"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Move models",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

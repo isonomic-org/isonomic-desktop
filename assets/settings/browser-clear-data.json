@@ -1,0 +1,87 @@
+{
+ "id": "browser-clear-data",
+ "kind": "dialog",
+ "name": [
+  "Browser",
+  "Clear data"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Clear browsing data"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Last 24 hours",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Last 24 hours"
+     ]
+    }
+   ],
+   "label": "Time range"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "history",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "History"
+    },
+    {
+     "id": "cookies-and-site-data",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Cookies and site data",
+     "desc": "Signs you out of most sites"
+    },
+    {
+     "id": "cached-images-and-files",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Cached images and files"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Clear data",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

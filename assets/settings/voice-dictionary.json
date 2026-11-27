@@ -1,0 +1,91 @@
+{
+ "id": "voice-dictionary",
+ "kind": "dialog",
+ "name": [
+  "Voice",
+  "Dictionary"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Voice dictionary"
+  },
+  {
+   "k": "note",
+   "text": "Words and names Isonomic should always spell your way."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Add a word or phrase",
+     "suffix": "↵",
+     "wide": 432,
+     "ph": true
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Isonomic"
+    },
+    {
+     "id": "capsule",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Capsule"
+    },
+    {
+     "id": "valkey",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Valkey"
+    },
+    {
+     "id": "qwen",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Qwen"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

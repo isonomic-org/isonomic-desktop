@@ -1,0 +1,53 @@
+{
+ "id": "account-delete-account",
+ "kind": "dialog",
+ "name": [
+  "Account",
+  "Delete account"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Delete your account?"
+  },
+  {
+   "k": "note",
+   "text": "This permanently deletes your Isonomic account, shared Capsules, and backups stored with Isonomic. Data on this Mac stays until you remove the app."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "DELETE",
+     "mono": true,
+     "wide": 412,
+     "ph": true
+    }
+   ],
+   "label": "Type DELETE to confirm"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete account",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 460
+}

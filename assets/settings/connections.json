@@ -1,0 +1,91 @@
+{
+ "id": "connections",
+ "kind": "page",
+ "name": [
+  "Connections"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Connections"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Control this Mac",
+    "Control other devices",
+    "SSH"
+   ],
+   "active": 0
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "iconbtn",
+     "name": "renew"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Devices that can control this Mac"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "allow-connections",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Allow connections"
+    },
+    {
+     "id": "iphone",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Revoke access",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "mobile"
+     },
+     "title": "iPhone",
+     "desc": "Last connected 22h ago"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Other settings"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "keep-this-mac-awake",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Keep this Mac awake",
+     "desc": "Prevent sleep when plugged in and remote access is on"
+    }
+   ]
+  }
+ ]
+}

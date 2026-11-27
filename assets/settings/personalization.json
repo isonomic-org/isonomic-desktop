@@ -1,0 +1,188 @@
+{
+ "id": "personalization",
+ "kind": "page",
+ "name": [
+  "Personalization"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Personalization"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Memory",
+   "sub": "Stored in your Capsule. It never leaves this Mac unless you share it."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "enable-memory",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Enable memory",
+     "desc": "Personalize answers from your chats, files, and connected apps"
+    },
+    {
+     "id": "memory-summary",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      }
+     ],
+     "title": "Memory summary",
+     "desc": "Review what Isonomic has learned about you"
+    },
+    {
+     "id": "memories-from-tool-assisted-chats",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Memories from tool-assisted chats",
+     "desc": "Create memories from chats that used MCP tools or web access"
+    },
+    {
+     "id": "delete-all-memories",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Delete",
+       "style": "white",
+       "red": "text"
+      }
+     ],
+     "title": "Delete all memories",
+     "desc": "Removes every memory from this Capsule"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Style"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "base-style-and-tone",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Default",
+       "options": [
+        "Default",
+        "Professional",
+        "Friendly",
+        "Candid",
+        "Quirky",
+        "Efficient"
+       ]
+      }
+     ],
+     "title": "Base style and tone"
+    },
+    {
+     "id": "warmth",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Default",
+       "options": [
+        "More",
+        "Default",
+        "Less"
+       ]
+      }
+     ],
+     "title": "Warmth"
+    },
+    {
+     "id": "emoji",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Less",
+       "options": [
+        "More",
+        "Default",
+        "Less"
+       ]
+      }
+     ],
+     "title": "Emoji"
+    },
+    {
+     "id": "headers-and-lists",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Default",
+       "options": [
+        "More",
+        "Default",
+        "Less"
+       ]
+      }
+     ],
+     "title": "Headers and lists"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Custom instructions"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Isonomic",
+     "desc": "Extra instructions and context for all chats"
+    },
+    {
+     "id": "cells",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Cells",
+     "desc": "Instructions applied to agents running in Cells"
+    },
+    {
+     "id": "agents-md",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "AGENTS.md",
+     "desc": "Edit the AGENTS.md file on this Mac. Repository instructions may also apply."
+    }
+   ]
+  }
+ ]
+}

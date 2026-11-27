@@ -1,0 +1,40 @@
+{
+ "id": "personalization-delete-memories",
+ "kind": "dialog",
+ "name": [
+  "Personalization",
+  "Delete memories"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Delete all memories?"
+  },
+  {
+   "k": "note",
+   "text": "Isonomic forgets everything it has saved about you. Your chats are not deleted."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete all",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}
