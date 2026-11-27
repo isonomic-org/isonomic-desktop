@@ -32,6 +32,8 @@ mod kit_run;
 mod kit_view;
 mod laptop;
 mod links;
+pub mod machine;
+mod machines;
 mod passkey;
 mod passkey_view;
 mod props;
@@ -57,6 +59,7 @@ use ui::{
 };
 
 use backend::Backend;
+pub use laptop::still;
 use laptop::Scene;
 use passkey::Seal;
 use props::Props;

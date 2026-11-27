@@ -4,6 +4,18 @@ Newest first.
 
 Older entries: `history-7.md`, then `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-27 · Onboarding shows the Mac it is on
+
+- **The computer is this Mac's.** Onboarding's 3D computer was always the 13-inch MacBook Pro (2020). It is now the enclosure of the Mac the window is on, from the devices repository: `onboarding::machine` asks the Mac for its model identifier (`sysctl -n hw.model`, off the foreground thread, where the model was already read) and looks it up in `onboarding/machines.rs`, a table of 100 identifiers over 23 enclosures made from that repository's `assets/index.json` at `65e685e`: every MacBook, MacBook Air and MacBook Pro from 2015, the iMacs, the Mac minis, Mac Studio and the Mac Pros. `laptop::Scene::load` reads that enclosure's model and colours it in the finish the table gives it (silver where the Mac comes in silver).
+- **A Mac the table does not know** is shown as the newest enclosure of its line (a `MacBookAir…` as the 13-inch Air of 2022, an `iMac…` as the 24-inch); one that names no line (a virtual machine, a Mac newer than the table) as the design's laptop, as before.
+- **Everything else is as it was**: the canvas, the camera (from 12° up, filling 84 % of a 4:3 frame), the flight, the turns and the lit display, which a Mac with no display of its own does not have. The design draws a laptop, and the code keeps that word.
+- **The colour is the enclosure's, not this Mac's.** A Mac does not say what colour it is, so a space grey one is shown silver.
+- **`ISONOMIC_MAC_MODEL`** names another identifier, to see its model on this Mac.
+- **The models** are `assets/onboarding/macs/*.glb`, the devices repository's `model.glb` of each enclosure, unchanged: 18 MB more in the repository, and built into the app like the rest of onboarding's models, so once for each of the universal app's two architectures. Kept beside the app in `Resources` they would be there once; that is a change to the bundle and is not made here.
+- **Not approved one by one.** The devices repository's `catalog/approvals.toml` approves no enclosure yet; these are shown on Omar's word that onboarding shows the person's own Mac. Nothing is marked approved there by this change.
+- **Pictures.** `ONBOARDING_SHOTS_MACS=1` with `ONBOARDING_SHOTS` writes every enclosure as the window shows it at rest.
+- **Checked.** `onboarding::machine`: a known Mac is its own enclosure, an unknown one its line's newest or the design's laptop, every identifier's enclosure has a model that reads and a finish. `onboarding::laptop`: every enclosure draws on the laptop's canvas. On the Intel Mac (`MacBookPro15,1`, the 15-inch of 2018) the window shows the 15-inch enclosure; pictures of the first screen taken as an Air, an iMac, a Mac mini, a Mac Studio and both Mac Pros.
+
 ## 2026-11-27 · Onboarding's models from the catalogue; its integrations connect
 
 - **Pins.** SDK `91c8d2a` (Isonomic UI `6e0c4a5`, unchanged), for `models.catalogue`, `models.remove` and `connections.*`. Chat stays at `67150eb`.
