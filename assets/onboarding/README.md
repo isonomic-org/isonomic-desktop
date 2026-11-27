@@ -12,4 +12,31 @@
 - `menu-bar.png`: the design's flat picture for the one step that has no 3D model yet, exported at three pixels to a point, with the white ground cleared so it sits on the sidebar. To be replaced by a 3D model.
 - `logos/*.png`: the marks beside the rows of "Local AI models" and "Add integrations", the design's own pictures (Isonomic Desktop, "09 · Local AI models" and "10 · Add integrations"), each in its 40-point box, exported at three pixels to a point, unchanged.
 
+- `logos/*.png` for the connector catalogue, added for "Add integrations": rasterised from the Simple Icons package (npm `simple-icons` 16.37.0, CC0-1.0; the marks remain their owners' trademarks) in each mark's own colour, very light colours drawn dark, at 100 pixels inside a clear 120-pixel square. One file per icon:
+
+| File | Simple Icons slug |
+| --- | --- |
+| `airtable.png` | airtable |
+| `asana.png` | asana |
+| `box.png` | box |
+| `cloudflare.png` | cloudflare |
+| `confluence.png` | confluence |
+| `gmail.png` | gmail |
+| `google-calendar.png` | googlecalendar |
+| `google-docs.png` | googledocs |
+| `google-drive.png` | googledrive |
+| `hubspot.png` | hubspot |
+| `intercom.png` | intercom |
+| `jira.png` | jira |
+| `paypal.png` | paypal |
+| `sentry.png` | sentry |
+| `square.png` | square |
+| `stripe.png` | stripe |
+| `supabase.png` | supabase |
+| `vercel.png` | vercel |
+| `webflow.png` | webflow |
+| `zoom.png` | zoom |
+
+  GitHub, Linear, Notion, Figma, Dropbox, Hugging Face and Zapier use the design's own pictures above; the three Microsoft connectors use `microsoft.png`. Simple Icons has no icon for Slack, Canva, Salesforce or monday.com: their rows show the name's first letter on a chip, drawn by the window.
+
 All are replaced, never edited: the models from the devices repository, the sound from the brand folder.

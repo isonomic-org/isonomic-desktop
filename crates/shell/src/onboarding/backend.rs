@@ -13,13 +13,14 @@
 
 use std::sync::Mutex;
 
-use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 use futures::StreamExt as _;
+use isonomic_proto::connections::{AddConnection, Connection, ConnectionState};
 use isonomic_proto::identity::RecoveryWords;
 use isonomic_proto::models::{DownloadOutcome, DownloadProgress};
 
 use super::steps;
+pub use crate::workspace::{Answer, Catalog, Memory, Model, Workspace};
 
 /// The person's Isonomic ID, and whether this call made it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,35 +38,8 @@ pub struct Kit {
     pub document: String,
 }
 
-/// A local model, as its row shows it.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Model {
-    pub id: String,
-    pub name: String,
-    pub about: String,
-    /// The tab it is under, by its place in [`steps::MODEL_TABS`].
-    pub kind: usize,
-    /// Does its switch start on?
-    pub on: bool,
-    pub installed: bool,
-}
-
-/// Has this Mac the memory local models need?
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Memory {
-    Enough,
-    Short { has: u64, needs: u64 },
-}
-
-/// The local models this Mac may run.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Catalog {
-    pub models: Vec<Model>,
-    pub memory: Memory,
-}
-
 /// What the person chose on the way: the models switched on, the
-/// integrations asked for, and the last step's three switches.
+/// connectors switched on (by key), and the last step's three switches.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Choices {
     pub models: Vec<String>,
@@ -74,8 +48,6 @@ pub struct Choices {
     pub web_access: bool,
     pub snapshots: bool,
 }
-
-pub type Answer<T> = BoxFuture<'static, Result<T, String>>;
 
 /// `work` on a thread of its own, for what blocks on a file or the system:
 /// an answer is polled on the foreground thread, which must never wait,
@@ -95,7 +67,8 @@ pub fn off_thread<T: Send + 'static>(
     })
 }
 
-pub trait Backend: Send + Sync + 'static {
+/// Onboarding's own calls; the models and connections are the workspace's.
+pub trait Backend: Workspace {
     /// Keep that the terms were accepted, and when.
     fn accept_terms(&self) -> Answer<()>;
     /// The person's ID, made now if this Mac has none.
@@ -104,11 +77,6 @@ pub trait Backend: Send + Sync + 'static {
     fn recovery_kit(&self) -> Answer<Kit>;
     /// The person typed the kit's words back: it is saved.
     fn kit_saved(&self) -> Answer<()>;
-    fn models(&self) -> Answer<Catalog>;
-    /// Download `model`, or follow its running download. The stream ends
-    /// after the event that has an outcome; dropping it only stops
-    /// following.
-    fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>>;
     /// Does Isonomic start at login now? `None` where this build can't.
     fn starts_at_login(&self) -> Option<bool>;
     /// Keep the choices and apply the ones this build can.
@@ -117,6 +85,8 @@ pub trait Backend: Send + Sync + 'static {
 
 /// The ID the design's samples stand in for.
 pub const SAMPLE_ID: &str = "isonomic:7Q4K-M2XD-9PLV";
+/// The page the samples sign in at, followed by the connection's id.
+pub const SIGN_IN_PAGE: &str = "http://127.0.0.1/sign-in/";
 
 /// The design's samples, with nothing behind them. A call named to
 /// [`Sample::refuse`] fails until [`Sample::recover`]; every call is
@@ -127,6 +97,7 @@ pub struct Sample {
     calls: Mutex<Vec<String>>,
     short: Mutex<Option<Memory>>,
     finished: Mutex<Option<Choices>>,
+    connected: Mutex<Vec<Connection>>,
 }
 
 impl Sample {
@@ -202,21 +173,88 @@ impl Backend for Sample {
         self.answer("kit_saved", ())
     }
 
-    fn models(&self) -> Answer<Catalog> {
+    fn starts_at_login(&self) -> Option<bool> {
+        None
+    }
+
+    fn finish(&self, choices: Choices) -> Answer<()> {
+        *self.finished.lock().unwrap() = Some(choices);
+        self.answer("finish", ())
+    }
+}
+
+impl Workspace for Sample {
+    fn catalogue(&self) -> Answer<Catalog> {
         let models = steps::MODEL_LIST
             .iter()
-            .zip(steps::MODEL_KINDS)
-            .map(|((name, about, on), kind)| Model {
+            .map(|&(name, publisher, about, kind, first, fits)| Model {
                 id: name.to_lowercase().replace(' ', "-"),
-                name: (*name).to_owned(),
-                about: (*about).to_owned(),
-                kind,
-                on: *on,
+                name: name.to_owned(),
+                publisher: Some(publisher.to_owned()),
+                about: about.to_owned(),
+                kind: kind.to_owned(),
+                size_bytes: None,
+                first,
                 installed: false,
+                downloading: false,
+                fits,
+                fit_reason: Some(steps::fit_reason(fits).to_owned()),
             })
             .collect();
         let memory = self.short.lock().unwrap().unwrap_or(Memory::Enough);
-        self.answer("models", Catalog { models, memory })
+        self.answer("catalogue", Catalog { models, memory })
+    }
+
+    fn remove_model(&self, model: &str) -> Answer<()> {
+        self.calls.lock().unwrap().push(format!("remove {model}"));
+        self.answer("remove_model", ())
+    }
+
+    fn connections(&self) -> Answer<Vec<Connection>> {
+        let held = self.connected.lock().unwrap().clone();
+        self.answer("connections", held)
+    }
+
+    /// Kept by key, never with its secret: a remote server without one
+    /// needs a sign-in.
+    fn connect(&self, add: AddConnection) -> Answer<Connection> {
+        let key = add.key.clone().unwrap_or_default();
+        self.calls.lock().unwrap().push(format!("connect {key}"));
+        let mut held = self.connected.lock().unwrap();
+        let remote = matches!(
+            add.server,
+            isonomic_proto::connections::Server::Remote { .. }
+        );
+        let connection = Connection {
+            id: format!("sample-{}", held.len() + 1),
+            name: add.name,
+            key: add.key,
+            server: add.server,
+            state: if remote && add.secret.is_none() {
+                ConnectionState::NeedsSignIn
+            } else {
+                ConnectionState::Ready
+            },
+            error: None,
+            tools: 0,
+        };
+        held.push(connection.clone());
+        drop(held);
+        self.answer("connect", connection)
+    }
+
+    fn sign_in(&self, id: &str) -> Answer<String> {
+        self.calls.lock().unwrap().push(format!("sign in {id}"));
+        self.answer("sign_in", format!("{SIGN_IN_PAGE}{id}"))
+    }
+
+    fn disconnect(&self, id: &str) -> Answer<()> {
+        self.connected.lock().unwrap().retain(|held| held.id != id);
+        self.answer("disconnect", ())
+    }
+
+    fn changes(&self) -> BoxStream<'static, Connection> {
+        futures::stream::pending().boxed()
     }
 
     fn download(&self, model: &str) -> BoxStream<'static, Result<DownloadProgress, String>> {
@@ -236,14 +274,5 @@ impl Backend for Sample {
             error: None,
         };
         futures::stream::once(async move { refused.map_or(Ok(done), Err) }).boxed()
-    }
-
-    fn starts_at_login(&self) -> Option<bool> {
-        None
-    }
-
-    fn finish(&self, choices: Choices) -> Answer<()> {
-        *self.finished.lock().unwrap() = Some(choices);
-        self.answer("finish", ())
     }
 }

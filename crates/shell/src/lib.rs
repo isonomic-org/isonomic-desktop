@@ -11,16 +11,20 @@
 
 pub mod acknowledgements;
 pub mod apps;
+pub mod connectors;
 pub mod downloads;
 pub mod first_run;
 pub mod home;
 pub mod install;
 pub mod lifecycle;
 pub mod light;
+pub mod lists;
+pub mod logos;
 pub mod logs;
 pub mod menubar;
 pub mod onboarding;
 pub mod problems;
+pub mod workspace;
 
 use std::sync::Arc;
 

@@ -31,7 +31,7 @@ mod kit;
 mod kit_run;
 mod kit_view;
 mod laptop;
-mod logos;
+mod links;
 mod passkey;
 mod passkey_view;
 mod props;
@@ -121,7 +121,12 @@ pub struct Onboarding {
     flow: Option<flow::Flow>,
     finishing: Option<f32>,
     models: Vec<bool>,
-    links: [bool; 8],
+    links: Vec<bool>,
+    /// The fields of the connectors that ask for a token or an address,
+    /// by their place in the catalogue, made at the first draw; and the
+    /// row whose field shows.
+    fields: Option<Vec<(usize, Entity<InputState>)>>,
+    asking_for: Option<usize>,
     residency: [bool; 3],
     /// The two lists' chosen tabs and their search boxes, which are made
     /// at the first draw; and whether the kit is ticked as stored.
@@ -248,7 +253,9 @@ impl Onboarding {
             flow: None,
             finishing: None,
             models: Vec::new(),
-            links: [false; 8],
+            links: vec![false; crate::connectors::CONNECTORS.len()],
+            fields: None,
+            asking_for: None,
             residency: [
                 backend.starts_at_login().unwrap_or(false),
                 steps::RESIDENCY[1].2,

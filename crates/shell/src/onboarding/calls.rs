@@ -21,9 +21,8 @@ use isonomic_proto::models::DownloadOutcome;
 use ui::{ClipboardItem, Context};
 
 use super::backend::{Answer, Choices, Memory};
-use super::engine::size;
-use super::steps;
 use super::Onboarding;
+use crate::workspace::size;
 
 /// How long a call waits on the engine.
 const WAIT: Duration = Duration::from_secs(30);
@@ -101,12 +100,16 @@ impl Onboarding {
             return;
         }
         self.catalog_trouble = None;
-        self.ask(self.backend.models(), cx, |view, catalog, _| {
+        self.ask(self.backend.catalogue(), cx, |view, catalog, _| {
             view.catalog_asked = false;
             match catalog {
                 Ok(catalog) => {
                     let fits = catalog.memory == Memory::Enough;
-                    view.models = catalog.models.iter().map(|m| m.on && fits).collect();
+                    view.models = catalog
+                        .models
+                        .iter()
+                        .map(|m| m.installed || (m.first && m.fits && fits))
+                        .collect();
                     view.catalog = Some(catalog);
                 }
                 Err(said) => {
@@ -208,11 +211,11 @@ impl Onboarding {
             .filter(|(_, on)| **on)
             .map(|(model, _)| model.id.clone())
             .collect();
-        let integrations = steps::LINK_LIST
+        let integrations = crate::connectors::CONNECTORS
             .iter()
-            .zip(self.links)
-            .filter(|(_, on)| *on)
-            .map(|((name, ..), _)| (*name).to_owned())
+            .zip(&self.links)
+            .filter(|(_, on)| **on)
+            .map(|(connector, _)| connector.key.to_owned())
             .collect();
         Choices {
             models,
@@ -223,13 +226,15 @@ impl Onboarding {
         }
     }
 
-    /// "Setting up your workspace": keep the choices, then fetch the
-    /// models switched on that this Mac hasn't got. The rest are started
+    /// "Setting up your workspace": keep the choices, connect the
+    /// connectors switched on, then fetch the models switched on that
+    /// this Mac hasn't got. The rest are started
     /// and left to the engine, whose downloads they are; the first is
     /// followed to its end, with how far it is said under the pill.
     pub(super) fn set_up(&mut self, cx: &mut Context<Self>) {
         let backend = Arc::clone(&self.backend);
         let choices = self.choices();
+        let connections = self.wanted_connections(cx);
         let wanted: Vec<(String, String)> = self
             .catalog
             .iter()
@@ -242,6 +247,7 @@ impl Onboarding {
             if let Err(said) = backend.finish(choices).await {
                 reports::log::line(&format!("onboarding: choices not kept: {said}"));
             }
+            super::links::connect_all(Arc::clone(&backend), connections, view.clone(), cx).await;
             // The rest first: each is started, and its first event is
             // enough to know the engine has it.
             let mut wanted = wanted.into_iter();

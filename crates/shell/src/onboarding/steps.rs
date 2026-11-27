@@ -159,43 +159,29 @@ pub const CONFIRM_NOTE: (&str, &str) = (
     "Look at the copy you wrote down or engraved. If a word doesn\u{2019}t match, go back and write the kit down again before you continue.",
 );
 
-pub const MODEL_TABS: [&str; 5] = ["All models", "Chat", "Reasoning", "Multimodal", "Utility"];
-/// Each model, what it is for, and whether it starts switched on.
-pub const MODEL_LIST: [(&str, &str, bool); 8] = [
-    ("Qwen3.5 4B", "Default chat model on every tier.", true),
-    (
-        "Mistral Small 4",
-        "Chat model for the Mac Studio tier.",
-        false,
-    ),
-    (
-        "Gemma 4 E4B",
-        "A second model family. It can also take images and audio later.",
-        false,
-    ),
-    ("Phi-4-mini", "Small MIT-licensed fallback.", false),
-    ("SmolLM3 3B", "Fully open, training data included.", false),
-    (
-        "Qwen3.5 0.8B",
-        "Tiny utility model for titles, routing and summaries.",
-        true,
-    ),
-    (
-        "gpt-oss-20b",
-        "Reasoning and tool use on Apple Silicon.",
-        false,
-    ),
-    (
-        "Qwen3.6 35B-A3B",
-        "The flagship for Apple Silicon with 32 GB or more.",
-        false,
-    ),
+/// Each sample model: its name, its publisher, what it is for, its
+/// kind, whether the engine would start with it, and whether it fits
+/// this Mac.
+#[rustfmt::skip]
+pub const MODEL_LIST: [(&str, &str, &str, &str, bool, bool); 8] = [
+    ("Qwen3.5 4B", "Qwen", "Default chat model on every tier.", "Chat", true, true),
+    ("Mistral Small 4", "Mistral AI", "Chat model for the Mac Studio tier.", "Chat", false, true),
+    ("Gemma 4 E4B", "Google", "It can also take images and audio later.", "Multimodal", false, true),
+    ("Phi-4-mini", "Microsoft", "Small MIT-licensed fallback.", "Utility", false, true),
+    ("SmolLM3 3B", "Hugging Face", "Fully open, training data included.", "Utility", false, true),
+    ("Qwen3.5 0.8B", "Qwen", "Tiny utility model for titles, routing and summaries.", "Utility", true, true),
+    ("gpt-oss-20b", "OpenAI", "Reasoning and tool use on Apple Silicon.", "Reasoning", false, true),
+    ("Qwen3.6 35B-A3B", "Qwen", "The flagship for Apple Silicon with 32 GB or more.", "Chat", false, false),
 ];
 
-/// The tab each model is under, and each integration, by its place in
-/// the tabs.
-pub const MODEL_KINDS: [usize; 8] = [1, 1, 3, 4, 4, 4, 2, 1];
-pub const LINK_KINDS: [usize; 8] = [3, 3, 1, 3, 3, 2, 2, 3];
+/// What a sample model's pill says when its "i" is pointed at.
+pub fn fit_reason(fits: bool) -> &'static str {
+    if fits {
+        "It fits in this Mac\u{2019}s 16 GB of memory, with room for your apps."
+    } else {
+        "It needs about 24 GB of memory, and this Mac has 16 GB."
+    }
+}
 
 /// An ID cut short for a line of small print: its start and its end.
 pub fn short(id: &str) -> String {
@@ -210,49 +196,6 @@ pub fn short(id: &str) -> String {
         end.iter().collect::<String>()
     )
 }
-
-/// Is a row of kind `kind`, called `name` and described by `about`, in
-/// the list when tab `tab` is chosen and `sought` is in the search box?
-/// The first tab is everything; the search looks in both lines, whatever
-/// the capitals.
-pub fn listed(kind: usize, tab: usize, sought: &str, (name, about): (&str, &str)) -> bool {
-    let sought = sought.trim().to_lowercase();
-    (tab == 0 || kind == tab)
-        && (name.to_lowercase().contains(&sought) || about.to_lowercase().contains(&sought))
-}
-
-pub const LINK_TABS: [&str; 5] = [
-    "All integrations",
-    "Developer tools",
-    "Communication",
-    "Productivity",
-    "Browser tools",
-];
-pub const LINK_LIST: [(&str, &str); 8] = [
-    (
-        "Linear",
-        "Streamline software projects, sprints, tasks, and bug tracking.",
-    ),
-    ("Figma", "Embed file previews in projects."),
-    ("GitHub", "Link pull requests and automate workflows."),
-    (
-        "Zapier",
-        "Build custom automations and integrations with other apps.",
-    ),
-    ("Notion", "Embed notion pages and notes in projects."),
-    (
-        "Loom",
-        "Boost your team\u{2019}s productivity with async video collaboration and recording.",
-    ),
-    (
-        "Mailchimp",
-        "Grow your business an all-in-one marketing & email marketing platform.",
-    ),
-    (
-        "Dropbox",
-        "Seamlessly connect your team\u{2019}s cloud files and storage with current projects.",
-    ),
-];
 
 pub const RESIDENCY: [(&str, &str, bool); 3] = [
     (
@@ -285,20 +228,5 @@ mod tests {
         let long = "did:iso:c6eeabb1d5d2823a365417297615ace4cf5dc74d1ea9f6cfa261b63b77b75353";
         assert_eq!(short(long), "did:iso:c6eeabb1\u{2026}b75353");
         assert_eq!(short("isonomic:7Q4K-M2XD-9PLV"), "isonomic:7Q4K-M2XD-9PLV");
-    }
-
-    #[test]
-    fn a_list_shows_what_its_tab_and_its_search_ask_for() {
-        let row = ("Qwen3.5 4B", "Default chat model on every tier.");
-        assert!(listed(1, 0, "", row) && listed(1, 1, "", row) && !listed(1, 2, "", row));
-        assert!(listed(1, 0, " QWEN ", row) && listed(1, 0, "every tier", row));
-        assert!(!listed(1, 0, "mistral", row) && !listed(1, 2, "qwen", row));
-        // Every row is under a tab there is.
-        assert!(MODEL_KINDS
-            .iter()
-            .all(|kind| (1..MODEL_TABS.len()).contains(kind)));
-        assert!(LINK_KINDS
-            .iter()
-            .all(|kind| (1..LINK_TABS.len()).contains(kind)));
     }
 }

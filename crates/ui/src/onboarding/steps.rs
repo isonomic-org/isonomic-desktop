@@ -59,6 +59,10 @@ pub fn field() -> Hsla {
 pub const ROW: f32 = 63.;
 pub const LOGO: f32 = 40.;
 pub const LOGO_GAP: f32 = 16.;
+/// The field in a connector's row for its token, or a custom server's
+/// URL or command; and the "i" in a model's pill.
+pub const ROW_FIELD: f32 = 220.;
+pub const PILL_ICON: f32 = 14.;
 pub const SMALL: (f32, f32) = (12., 18.);
 pub const FIELD: (f32, f32) = (360., 38.);
 
