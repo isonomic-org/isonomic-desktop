@@ -55,6 +55,7 @@ pub fn named(name: impl Into<SharedString>, about: impl Into<SharedString>) -> D
 pub fn row(picture: AnyElement, words: Div, beside: Vec<AnyElement>, control: AnyElement) -> Div {
     div()
         .w_full()
+        .flex_none()
         .h(px(design::ROW))
         .flex()
         .items_center()
