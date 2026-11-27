@@ -143,6 +143,9 @@ impl Render for Onboarding {
                 search
             }));
         }
+        if self.fields.is_none() {
+            self.fields = Some(self.make_fields(window, cx));
+        }
         self.land();
         self.draw_kit(cx);
         if self.words.is_none() {

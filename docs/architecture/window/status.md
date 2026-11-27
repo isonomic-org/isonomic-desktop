@@ -2,7 +2,18 @@
 
 Newest first.
 
-Older entries: `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
+Older entries: `history-7.md`, then `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
+
+## 2026-11-27 · Onboarding's models from the catalogue; its integrations connect
+
+- **Pins.** SDK `91c8d2a` (Isonomic UI `6e0c4a5`, unchanged), for `models.catalogue`, `models.remove` and `connections.*`. Chat stays at `67150eb`.
+- **One layer for the models and the connections** (`shell::workspace`): the catalogue, downloads, removal, and the connections' list, add, sign-in, removal and changes (from `connections().changes()`). The window's is `workspace::engine::EngineWorkspace` over the shell's client. Onboarding's `Backend` builds on it; Settings can call it as it is. No Settings screen is in this change: another change builds it.
+- **Turn on local AI models** lists `models.catalogue`: every local model, not only the recommended one and what is installed. Each row's line is the publisher, the model's `about` and its size. Beside it, a pill says Recommended (`fits`) or Not recommended, with the library's "i" in it; pointing at the "i" shows `fit_reason` in the library's tooltip. The tabs are the kinds the catalogue has (from each model's capabilities), not a fixed list. The model the engine would start with is switched on when it fits; installed ones stay on and fixed. "Setting up your workspace" starts every model switched on and follows the first, as before.
+- **Add integrations** lists the connector catalogue (`shell::connectors`, its rows as data in `connectors/table.rs`): key, name, line, logo, server, how it signs in, and whether it is available. Available: GitHub, Hugging Face, Supabase and Zapier with a pasted token; Linear, Notion, Jira, Confluence, Sentry, Vercel, Cloudflare, Airtable, monday.com, Intercom, Stripe, PayPal and Webflow in the browser; the design app's own server on this Mac at its loopback address; and a custom server by URL or command. Coming soon, with the tag where "Connect" would be: Gmail, Google Drive, Docs and Calendar, Figma's remote server, Slack, Dropbox, Box, Outlook, Teams, OneDrive, Salesforce, HubSpot, Zoom, Asana, Canva and Square (each needs a registered developer app or an allowlist).
+- **Connecting.** "Connect" marks a connector, as the design's button did; several can be. One that takes a token or an address shows its field in the row when "Connect" is pressed, and is on once something is typed there. "Setting up your workspace" adds each with `connections.add`; one that answers `needs_sign_in` has the engine's sign-in page opened in the browser (`open_url`). A token goes to the engine as the connection's secret only: it is never logged and never kept with the choices, which keep connector keys.
+- **Deviations.** The rows and the motion are the design's; the only things added to them are the pill with its "i", the "Coming soon" tag, and a token row's field once its "Connect" is pressed. The list scrolls, as the catalogue is longer than the panel. Onboarding has left its integrations step when the connections are added, so the rows there do not follow `changes()`; the workspace layer gives the changes to whatever lists them next. The tabs of "Add integrations" are the catalogue's categories, not the design's four. The design's Loom and Mailchimp rows are gone: neither is in the catalogue.
+- **Not checked live.** The connector addresses come from the vendors' documentation, not from a call to each.
+- **Checked.** `tests/workspace.rs` against the SDK's test engine: the catalogue's pills, their reasons and tabs; two models downloaded and one removed, with the engine's refusal as said; a token connector ready with its secret; a browser connector signed in, its change and a failure followed, and removed. `tests/onboarding_backend.rs`: every model switched on fetched, a browser connector added with its sign-in page opened, and a token connector that asks for its token first, never signs in, and keeps no token in the choices.
 
 ## 2026-11-25 · Onboarding works over the engine
 
@@ -38,45 +49,3 @@ Older entries: `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.m
 - **Frames are drawn ahead.** While the mark plays, the laptop's flight and the terms' coming on are drawn (`terms::warm`); when the terms rest, the signing (`signing::warm`); while it signs, the seal's flight (`Seal::warm`). A press on "Start new account" before its frames are there waits for them, 0.6 s at most.
 - **Measured on the 2020 Intel MacBook Pro, development build:** the first screens' 270 frames are drawn ahead in 3.7 s; the laptop's flight showed 65 of its 99 frames, 54 before. The development build draws the window itself unoptimised, so it is slower than what ships; the test app can be opened from the release build (`UI-Test/open-release.sh`).
 - **Not yet:** the kit's holder is drawn as it plays, not ahead (its frames are kept once drawn); frames are swapped by a timer, not by the screen's own refresh.
-
-## 2026-11-25 · Onboarding's edge cases, and a second design pass
-
-- **"Save your recovery kit"** can't be left forward until the kit is ticked as stored: "Continue" is disabled and `next_step` holds (`Onboarding::held_back`, `store_kit`).
-- **The words typed back** may have capitals and spaces around them, as the screen says (`kit_run::fits`). A wrong word is red whether or not it has the keyboard, and takes the keyboard so it can be put right. With nothing typed, the line under the grid asks for the words instead of calling word 4 wrong.
-- **The lists** show what their tab and their search box ask for (`steps::listed`, `MODEL_KINDS`, `LINK_KINDS`), and say so when that is nothing.
-- **"Setting up your workspace"** cuts a long name short with an ellipsis.
-- **Tested in `tests/onboarding.rs`:** "Cancel" on the Face ID sheet and asking again; the unticked kit; words with capitals and spaces; a wrong word, then put right.
-- **Design pass:** the notes are a grey card with the 20 px "i" centred beside the text (laid out here with the library's icon, because the library's alert pins its icon to the top at its own size); the kit's grid has the design's 187-wide cells with 12 between; "Learn more" is underlined only when pointed at; button icons are 20; the holder is the design's size (181 tall, open) with bright faces and a lighter frame; a step with no rule starts 22 under its heading.
-- **Not done:** "Recover existing account" still leads nowhere, since recovery has no screens; Escape doesn't dismiss the Face ID sheet; the primary colour is the library theme's near-black where the design has navy.
-
-## 2026-11-25 · "Decline" and the Face ID screen's "Previous step" play backward
-
-- **Was:** "Decline" on the terms and "Previous step" on "Create your account with Face ID" showed the screen before at once.
-- **Now:** both play what brought the screen on backward (`onboarding::rewind`). Everything on those screens is placed by the third screen's clock, so going back is that clock running backward: `Onboarding::terms_now` reads it from the rewind while one runs, the 3D pieces are drawn again for each time it passes, and what it goes back past is put back (`Onboarding::passed`). No button is heard until it lands.
-- **"Decline":** the clipboard and the pen go back under the content, the stepper drops, the content slides off to the right, the laptop turns back to the middle, and the title, the pill and the link come back.
-- **"Previous step":** the seal goes back under its panel and the panel slides off; the clipboard and the pen come back in from the left; then the signing is undone four times as fast as it was done (`signs::UNDO_RATE`): the pages lift, the signature is unwritten, the pages settle. The terms can be accepted again.
-- **Also:** "Learn more" in the two lists is the library's `Link`; the Face ID sheet has the design's sizes; the shell's onboarding panels have no raw sizes left (the spacing scale, or `ui::onboarding` tokens); the kit's words are typed into their inputs in `tests/onboarding.rs`.
-- **Checked how:** the tests land both; `ONBOARDING_SHOTS_BACK=1` with `ONBOARDING_SHOTS` draws both and shows each lands on the right screen. The headless window runs a rewind to its end in one step, so the motion itself is still to be watched in the window.
-- **Known, in the library:** buttons, switches, checkboxes and tabs show the arrow, not the pointing hand, when pointed at; only links show the hand. `Link` is always underlined, where the design's "Learn more" is not.
-
-## 2026-11-25 · Onboarding's controls are Isonomic UI's, and a design pass
-
-- **Was:** onboarding drew its own buttons, switches, tabs, search boxes, checkbox, badges, notes and the three boxes the kit's words are typed back in, and several had no icon.
-- **Now:** every control is the library's (`ui::component`): `Button` (with the design's icons: arrows, plus, check, printer, download, add, fingerprint), `Switch`, `TabBar`, `Input`, `Checkbox`, `Tag`, `Alert`, `Spinner` and `Link`. What is still drawn here is layout and art only: cards, rows, the stepper, the Face ID sheet's frame, and the 3D pieces.
-- **The words typed back** are three `Input`s. Letters only, twelve at most (`kit_run::fits`); Tab and Enter are the input's own. The view keeps what is typed (`Onboarding::word_event`) and writes it back to the inputs when it is filled in for a test or held after confirming.
-- **"Get started"** follows the design as it is now: the laptop is 300 across at (490, 150), the title is under it, one pill ("Start new account"), and "Recover existing account" is a link under the pill.
-- **"Setting up your workspace"** shows this Mac's own name (`scutil --get ComputerName`, or "This Mac"), and its pill has the design's mark and a spinner.
-- **The stepper** has six steps, as the design has: the recovery kit's two screens are one step.
-- **Smaller things from the pass:** card padding counts the border; the address card has no gaps between its lines; "Active" is the pale green badge with a dot; notes are the grey card, not the blue one; the words not asked for are faint; list headers have the add button beside the title and the tabs and search under it.
-- **How it was checked:** `ONBOARDING_SHOTS=<folder> cargo test -p shell --test onboarding_shots` draws every screen at rest to a PNG without a window on screen, for laying beside the design. The timer-driven 3D pieces are not in those pictures.
-- **Differs from the design, on purpose:** the tabs are the library's segmented tabs (grey bar, white chosen tab) where the design draws an outlined bar; the spinner is the library's.
-- **Not yet:** raw sizes in the shell's onboarding panels still to move into `ui::onboarding` tokens.
-
-## 2026-11-24 · "Previous step" plays a step's coming on backward
-
-- **Was:** "Previous step" on the later steps showed the step before at once, at rest.
-- **Now:** the step being left plays its coming on backward (`flow::Flow::back`): its art turns over and goes back under its panel, the panel slides off to the right, the stepper's words change back, and the step before's art comes back in from the left edge. The step before is there when that ends (`Onboarding::land`), and no button is heard until then.
-- **What each step's art does backward:** the ID card comes out of the wallet and lies over it again; the holder's tiles turn back, it closes and goes under the panel; on "Confirm your recovery kit" it turns to face the person again.
-- **The locked kit:** past "Confirm your recovery kit" the kit stays locked. Going back to that step shows it closed with its padlock on, and "Continue" goes on without asking for the words again. Going back out of it unlocks it first: the padlock's body drops, it goes back under the panel, and the holder opens with its back turned, before the rest plays backward.
-- **From "Your account exists."** back to "Create your account with Face ID" likewise; the seal comes back in from the left edge.
-- **Not yet:** "Previous step" on "Create your account with Face ID" and "Decline" on the terms still go back at once.

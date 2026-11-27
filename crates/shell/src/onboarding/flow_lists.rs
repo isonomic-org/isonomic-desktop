@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! The two list steps' panels: "Turn on local AI models", whose rows are
-//! the models the engine says this Mac may run, and "Integrations and
-//! connected apps", whose rows are the design's.
+//! the engine's catalogue of local models, each with its Recommended or
+//! Not recommended pill; and "Integrations and connected apps", whose
+//! rows are the connector catalogue (`crate::connectors`).
 //!
-//! A model switched on is fetched by "Setting up your workspace". An
-//! integration asked for is only kept as a choice: nothing connects yet.
+//! A model or a connector switched on is fetched or connected by
+//! "Setting up your workspace". A connector that takes a token asks for
+//! it in its row before its switch goes on.
 
 use ui::assets::IconName;
 use ui::component::button::{Button, ButtonVariants as _};
@@ -14,28 +16,31 @@ use ui::component::input::Input;
 use ui::component::link::Link;
 use ui::component::switch::Switch;
 use ui::component::tab::{Tab, TabBar};
-use ui::component::{Disableable as _, Icon, Sizable as _, Size};
+use ui::component::{Disableable as _, Sizable as _, Size};
 use ui::onboarding::passkey::{self as fourth};
 use ui::onboarding::steps::{self as design};
 use ui::onboarding::terms::{self as shared};
-use ui::onboarding::{self as page};
 use ui::{
-    div, img, px, AnyElement, Context, Div, InteractiveElement as _, IntoElement, MouseButton,
-    ParentElement as _, SharedString, Styled as _,
+    div, px, AnyElement, Context, Div, InteractiveElement as _, IntoElement, MouseButton,
+    ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _,
 };
 
 use super::backend::Memory;
-use super::flow_bodies::{held, icon, named, note, outlined, text};
-use super::logos;
+use super::flow_bodies::{held, icon, note, outlined, text};
 use super::steps;
 use super::Onboarding;
+use crate::connectors::{self, CONNECTORS};
+use crate::lists::{self, named};
+use crate::logos;
 
-/// A row of a list: its picture, its two lines and its control.
+/// A row of a list: its picture, its two lines, what is beside them and
+/// its control.
 struct Row {
     key: usize,
     picture: AnyElement,
     name: SharedString,
     about: SharedString,
+    beside: Vec<AnyElement>,
     control: AnyElement,
 }
 
@@ -88,7 +93,7 @@ impl Onboarding {
         )
     }
 
-    /// "Connect", or "Connected" once pressed.
+    /// "Connect", or "Connected" once pressed, as the design has it.
     fn connect(&self, index: usize, on: bool, cx: &mut Context<Self>) -> impl IntoElement {
         let id = ("onboarding-connect", index);
         let button = if on {
@@ -111,15 +116,15 @@ impl Onboarding {
     /// What a list step has in its header, beside and under its heading:
     /// the button beside it, and its tabs with their search box.
     pub(super) fn header_extras(&self, step: usize, cx: &mut Context<Self>) -> Option<(Div, Div)> {
-        let (which, add, names): (usize, _, &'static [&'static str]) = match step {
-            steps::MODELS => (0, "Import model", &steps::MODEL_TABS),
-            steps::LINKS => (1, "Custom integration", &steps::LINK_TABS),
+        let (which, add, names): (usize, _, Vec<SharedString>) = match step {
+            steps::MODELS => (0, "Import model", self.model_tabs()),
+            steps::LINKS => (1, "Custom integration", self.link_tabs()),
             _ => return None,
         };
         let tabs = TabBar::new(("onboarding-tabs", which))
             .segmented()
             .selected_index(self.tabs[which])
-            .children(names.iter().map(|name| Tab::new().label(*name)))
+            .children(names.into_iter().map(|name| Tab::new().label(name)))
             .on_click(cx.listener(move |view, chosen: &usize, _, cx| {
                 view.tabs[which] = *chosen;
                 cx.notify();
@@ -167,57 +172,38 @@ impl Onboarding {
             return instead(says).into_any_element();
         }
         let rows = rows.into_iter().map(|row| {
-            div()
-                .w_full()
-                .h(px(design::ROW))
-                .flex()
-                .items_center()
-                .gap(px(design::LOGO_GAP))
-                .border_b_1()
-                .border_color(page::hairline())
-                .child(row.picture)
-                .child(named(row.name, row.about))
-                .child(
-                    Link::new(("onboarding-learn", step * 16 + row.key))
-                        .flex_none()
-                        .text_size(px(shared::ACTION_LABEL.0))
-                        .line_height(px(shared::ACTION_LABEL.1))
-                        .text_color(shared::quiet())
-                        // Underlined only when pointed at, as the design has it.
-                        .text_decoration_0()
-                        .child("Learn more"),
-                )
-                .child(row.control)
+            let learn = Link::new(("onboarding-learn", step * 64 + row.key))
+                .flex_none()
+                .text_size(px(shared::ACTION_LABEL.0))
+                .line_height(px(shared::ACTION_LABEL.1))
+                .text_color(shared::quiet())
+                // Underlined only when pointed at, as the design has it.
+                .text_decoration_0()
+                .child("Learn more");
+            let mut beside = row.beside;
+            beside.push(learn.into_any_element());
+            lists::row(row.picture, named(row.name, row.about), beside, row.control)
         });
         div()
-            .w_full()
+            .id(("onboarding-list", step))
+            .size_full()
+            .overflow_y_scroll()
             .flex()
             .flex_col()
             .children(rows)
             .into_any_element()
     }
 
-    /// A model's mark: its maker's, or a chip where the design has none.
-    fn model_mark(name: &str) -> AnyElement {
-        match logos::model(name) {
-            Some(logo) => img(logo)
-                .flex_none()
-                .size(px(design::LOGO))
-                .into_any_element(),
-            None => div()
-                .flex_none()
-                .size(px(design::LOGO))
-                .flex()
-                .items_center()
-                .justify_center()
-                .rounded(px(fourth::CARD_CORNER))
-                .border_1()
-                .border_color(page::hairline())
-                .bg(design::field())
-                .text_color(page::ink())
-                .child(Icon::from(IconName::Chip).size(px(design::PASSKEY_ICON)))
-                .into_any_element(),
-        }
+    /// The models' tabs, from the catalogue: "All models" until it is here.
+    pub(super) fn model_tabs(&self) -> Vec<SharedString> {
+        self.catalog.as_ref().map_or_else(
+            || vec![crate::workspace::ALL_MODELS.into()],
+            |catalog| catalog.tabs().into_iter().map(Into::into).collect(),
+        )
+    }
+
+    fn link_tabs(&self) -> Vec<SharedString> {
+        connectors::tabs().into_iter().map(Into::into).collect()
     }
 
     /// "Turn on local AI models": the models this Mac may run.
@@ -242,19 +228,16 @@ impl Onboarding {
             .models
             .iter()
             .enumerate()
-            .filter(|(_, model)| {
-                steps::listed(
-                    model.kind,
-                    self.tabs[0],
-                    &sought,
-                    (&model.name, &model.about),
-                )
-            })
+            .filter(|(_, model)| catalog.listed(model, self.tabs[0], &sought))
             .map(|(index, model)| Row {
                 key: index,
-                picture: Self::model_mark(&model.name),
+                picture: lists::mark(
+                    logos::model(&model.name, model.publisher.as_deref()),
+                    &model.name,
+                ),
                 name: model.name.clone().into(),
-                about: model.about.clone().into(),
+                about: model.line().into(),
+                beside: vec![lists::fit_pill(("onboarding-fit", index), model)],
                 control: self
                     .switch(
                         steps::MODELS,
@@ -290,31 +273,47 @@ impl Onboarding {
             .into_any_element()
     }
 
-    /// "Integrations and connected apps": the design's rows.
+    /// "Integrations and connected apps": the connector catalogue. One
+    /// that is coming soon has its tag where "Connect" would be; one that
+    /// asks for a token or an address shows its field when "Connect" is
+    /// pressed, and is connected once something is typed there.
     pub(super) fn links_list(&self, cx: &mut Context<Self>) -> AnyElement {
         let sought = self.sought(1, cx);
-        let rows = steps::LINK_LIST
+        let rows = CONNECTORS
             .iter()
             .enumerate()
-            .filter(|(index, (name, about))| {
-                steps::listed(
-                    steps::LINK_KINDS[*index],
-                    self.tabs[1],
-                    &sought,
-                    (name, about),
-                )
-            })
-            .map(|(index, (name, about))| Row {
-                key: index,
-                picture: img(logos::link(index))
-                    .flex_none()
-                    .size(px(design::LOGO))
-                    .into_any_element(),
-                name: (*name).into(),
-                about: (*about).into(),
-                control: self
-                    .connect(index, self.links[index], cx)
-                    .into_any_element(),
+            .filter(|(_, connector)| connectors::listed(connector, self.tabs[1], &sought))
+            .map(|(index, connector)| {
+                // The field shows once "Connect" is pressed on a row that
+                // needs something typed; the row is the design's until then.
+                let field = self
+                    .field(index)
+                    .filter(|_| connector.available && self.asking_for == Some(index));
+                let beside = field
+                    .map(|field| {
+                        held(
+                            div()
+                                .w(px(design::ROW_FIELD))
+                                .child(Input::new(field).min_h(px(design::CONNECT))),
+                        )
+                        .into_any_element()
+                    })
+                    .into_iter()
+                    .collect();
+                let control = if connector.available {
+                    let on = self.links.get(index).copied().unwrap_or(false);
+                    self.connect(index, on, cx).into_any_element()
+                } else {
+                    lists::coming_soon()
+                };
+                Row {
+                    key: index,
+                    picture: lists::mark(connector.logo.and_then(logos::named), connector.name),
+                    name: connector.name.into(),
+                    about: connector.about.into(),
+                    beside,
+                    control,
+                }
             })
             .collect();
         Self::listed(steps::LINKS, rows, &sought, "No integrations here yet.")

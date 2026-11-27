@@ -10,7 +10,7 @@ extern crate ui as gpui;
 
 use std::sync::Arc;
 
-use shell::onboarding::backend::{Memory, Sample, SAMPLE_ID};
+use shell::onboarding::backend::{Memory, Sample, SAMPLE_ID, SIGN_IN_PAGE};
 use shell::onboarding::{self, Onboarding};
 use ui::test::TestWindowExt as _;
 use ui::{AnyWindowHandle, AppContext as _, ElementId, Entity, TestAppContext};
@@ -186,8 +186,9 @@ fn finishing_keeps_the_choices_and_fetches_the_models_switched_on(cx: &mut TestA
     run.click(cx, ("onboarding-switch", 3 * 16 + 1usize));
     run.click(cx, "onboarding-next");
     run.skip(cx);
-    // Nothing is connected until asked for.
-    run.click(cx, ("onboarding-connect", 2usize));
+    // Nothing is connected until asked for: the second connector signs
+    // in through the browser.
+    run.click(cx, ("onboarding-connect", 1usize));
     run.click(cx, "onboarding-next");
     run.skip(cx);
     assert!(run.shown(cx, "onboarding-finish"));
@@ -199,12 +200,52 @@ fn finishing_keeps_the_choices_and_fetches_the_models_switched_on(cx: &mut TestA
         choices.models,
         ["qwen3.5-4b", "mistral-small-4", "qwen3.5-0.8b"]
     );
-    assert_eq!(choices.integrations, ["GitHub"]);
+    assert_eq!(choices.integrations, ["linear"]);
     assert!(!choices.web_access && choices.snapshots);
     let calls = run.sample.calls();
     for model in &choices.models {
         assert!(calls.contains(&format!("download {model}")), "{model}");
     }
+    // Every model switched on is fetched, and the connector is added and
+    // its sign-in page opened.
+    assert!(calls.contains(&"connect linear".to_owned()));
+    assert!(calls.contains(&"sign in sample-1".to_owned()));
+    assert_eq!(cx.opened_url(), Some(format!("{SIGN_IN_PAGE}sample-1")));
+}
+
+#[ui::test]
+fn a_token_connector_asks_for_its_token_first_and_never_signs_in(cx: &mut TestAppContext) {
+    let run = Run::open(cx);
+    run.to_face_id(cx);
+    run.to_kit(cx);
+    run.to_models(cx);
+    run.click(cx, "onboarding-next");
+    run.skip(cx);
+    // The first connector takes a pasted token: "Connect" shows its field.
+    run.click(cx, ("onboarding-connect", 0usize));
+    assert!(run
+        .view
+        .read_with(cx, |view, _| view.choices().integrations.is_empty()));
+    cx.update_window(run.window, |_, window, cx| {
+        run.view
+            .update(cx, |view, cx| view.type_for(0, "token-7f3a", window, cx))
+    })
+    .unwrap();
+    assert_eq!(
+        run.view
+            .read_with(cx, |view, _| view.choices().integrations),
+        ["github"]
+    );
+    run.click(cx, "onboarding-next");
+    run.skip(cx);
+    run.click(cx, "onboarding-next");
+    cx.run_until_parked();
+    let calls = run.sample.calls();
+    assert!(calls.contains(&"connect github".to_owned()));
+    assert!(!calls.iter().any(|call| call.starts_with("sign in")));
+    assert!(!calls.iter().any(|call| call.contains("token-7f3a")));
+    let kept = run.sample.choices().expect("the choices are kept");
+    assert!(!format!("{kept:?}").contains("token-7f3a"));
 }
 
 #[ui::test]

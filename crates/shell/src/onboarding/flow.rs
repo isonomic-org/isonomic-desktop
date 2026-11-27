@@ -494,6 +494,9 @@ impl Onboarding {
         {
             return;
         }
+        if step == steps::LINKS && !self.may_connect(index, cx) {
+            return;
+        }
         let switches: &mut [bool] = match step {
             steps::MODELS => &mut self.models,
             steps::LINKS => &mut self.links,
