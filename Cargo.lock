@@ -3159,7 +3159,7 @@ dependencies = [
 [[package]]
 name = "harness-compact"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
  "harness-log",
@@ -3168,7 +3168,7 @@ dependencies = [
 [[package]]
 name = "harness-core"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "serde",
 ]
@@ -3176,7 +3176,7 @@ dependencies = [
 [[package]]
 name = "harness-host"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
  "harness-log",
@@ -3190,7 +3190,7 @@ dependencies = [
 [[package]]
 name = "harness-log"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
  "serde",
@@ -3200,7 +3200,7 @@ dependencies = [
 [[package]]
 name = "harness-loop"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-compact",
  "harness-core",
@@ -3214,7 +3214,7 @@ dependencies = [
 [[package]]
 name = "harness-policy"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
 ]
@@ -3222,7 +3222,7 @@ dependencies = [
 [[package]]
 name = "harness-preset"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
  "harness-policy",
@@ -3233,16 +3233,17 @@ dependencies = [
 [[package]]
 name = "harness-toolkit"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
  "harness-tools",
+ "serde_json",
 ]
 
 [[package]]
 name = "harness-tools"
 version = "0.1.0"
-source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=077909e25d1c4fa9054872da3d1f7e01ee6d5fbc#077909e25d1c4fa9054872da3d1f7e01ee6d5fbc"
+source = "git+ssh://git@github.com/isonomic-org/isonomic-harness.git?rev=ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd#ef14f17d84021ddfb6468cc4a286bab5a5f5d8fd"
 dependencies = [
  "harness-core",
 ]
