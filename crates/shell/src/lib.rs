@@ -24,6 +24,7 @@ pub mod logs;
 pub mod menubar;
 pub mod onboarding;
 pub mod problems;
+pub mod user_input;
 pub mod workspace;
 
 use std::sync::Arc;

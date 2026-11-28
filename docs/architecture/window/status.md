@@ -4,6 +4,14 @@ Newest first.
 
 Older entries: `history-7.md`, then `history-6.md`, then `history-5.md`, `history-4.md`, `history-3.md`, `history-2.md` and `history.md`.
 
+## 2026-11-28 · Apps can get the person's token for an approval
+
+- **Pins.** SDK `d756838` (SDK #65, `AppContext::user_action`), still on harness `d7d8ab6`. Chat stays at `8893743`.
+- **The window mints, and only while the person acts in that app** (`shell::user_input`). Each app's context gets `ShellUserActions` over the shell's client. Its gate is armed by capture-phase listeners on the app tab's root for a mouse press or release, or a key press that isn't a repeat. Pointer events reach a tab only while it is on screen under the pointer, and key events only while focus is inside it. The window must be active. The gate is cleared when that event's dispatch ends (`window.defer`), and the first ask takes it, so one input mints at most one token. A timer, a stream or the model's output never runs inside such a dispatch.
+- **Deviation:** a keyboard binding that GPUI dispatches as an action, rather than as a key-down listener, may not arm the gate. Allow and Deny by click, or by Enter or Space on a focused button, do.
+- **Test:** `shell/tests/user_actions.rs`. An ask outside a click is refused (`no_user_input`) and nothing reaches the engine. An ask from the app's own click handler is minted by the shell's client. An ask after the click is refused again.
+- Chat's kit must still call `user_action` inside its click handler before Chat's approvals work in the window. That is the Chat project's change.
+
 ## 2026-11-28 · Self-check step 12 reviews the sample report at once
 
 - **The problem-report notice step** (`self_check/full/more.rs`, `notice_screen`) failed on three of five Mac builds with no change to its code ("no notice opened within 10s"). It only marked reports due, so the review ran on the shell's next draw, and a window that is not on screen may not draw in time. The step now calls `ProblemReports::review` itself after `watch_reports`; the draw's own review finds the notice already chosen and opens nothing more. The app's own behaviour is unchanged. Not yet confirmed on the Mac: the next build's self-check will tell.

@@ -22,6 +22,8 @@ use isonomic_app::{
     AppContext, Attention, LoadedApp, Registration, SearchHit, SettingsStore, WindowRequests,
 };
 use isonomic_client::{AppClient, Client};
+
+use crate::user_input::UserInput;
 use tokio::sync::watch;
 use ui::base::h_flex;
 use ui::component::alert::Alert;
@@ -63,6 +65,8 @@ pub struct AppHost {
     settings: Arc<dyn SettingsStore>,
     /// Where apps' window requests go; none means every request is refused.
     requests: Option<Arc<dyn WindowRequests>>,
+    /// Whether the person is acting in an app now, for approval tokens.
+    input: Arc<UserInput>,
 }
 
 impl AppHost {
@@ -73,6 +77,7 @@ impl AppHost {
             client,
             settings,
             requests: None,
+            input: Arc::default(),
         }
     }
 
@@ -227,6 +232,8 @@ impl AppTab {
         if let Some(requests) = &self.host.requests {
             context = context.with_window(Arc::clone(requests));
         }
+        // The shell's client mints, and only while the person acts here.
+        context = context.with_user_actions(self.host.input.source(self.host.client.agents()));
         let registration = &self.registration;
         let app = match reports::panic::contain(|| registration.open(context, window, cx)) {
             Ok(app) => app,
@@ -271,7 +278,22 @@ impl Render for AppTab {
         let muted = cx.theme().muted_foreground;
         let name = self.registration.manifest().name.clone();
         match &self.state {
-            AppState::Open(app) => host.child(app.view()),
+            AppState::Open(app) => {
+                let arm = |input: &Arc<UserInput>, id: &str| {
+                    let (input, id) = (Arc::clone(input), id.to_string());
+                    move |window: &mut Window, cx: &mut ui::App| input.arm(&id, window, cx)
+                };
+                let (down, up) = (arm(&self.host.input, &id), arm(&self.host.input, &id));
+                let key = arm(&self.host.input, &id);
+                host.capture_any_mouse_down(move |_, window, cx| down(window, cx))
+                    .capture_any_mouse_up(move |_, window, cx| up(window, cx))
+                    .capture_key_down(move |event, window, cx| {
+                        if !event.is_held {
+                            key(window, cx)
+                        }
+                    })
+                    .child(app.view())
+            }
             AppState::Closed | AppState::Granting => host.child(
                 h_flex()
                     .id("app-opening")
