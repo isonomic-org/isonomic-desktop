@@ -1,0 +1,106 @@
+{
+ "id": "git",
+ "kind": "page",
+ "name": [
+  "Git"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Git"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "branch-prefix",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "isonomic/",
+       "mono": true,
+       "wide": 200
+      }
+     ],
+     "title": "Branch prefix",
+     "desc": "Prefix for branches Isonomic creates"
+    },
+    {
+     "id": "pull-request-merge-method",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Merge",
+        "Squash"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Pull request merge method"
+    },
+    {
+     "id": "always-force-push",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Always force push",
+     "desc": "Use --force-with-lease when pushing"
+    },
+    {
+     "id": "create-draft-pull-requests",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Create draft pull requests"
+    },
+    {
+     "id": "review-delivery",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Inline",
+        "Detached"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Review delivery",
+     "desc": "Start reviews in the current chat or a separate one"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Commit instructions",
+   "sub": "Added to commit message prompts"
+  },
+  {
+   "k": "textarea",
+   "text": "Add commit message guidance…",
+   "tall": 120,
+   "mono": false
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Pull request instructions",
+   "sub": "Added to PR title and description prompts"
+  },
+  {
+   "k": "textarea",
+   "text": "Add pull request guidance…",
+   "tall": 120,
+   "mono": false
+  }
+ ]
+}

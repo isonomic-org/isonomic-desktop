@@ -1,0 +1,93 @@
+{
+ "id": "browser-add-website-permission",
+ "kind": "dialog",
+ "name": [
+  "Browser",
+  "Add website permission"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add website permission"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "example.com",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Website"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Ask",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Ask"
+     ]
+    }
+   ],
+   "label": "Camera"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Ask",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Ask"
+     ]
+    }
+   ],
+   "label": "Microphone"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Block",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Block"
+     ]
+    }
+   ],
+   "label": "Location"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

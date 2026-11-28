@@ -1,0 +1,124 @@
+{
+ "id": "data-controls",
+ "kind": "page",
+ "name": [
+  "Data controls"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Data controls"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "shared-links",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      }
+     ],
+     "title": "Shared links"
+    },
+    {
+     "id": "improve-the-model-for-everyone",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Improve the model for everyone",
+     "desc": "Off by default. Your chats are never used for training unless you opt in."
+    },
+    {
+     "id": "location",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "On"
+      },
+      {
+       "c": "button",
+       "label": "Turn off",
+       "style": "white"
+      }
+     ],
+     "title": "Location",
+     "desc": "Allow precise location when it helps answer a question"
+    },
+    {
+     "id": "network-access-for-cells",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Network access for Cells"
+    },
+    {
+     "id": "information-shared-with-apps",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Information shared with apps"
+    },
+    {
+     "id": "archived-chats",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Archived chats"
+    },
+    {
+     "id": "archive-all-chats",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Archive all",
+       "style": "white"
+      }
+     ],
+     "title": "Archive all chats"
+    },
+    {
+     "id": "delete-all-chats",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Delete all",
+       "style": "white",
+       "red": "text"
+      }
+     ],
+     "title": "Delete all chats"
+    },
+    {
+     "id": "export-data",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Export",
+       "style": "white",
+       "icon": "export",
+       "at": "lead"
+      }
+     ],
+     "title": "Export data",
+     "desc": "Download your Capsule as an encrypted archive"
+    }
+   ]
+  }
+ ]
+}

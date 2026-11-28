@@ -20,6 +20,7 @@ pub use isonomic_app::ui::*;
 pub mod logo;
 pub mod motion;
 pub mod onboarding;
+pub mod settings;
 
 /// Layout sizes used by the shell. No view contains a raw size or color:
 /// colors come from the theme, sizes from here or from the spacing scale.

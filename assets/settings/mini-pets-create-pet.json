@@ -1,0 +1,64 @@
+{
+ "id": "mini-pets-create-pet",
+ "kind": "dialog",
+ "name": [
+  "Mini & Pets",
+  "Create pet"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Create a pet"
+  },
+  {
+   "k": "note",
+   "text": "Describe a small companion and Isonomic draws it. Pets live in the mini window."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Pixel",
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "textarea",
+     "text": "A sleepy grey cat that naps on the Dock and wakes up when a task finishes",
+     "tall": 88,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Describe it"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Create",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

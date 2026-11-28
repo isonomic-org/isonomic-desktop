@@ -1,0 +1,44 @@
+{
+ "id": "plugins-add-skill",
+ "kind": "dialog",
+ "name": [
+  "Plugins",
+  "Add skill"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add a skill"
+  },
+  {
+   "k": "note",
+   "text": "A skill is a folder with a SKILL.md that teaches Isonomic a task."
+  },
+  {
+   "k": "dropzone",
+   "title": "Drop a skill folder or .zip",
+   "text": "or click to choose"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add skill",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

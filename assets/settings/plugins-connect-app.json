@@ -1,0 +1,99 @@
+{
+ "id": "plugins-connect-app",
+ "kind": "dialog",
+ "name": [
+  "Plugins",
+  "Connect app"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Connect an app"
+  },
+  {
+   "k": "note",
+   "text": "Apps give Isonomic access to your accounts. You choose what each app can do."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "gmail",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "gmail"
+     },
+     "title": "Gmail",
+     "desc": "Read and draft email"
+    },
+    {
+     "id": "google-calendar",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "google-calendar"
+     },
+     "title": "Google Calendar",
+     "desc": "See and create events"
+    },
+    {
+     "id": "slack",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "slack"
+     },
+     "title": "Slack",
+     "desc": "Search and post messages"
+    },
+    {
+     "id": "dropbox",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "dropbox"
+     },
+     "title": "Dropbox",
+     "desc": "Find and read files"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

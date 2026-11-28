@@ -1,0 +1,104 @@
+{
+ "id": "connections-ssh",
+ "kind": "sub",
+ "name": [
+  "Connections",
+  "SSH"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Connections"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Control this Mac",
+    "Control other devices",
+    "SSH"
+   ],
+   "active": 2
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add host",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "SSH hosts",
+   "sub": "Run tasks on remote machines over SSH."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "build-box-lan",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Test",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "hard-drive"
+     },
+     "title": "build-box.lan",
+     "desc": "ubuntu · key ~/.ssh/id_ed25519"
+    },
+    {
+     "id": "gpu-01-lab",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Test",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "hard-drive"
+     },
+     "title": "gpu-01.lab",
+     "desc": "root · port 2222"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Options"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "read-ssh-config",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Read ~/.ssh/config",
+     "desc": "Use hosts and keys from your SSH config"
+    },
+    {
+     "id": "forward-ssh-agent",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Forward SSH agent"
+    }
+   ]
+  }
+ ]
+}

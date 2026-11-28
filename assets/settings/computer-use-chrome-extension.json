@@ -1,0 +1,77 @@
+{
+ "id": "computer-use-chrome-extension",
+ "kind": "dialog",
+ "name": [
+  "Computer use",
+  "Chrome extension"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Chrome extension"
+  },
+  {
+   "k": "note",
+   "text": "The Isonomic extension lets Isonomic read and act on pages in Chrome."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "status",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "Installed"
+      }
+     ],
+     "title": "Status"
+    },
+    {
+     "id": "allow-on-all-sites",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Allow on all sites",
+     "desc": "Otherwise Isonomic asks per site"
+    },
+    {
+     "id": "ask-before-submitting-forms",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Ask before submitting forms"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Remove extension",
+     "style": "white",
+     "red": "text"
+    },
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

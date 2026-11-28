@@ -1,0 +1,81 @@
+{
+ "id": "cloud-environments-create",
+ "kind": "dialog",
+ "name": [
+  "Cloud environments",
+  "Create"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Create environment"
+  },
+  {
+   "k": "note",
+   "text": "Environments set the image, setup script, and secrets that cloud tasks run with."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "isonomic-desktop",
+     "mono": true,
+     "wide": 472,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "isonomic-org/isonomic-desktop",
+     "logo": false,
+     "wide": 472,
+     "options": [
+      "isonomic-org/isonomic-desktop"
+     ]
+    }
+   ],
+   "label": "Repository"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "textarea",
+     "text": "cargo fetch\npnpm install --frozen-lockfile",
+     "mono": true,
+     "tall": 72,
+     "wide": 472,
+     "ph": true
+    }
+   ],
+   "label": "Setup script"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Create",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

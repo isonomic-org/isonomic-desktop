@@ -1,0 +1,127 @@
+{
+ "id": "plugins-mcps",
+ "kind": "sub",
+ "name": [
+  "Plugins",
+  "MCPs"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Browse directory",
+     "style": "white",
+     "icon": "launch",
+     "at": "trail"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead",
+     "menu": [
+      [
+       "Plugin from repository",
+       "d:plugins-add-plugin"
+      ],
+      [
+       "Connect an app",
+       "d:plugins-connect-app"
+      ],
+      [
+       "MCP server",
+       "d:plugins-add-mcp-server"
+      ],
+      [
+       "Skill",
+       "d:plugins-add-skill"
+      ]
+     ]
+    }
+   ],
+   "title": "Plugins",
+   "sub": "Manage plugins, skills, and MCP servers"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Plugins",
+    "Apps",
+    "MCPs",
+    "Skills"
+   ],
+   "search": "Search plugins",
+   "active": 2,
+   "counts": [
+    "7",
+    "13",
+    "4",
+    "8"
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "postgres",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "postgresql"
+     },
+     "title": "postgres",
+     "desc": "Local · stdio · 6 tools"
+    },
+    {
+     "id": "filesystem",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "icon": "folder"
+     },
+     "title": "filesystem",
+     "desc": "Local · stdio · 11 tools"
+    },
+    {
+     "id": "github",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "github"
+     },
+     "title": "github",
+     "desc": "Remote · HTTP · 24 tools"
+    },
+    {
+     "id": "browserbase",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "lead": {
+      "icon": "globe"
+     },
+     "title": "browserbase",
+     "desc": "Remote · HTTP · 8 tools"
+    }
+   ]
+  }
+ ]
+}

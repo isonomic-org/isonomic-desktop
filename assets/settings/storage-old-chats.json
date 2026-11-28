@@ -1,0 +1,78 @@
+{
+ "id": "storage-old-chats",
+ "kind": "dialog",
+ "name": [
+  "Storage",
+  "Old chats"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Clean up old chats"
+  },
+  {
+   "k": "note",
+   "text": "Chats with no activity in the last six months."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "q3-roadmap-brainstorm",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Q3 roadmap brainstorm",
+     "desc": "Last opened Apr 12 · 18 MB"
+    },
+    {
+     "id": "postgres-tuning-notes",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Postgres tuning notes",
+     "desc": "Last opened Mar 30 · 6 MB"
+    },
+    {
+     "id": "trip-planning",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Trip planning",
+     "desc": "Last opened Feb 9 · 41 MB"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete selected",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

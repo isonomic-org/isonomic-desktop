@@ -24,6 +24,7 @@ pub mod logs;
 pub mod menubar;
 pub mod onboarding;
 pub mod problems;
+pub mod settings;
 pub mod workspace;
 
 use std::sync::Arc;
@@ -90,6 +91,8 @@ pub struct Shell {
     reports: Option<Entity<ProblemReports>>,
     /// Look at the kept reports at the next draw.
     reports_due: bool,
+    /// Settings, where the window offers it.
+    settings: settings::host::Slot,
 }
 
 impl Shell {
@@ -121,6 +124,7 @@ impl Shell {
             recent: Vec::new(),
             reports: None,
             reports_due: false,
+            settings: Default::default(),
         }
     }
 
@@ -399,6 +403,10 @@ impl Shell {
     }
 
     fn select(&mut self, index: usize, window: &mut Window, cx: &mut Context<Self>) {
+        // Choosing a tab puts Settings away.
+        if std::mem::take(&mut self.settings.shown) {
+            cx.notify();
+        }
         if index >= self.tabs.len() || index == self.selected {
             return;
         }
@@ -468,7 +476,7 @@ impl Render for Shell {
                     .ghost()
                     .small()
                     .size(tokens::rail_button())
-                    .selected(selected)
+                    .selected(selected && !self.settings.shown)
                     .tooltip(tab.title.clone())
                     .accessibility_label(tab.title.clone())
                     .track_focus(&tab.focus)
@@ -521,7 +529,8 @@ impl Render for Shell {
                     .bg(theme.sidebar)
                     .border_r_1()
                     .border_color(theme.sidebar_border)
-                    .children(rail_items),
+                    .children(rail_items)
+                    .children(self.rail_foot(cx)),
             )
             .child(
                 div()
@@ -531,7 +540,7 @@ impl Render for Shell {
                     .overflow_hidden()
                     .child(match &self.install {
                         Some(install) => install.clone().into_any_element(),
-                        None => self.tabs[self.selected].view.clone().into_any_element(),
+                        None => self.shown(),
                     }),
             )
     }

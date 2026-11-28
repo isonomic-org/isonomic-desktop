@@ -1,0 +1,52 @@
+{
+ "id": "import",
+ "kind": "page",
+ "name": [
+  "Import"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Import",
+   "sub": "Bring setup, projects, and chats from other AI apps into Isonomic"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Automatic sync"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "keep-imports-in-sync",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Keep imports in sync",
+     "desc": "Sync paused. Your content selections are saved."
+    },
+    {
+     "id": "content-to-sync",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Customize",
+       "style": "white"
+      }
+     ],
+     "title": "Content to sync",
+     "desc": "Available after your first import"
+    }
+   ]
+  },
+  {
+   "k": "note",
+   "text": "Imports run on this machine. Nothing is uploaded — history and keys stay in your Capsule."
+  }
+ ]
+}

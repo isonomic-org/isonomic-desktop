@@ -1,0 +1,40 @@
+{
+ "id": "keys-regenerate-kit",
+ "kind": "dialog",
+ "name": [
+  "Keys",
+  "Regenerate kit"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Regenerate recovery kit?"
+  },
+  {
+   "k": "note",
+   "text": "Your current 12 words stop working right away. Save the new kit before you close it."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Regenerate",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

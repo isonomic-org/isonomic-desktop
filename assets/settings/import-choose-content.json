@@ -1,0 +1,97 @@
+{
+ "id": "import-choose-content",
+ "kind": "dialog",
+ "name": [
+  "Import",
+  "Choose content"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Choose what to import"
+  },
+  {
+   "k": "note",
+   "text": "Pick what Isonomic brings over from your other apps. You can change this any time."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "chats",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Chats",
+     "desc": "Conversation history and attachments"
+    },
+    {
+     "id": "projects",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Projects",
+     "desc": "Project folders and their instructions"
+    },
+    {
+     "id": "memory",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Memory",
+     "desc": "Saved memories and preferences"
+    },
+    {
+     "id": "custom-instructions",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Custom instructions"
+    },
+    {
+     "id": "mcp-servers-and-skills",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "MCP servers and skills"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Save",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

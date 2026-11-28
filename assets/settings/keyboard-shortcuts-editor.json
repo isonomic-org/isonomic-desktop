@@ -1,0 +1,72 @@
+{
+ "id": "keyboard-shortcuts-editor",
+ "kind": "sub",
+ "name": [
+  "Keyboard shortcuts",
+  "Editor"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Keyboard shortcuts"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "All",
+    "Chats",
+    "Navigation",
+    "Engine",
+    "Editor"
+   ],
+   "search": "Search shortcuts",
+   "active": 4
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "search-files",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘P",
+       "keys": "cmd-p"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Search files",
+     "desc": "Search files in the current project"
+    },
+    {
+     "id": "open-terminal",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌃`",
+       "keys": "ctrl-`"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Open terminal",
+     "desc": "Open the terminal panel"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,39 @@
+{
+ "id": "account-sign-out-iphone",
+ "kind": "dialog",
+ "name": [
+  "Account",
+  "Sign out iPhone"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Sign out of iPhone?"
+  },
+  {
+   "k": "note",
+   "text": "iPhone will need your passkey to sign back in."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Sign out",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

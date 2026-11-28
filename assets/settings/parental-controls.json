@@ -1,0 +1,63 @@
+{
+ "id": "parental-controls",
+ "kind": "page",
+ "name": [
+  "Parental controls"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Parental controls",
+   "sub": "Parents and teens can link accounts to adjust features, set limits, and add safeguards."
+  },
+  {
+   "k": "empty",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add family member",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "No family members yet",
+   "text": "Invite a parent, guardian, or child to link accounts."
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "When accounts are linked, parents can"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "set-quiet-hours",
+     "ctl": [],
+     "title": "Set quiet hours",
+     "desc": "Pause chats and Cells during set times."
+    },
+    {
+     "id": "limit-apps-and-cells",
+     "ctl": [],
+     "title": "Limit apps and Cells",
+     "desc": "Choose which apps a teen can install and run."
+    },
+    {
+     "id": "turn-off-memory-and-voice",
+     "ctl": [],
+     "title": "Turn off memory and voice",
+     "desc": "Control personalization features."
+    },
+    {
+     "id": "get-safety-notifications",
+     "ctl": [],
+     "title": "Get safety notifications",
+     "desc": "Be alerted to serious safety concerns."
+    }
+   ]
+  }
+ ]
+}

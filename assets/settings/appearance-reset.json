@@ -1,0 +1,39 @@
+{
+ "id": "appearance-reset",
+ "kind": "dialog",
+ "name": [
+  "Appearance",
+  "Reset"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Reset appearance?"
+  },
+  {
+   "k": "note",
+   "text": "Theme, fonts, and colours go back to their defaults. Your mode setting stays the same."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Reset",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

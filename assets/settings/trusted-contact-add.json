@@ -1,0 +1,63 @@
+{
+ "id": "trusted-contact-add",
+ "kind": "dialog",
+ "name": [
+  "Trusted contact",
+  "Add"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add a trusted contact"
+  },
+  {
+   "k": "note",
+   "text": "If you’re ever locked out, this person can help you recover your account. They never see your data."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Full name",
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "name@example.com",
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Email or phone"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Send request",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

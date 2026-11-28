@@ -1,0 +1,43 @@
+{
+ "id": "backups-move-to-another-mac",
+ "kind": "dialog",
+ "name": [
+  "Backups",
+  "Move to another Mac"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Move to another Mac"
+  },
+  {
+   "k": "note",
+   "text": "On the new Mac, open Isonomic, choose “Move from another Mac”, and enter this code."
+  },
+  {
+   "k": "code",
+   "code": "482 913",
+   "text": "Expires in 10 minutes"
+  },
+  {
+   "k": "note",
+   "text": "Both Macs need to be on the same network."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

@@ -1,0 +1,78 @@
+{
+ "id": "hooks",
+ "kind": "page",
+ "name": [
+  "Hooks"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "iconbtn",
+     "name": "renew"
+    }
+   ],
+   "title": "Hooks",
+   "sub": "Lifecycle hooks from config and enabled plugins"
+  },
+  {
+   "k": "empty",
+   "ctl": [],
+   "title": "No hooks found",
+   "text": "Configured hooks will appear here"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Add a hook"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "before-a-tool-runs",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Add",
+       "style": "white",
+       "icon": "add",
+       "at": "lead"
+      }
+     ],
+     "title": "Before a tool runs",
+     "desc": "pre_tool_use"
+    },
+    {
+     "id": "after-a-tool-runs",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Add",
+       "style": "white",
+       "icon": "add",
+       "at": "lead"
+      }
+     ],
+     "title": "After a tool runs",
+     "desc": "post_tool_use"
+    },
+    {
+     "id": "when-a-task-finishes",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Add",
+       "style": "white",
+       "icon": "add",
+       "at": "lead"
+      }
+     ],
+     "title": "When a task finishes",
+     "desc": "stop"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+ "id": "personalization-memories",
+ "kind": "dialog",
+ "name": [
+  "Personalization",
+  "Memories"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Memories"
+  },
+  {
+   "k": "note",
+   "text": "What Isonomic remembers to make answers more useful. Delete anything you don’t want kept."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "prefers-concise-answers-with-a-checklist",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Prefers concise answers with a checklist"
+    },
+    {
+     "id": "works-on-isonomic-desktop-in-rust-and-gp",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Works on Isonomic Desktop in Rust and GPUI"
+    },
+    {
+     "id": "uses-ibm-plex-in-all-documents",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Uses IBM Plex in all documents"
+    },
+    {
+     "id": "keeps-data-on-device-by-default",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Keeps data on-device by default"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

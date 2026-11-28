@@ -1,0 +1,170 @@
+{
+ "id": "profile",
+ "kind": "page",
+ "name": [
+  "Profile"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Profile",
+   "sub": "How you appear to collaborators and in shared Capsules"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "photo",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Upload",
+       "style": "white",
+       "icon": "upload",
+       "at": "lead"
+      },
+      {
+       "c": "button",
+       "label": "Remove",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "avatar": "JA"
+     },
+     "title": "Photo",
+     "desc": "Shown on shared Capsules and comments."
+    },
+    {
+     "id": "display-name",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "John Appleseed",
+       "wide": 260
+      }
+     ],
+     "title": "Display name"
+    },
+    {
+     "id": "handle",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "@john",
+       "wide": 260
+      }
+     ],
+     "title": "Handle",
+     "desc": "Unique across the Isonomic network."
+    },
+    {
+     "id": "bio",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "Builder. Local-first everything.",
+       "wide": 260
+      }
+     ],
+     "title": "Bio"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Isonomic ID"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic-id",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "iso1q8…7m2k",
+       "mono": true
+      },
+      {
+       "c": "button",
+       "label": "Copy",
+       "style": "white",
+       "icon": "copy",
+       "at": "lead"
+      }
+     ],
+     "title": "Isonomic ID",
+     "desc": "Your self-custodial identity, derived on this device. No one can reset it for you."
+    },
+    {
+     "id": "public-key",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "ed25519:9Fh2…Lq4",
+       "mono": true
+      },
+      {
+       "c": "button",
+       "label": "Copy",
+       "style": "white",
+       "icon": "copy",
+       "at": "lead"
+      }
+     ],
+     "title": "Public key"
+    },
+    {
+     "id": "linked-devices",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "3 devices"
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "title": "Linked devices",
+     "desc": "Devices that hold a key for your Capsule."
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Visibility"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "discoverable-by-handle",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Discoverable by handle",
+     "desc": "Let people find you when sharing a Capsule."
+    },
+    {
+     "id": "show-online-status",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Show online status",
+     "desc": "Collaborators can see when you are active."
+    }
+   ]
+  }
+ ]
+}

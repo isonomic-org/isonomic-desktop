@@ -1,0 +1,96 @@
+{
+ "id": "connections-control-other-devices",
+ "kind": "sub",
+ "name": [
+  "Connections",
+  "Control other devices"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Connections"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Control this Mac",
+    "Control other devices",
+    "SSH"
+   ],
+   "active": 1
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Macs you can control",
+   "sub": "Macs signed in to your account with “Allow connections” turned on."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "mac-studio",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "screen"
+     },
+     "title": "Mac Studio",
+     "desc": "Online · M2 Ultra · 128 GB"
+    },
+    {
+     "id": "macbook-air",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "Offline"
+      }
+     ],
+     "lead": {
+      "icon": "laptop"
+     },
+     "title": "MacBook Air",
+     "desc": "Offline · last seen yesterday"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Options"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "show-connected-macs-in-the-sidebar",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Show connected Macs in the sidebar"
+    },
+    {
+     "id": "ask-before-running-tasks-on-another-mac",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Ask before running tasks on another Mac",
+     "desc": "You approve each task before it starts"
+    }
+   ]
+  }
+ ]
+}

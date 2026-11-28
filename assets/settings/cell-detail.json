@@ -1,0 +1,151 @@
+{
+ "id": "cell-detail",
+ "kind": "sub",
+ "name": [
+  "Cell detail"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Cells"
+  },
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Open terminal",
+     "style": "white",
+     "icon": "terminal",
+     "at": "lead"
+    },
+    {
+     "c": "button",
+     "label": "Stop",
+     "style": "white",
+     "icon": "stop",
+     "at": "lead"
+    }
+   ],
+   "title": "research-assistant",
+   "sub": "2 vCPU · 4 GB · network: allow-list"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Status"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "state",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Running"
+      }
+     ],
+     "title": "State"
+    },
+    {
+     "id": "uptime",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "3h 12m"
+      }
+     ],
+     "title": "Uptime"
+    },
+    {
+     "id": "cpu",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "18%"
+      }
+     ],
+     "title": "CPU"
+    },
+    {
+     "id": "memory",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "1.2 of 4 GB"
+      }
+     ],
+     "title": "Memory"
+    },
+    {
+     "id": "network",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Allow-list · 4 domains"
+      }
+     ],
+     "title": "Network"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Recent activity"
+  },
+  {
+   "k": "table",
+   "head": [
+    "Time",
+    "Event"
+   ],
+   "widths": [
+    120,
+    568
+   ],
+   "rows": [
+    [
+     "15:12",
+     "Fetched arxiv.org/abs/2411.0921"
+    ],
+    [
+     "15:10",
+     "Ran python summarize.py (exit 0)"
+    ],
+    [
+     "14:58",
+     "Wrote notes/summary.md"
+    ],
+    [
+     "14:41",
+     "Started from template Blank · Linux"
+    ]
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Danger zone"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "delete-cell",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Delete",
+       "style": "white",
+       "red": "text"
+      }
+     ],
+     "title": "Delete Cell",
+     "desc": "Stops the Cell and deletes its disk"
+    }
+   ]
+  }
+ ]
+}

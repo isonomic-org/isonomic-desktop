@@ -1,0 +1,80 @@
+{
+ "id": "usage-billing-plans",
+ "kind": "dialog",
+ "name": [
+  "Usage & billing",
+  "Plans"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Choose a plan"
+  },
+  {
+   "k": "note",
+   "text": "All plans run local models free. Paid plans add hosted models, cloud Cells, and more usage."
+  },
+  {
+   "k": "plans",
+   "plans": [
+    {
+     "name": "Free",
+     "price": "$0",
+     "about": "Local models and Cells",
+     "points": [
+      "Unlimited local chats",
+      "1 Capsule",
+      "Community support"
+     ],
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Switch",
+       "style": "white"
+      }
+     ]
+    },
+    {
+     "name": "Pro",
+     "price": "$20 / month",
+     "about": "For daily work",
+     "points": [
+      "Hosted models",
+      "10 cloud Cells",
+      "Priority support"
+     ],
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Current plan",
+       "style": "white"
+      }
+     ]
+    },
+    {
+     "name": "Max",
+     "price": "$100 / month",
+     "about": "For heavy use",
+     "points": [
+      "5× Pro usage",
+      "Unlimited Cells",
+      "Early features"
+     ],
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Upgrade",
+       "style": "primary"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "wide": 760
+}

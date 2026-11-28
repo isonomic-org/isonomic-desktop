@@ -1,0 +1,103 @@
+{
+ "id": "worktrees",
+ "kind": "page",
+ "name": [
+  "Worktrees"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Worktrees"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "General",
+    "Environments"
+   ],
+   "active": 0
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Creation and cleanup"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "worktree-root",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "~/.isonomic/worktrees",
+       "mono": true,
+       "wide": 260
+      }
+     ],
+     "title": "Worktree root",
+     "desc": "Leave blank to use the default location"
+    },
+    {
+     "id": "fetch-upstream-before-creating-worktrees",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Fetch upstream before creating worktrees"
+    },
+    {
+     "id": "automatically-delete-old-worktrees",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Automatically delete old worktrees",
+     "desc": "Saves a recovery snapshot first"
+    },
+    {
+     "id": "worktrees-to-keep",
+     "ctl": [
+      {
+       "c": "input",
+       "text": "15",
+       "wide": 64
+      }
+     ],
+     "title": "Worktrees to keep",
+     "desc": "Pinned or active chats keep theirs"
+    },
+    {
+     "id": "ask-before-deleting-worktrees",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Ask before deleting worktrees"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "iconbtn",
+     "name": "renew"
+    }
+   ],
+   "title": "Managed worktrees"
+  },
+  {
+   "k": "empty",
+   "ctl": [],
+   "title": "No worktrees yet"
+  }
+ ]
+}

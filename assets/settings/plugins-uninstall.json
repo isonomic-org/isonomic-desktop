@@ -1,0 +1,40 @@
+{
+ "id": "plugins-uninstall",
+ "kind": "dialog",
+ "name": [
+  "Plugins",
+  "Uninstall"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Uninstall this plugin?"
+  },
+  {
+   "k": "note",
+   "text": "Isonomic removes the plugin and its saved settings. You can reinstall it from the directory."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Uninstall",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

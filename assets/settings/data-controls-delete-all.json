@@ -1,0 +1,40 @@
+{
+ "id": "data-controls-delete-all",
+ "kind": "dialog",
+ "name": [
+  "Data controls",
+  "Delete all"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Delete all chats?"
+  },
+  {
+   "k": "note",
+   "text": "This permanently deletes every chat on this Mac and in your backups. It can’t be undone."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete all",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

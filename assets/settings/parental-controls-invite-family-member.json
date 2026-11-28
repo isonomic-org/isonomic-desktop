@@ -1,0 +1,66 @@
+{
+ "id": "parental-controls-invite-family-member",
+ "kind": "dialog",
+ "name": [
+  "Parental controls",
+  "Invite family member"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Invite a family member"
+  },
+  {
+   "k": "note",
+   "text": "They get an invite to join your family on Isonomic. You can set limits once they accept."
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "name@example.com",
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Email or phone"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Child (under 18)",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Child (under 18)"
+     ]
+    }
+   ],
+   "label": "Relationship"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Send invite",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

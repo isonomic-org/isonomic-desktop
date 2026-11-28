@@ -1,0 +1,146 @@
+{
+ "id": "plugins-apps",
+ "kind": "sub",
+ "name": [
+  "Plugins",
+  "Apps"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Browse directory",
+     "style": "white",
+     "icon": "launch",
+     "at": "trail"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead",
+     "menu": [
+      [
+       "Plugin from repository",
+       "d:plugins-add-plugin"
+      ],
+      [
+       "Connect an app",
+       "d:plugins-connect-app"
+      ],
+      [
+       "MCP server",
+       "d:plugins-add-mcp-server"
+      ],
+      [
+       "Skill",
+       "d:plugins-add-skill"
+      ]
+     ]
+    }
+   ],
+   "title": "Plugins",
+   "sub": "Manage plugins, skills, and MCP servers"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Plugins",
+    "Apps",
+    "MCPs",
+    "Skills"
+   ],
+   "search": "Search plugins",
+   "active": 1,
+   "counts": [
+    "7",
+    "13",
+    "4",
+    "8"
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "gmail",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "Connected"
+      }
+     ],
+     "lead": {
+      "logo": "gmail"
+     },
+     "title": "Gmail",
+     "desc": "Read, search, and draft email"
+    },
+    {
+     "id": "google-calendar",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "Connected"
+      }
+     ],
+     "lead": {
+      "logo": "google-calendar"
+     },
+     "title": "Google Calendar",
+     "desc": "See and create events"
+    },
+    {
+     "id": "slack",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "slack"
+     },
+     "title": "Slack",
+     "desc": "Search and post messages"
+    },
+    {
+     "id": "dropbox",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "dropbox"
+     },
+     "title": "Dropbox",
+     "desc": "Find and read files"
+    },
+    {
+     "id": "todoist",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Connect",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "todoist"
+     },
+     "title": "Todoist",
+     "desc": "Tasks and projects"
+    }
+   ]
+  }
+ ]
+}

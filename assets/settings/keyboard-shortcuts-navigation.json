@@ -1,0 +1,133 @@
+{
+ "id": "keyboard-shortcuts-navigation",
+ "kind": "sub",
+ "name": [
+  "Keyboard shortcuts",
+  "Navigation"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Keyboard shortcuts"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "All",
+    "Chats",
+    "Navigation",
+    "Engine",
+    "Editor"
+   ],
+   "search": "Search shortcuts",
+   "active": 2
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "number-shortcuts",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "⌘1–9 for tabs",
+       "options": [
+        "⌘1–9 for tabs",
+        "⌘1–9 for chats",
+        "Off"
+       ]
+      }
+     ],
+     "title": "Number shortcuts",
+     "desc": "Use ⌘1–9 to switch tabs and ⌃1–9 to switch chats"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "command-menu",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘K",
+       "keys": "cmd-k"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Command menu",
+     "desc": "Open the command menu"
+    },
+    {
+     "id": "toggle-sidebar",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⇧⌘S",
+       "keys": "shift-cmd-s"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Toggle sidebar",
+     "desc": "Show or hide the sidebar"
+    },
+    {
+     "id": "settings",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘,",
+       "keys": "cmd-,"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Settings",
+     "desc": "Open Settings"
+    },
+    {
+     "id": "show-keyboard-shortcuts",
+     "ctl": [
+      {
+       "c": "kbd",
+       "text": "⌘/",
+       "keys": "cmd-/"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Show keyboard shortcuts",
+     "desc": "Show the shortcuts available right now"
+    }
+   ]
+  }
+ ]
+}

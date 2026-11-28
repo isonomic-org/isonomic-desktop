@@ -1,0 +1,161 @@
+{
+ "id": "backups",
+ "kind": "page",
+ "name": [
+  "Backups"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Back up now",
+     "style": "primary",
+     "icon": "cloud-upload",
+     "at": "lead"
+    }
+   ],
+   "title": "Backups",
+   "sub": "Encrypted, deduplicated snapshots of your Capsule"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "automatic-backups",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Automatic backups"
+    },
+    {
+     "id": "frequency",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Daily",
+       "options": [
+        "Hourly",
+        "Daily",
+        "Weekly",
+        "Manual only"
+       ]
+      }
+     ],
+     "title": "Frequency"
+    },
+    {
+     "id": "destination",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Change",
+       "style": "white"
+      }
+     ],
+     "title": "Destination",
+     "desc": "iCloud Drive › Isonomic Backups"
+    },
+    {
+     "id": "keep",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "30 daily, 12 monthly",
+       "options": [
+        "7 daily, 4 weekly",
+        "30 daily, 12 monthly",
+        "Keep everything"
+       ]
+      }
+     ],
+     "title": "Keep"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Recent snapshots"
+  },
+  {
+   "k": "table",
+   "head": [
+    "Snapshot",
+    "Size",
+    "Status",
+    ""
+   ],
+   "widths": [
+    250,
+    120,
+    180,
+    130
+   ],
+   "rows": [
+    [
+     "Today, 3:00 AM",
+     "214 MB",
+     "Verified",
+     "Restore"
+    ],
+    [
+     "Yesterday, 3:00 AM",
+     "198 MB",
+     "Verified",
+     "Restore"
+    ],
+    [
+     "Nov 12, 3:00 AM",
+     "201 MB",
+     "Verified",
+     "Restore"
+    ],
+    [
+     "Nov 11, 3:00 AM",
+     "187 MB",
+     "Verified",
+     "Restore"
+    ]
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Restore"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "restore-from-a-backup",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Restore…",
+       "style": "white"
+      }
+     ],
+     "title": "Restore from a backup",
+     "desc": "Replaces this Capsule with a snapshot"
+    },
+    {
+     "id": "move-to-another-mac",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Start",
+       "style": "white"
+      }
+     ],
+     "title": "Move to another Mac",
+     "desc": "Uses the same snapshot format"
+    }
+   ]
+  }
+ ]
+}

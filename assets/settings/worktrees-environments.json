@@ -1,0 +1,114 @@
+{
+ "id": "worktrees-environments",
+ "kind": "sub",
+ "name": [
+  "Worktrees",
+  "Environments"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Worktrees"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "General",
+    "Environments"
+   ],
+   "active": 1
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add environment",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Setup environments",
+   "sub": "Commands that run when Isonomic creates a worktree."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic-desktop",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Edit",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "terminal"
+     },
+     "title": "isonomic-desktop",
+     "desc": "cargo fetch · pnpm install"
+    },
+    {
+     "id": "isonomic-inference",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Edit",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "icon": "terminal"
+     },
+     "title": "isonomic-inference",
+     "desc": "uv sync"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Copy into new worktrees"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "-env-files",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": ".env files",
+     "desc": "Copies untracked .env files from the main checkout"
+    },
+    {
+     "id": "node-modules",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "node_modules",
+     "desc": "Faster setup, but uses more disk"
+    },
+    {
+     "id": "target-build-cache",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "target/ build cache"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,203 @@
+{
+ "id": "cells",
+ "kind": "page",
+ "name": [
+  "Cells"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "New Cell",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Cells",
+   "sub": "Isolated environments where agents run with only the capabilities you grant"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "research-assistant",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Running"
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "hexagon-outline"
+     },
+     "title": "research-assistant",
+     "desc": "2 vCPU · 4 GB · network: allow-list"
+    },
+    {
+     "id": "invoice-agent",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Stopped"
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "hexagon-outline"
+     },
+     "title": "invoice-agent",
+     "desc": "1 vCPU · 2 GB · no network"
+    },
+    {
+     "id": "site-builder",
+     "ctl": [
+      {
+       "c": "status",
+       "text": "Paused"
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "hexagon-outline"
+     },
+     "title": "site-builder",
+     "desc": "2 vCPU · 4 GB · network: open"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Defaults for new Cells"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "cpu",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "2 vCPU",
+       "options": [
+        "1 vCPU",
+        "2 vCPU",
+        "4 vCPU",
+        "8 vCPU"
+       ]
+      }
+     ],
+     "title": "CPU"
+    },
+    {
+     "id": "memory",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "4 GB",
+       "options": [
+        "2 GB",
+        "4 GB",
+        "8 GB",
+        "16 GB"
+       ]
+      }
+     ],
+     "title": "Memory"
+    },
+    {
+     "id": "network",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Allow-list",
+       "options": [
+        "Off",
+        "Allow-list",
+        "Full"
+       ]
+      }
+     ],
+     "title": "Network",
+     "desc": "Allow-list hosts per Cell"
+    },
+    {
+     "id": "filesystem",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "No mounts",
+       "options": [
+        "No mounts",
+        "Read-only workspace",
+        "Read/write workspace"
+       ]
+      }
+     ],
+     "title": "Filesystem",
+     "desc": "Cells see only the folders you mount"
+    },
+    {
+     "id": "ask-before-granting-new-capabilities",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Ask before granting new capabilities"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Runtime"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isolation",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Hardware VM"
+      }
+     ],
+     "title": "Isolation",
+     "desc": "Apple Virtualization framework"
+    },
+    {
+     "id": "max-running-cells",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "4",
+       "options": [
+        "2",
+        "4",
+        "8",
+        "Unlimited"
+       ]
+      }
+     ],
+     "title": "Max running Cells"
+    }
+   ]
+  }
+ ]
+}

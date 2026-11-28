@@ -1,0 +1,132 @@
+{
+ "id": "information-shared-with-apps",
+ "kind": "sub",
+ "name": [
+  "Information shared with apps"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Data controls"
+  },
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Information shared with apps",
+   "sub": "What connected apps can see about you."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "name-and-email",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Name and email"
+    },
+    {
+     "id": "profile-photo",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Profile photo"
+    },
+    {
+     "id": "location",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Location",
+     "desc": "Approximate city only"
+    },
+    {
+     "id": "memories",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Memories",
+     "desc": "Lets apps personalise their answers"
+    },
+    {
+     "id": "capsule-contents",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Capsule contents",
+     "desc": "Only files you share in a chat"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Apps with access"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "figma",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Revoke",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "figma"
+     },
+     "title": "Figma",
+     "desc": "Name, email · since Oct 2"
+    },
+    {
+     "id": "google-drive",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Revoke",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "google-drive"
+     },
+     "title": "Google Drive",
+     "desc": "Name, email, Capsule contents"
+    },
+    {
+     "id": "notion",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Revoke",
+       "style": "white"
+      }
+     ],
+     "lead": {
+      "logo": "notion"
+     },
+     "title": "Notion",
+     "desc": "Name, email"
+    }
+   ]
+  }
+ ]
+}

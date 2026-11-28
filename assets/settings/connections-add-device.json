@@ -1,0 +1,39 @@
+{
+ "id": "connections-add-device",
+ "kind": "dialog",
+ "name": [
+  "Connections",
+  "Add device"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Let a device control this Mac"
+  },
+  {
+   "k": "note",
+   "text": "On your other device, open Isonomic → Connections → Control other devices, and enter this code."
+  },
+  {
+   "k": "code",
+   "code": "731 204",
+   "text": "Expires in 10 minutes"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

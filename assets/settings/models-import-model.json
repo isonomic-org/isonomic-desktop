@@ -1,0 +1,84 @@
+{
+ "id": "models-import-model",
+ "kind": "dialog",
+ "name": [
+  "Models",
+  "Import model"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Import a model"
+  },
+  {
+   "k": "note",
+   "text": "Add a GGUF file from this Mac, or pull a model by name from Hugging Face."
+  },
+  {
+   "k": "controls",
+   "ctl": [
+    {
+     "c": "seg",
+     "options": [
+      "From file",
+      "From Hugging Face"
+     ],
+     "active": 1
+    }
+   ]
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "bartowski/Qwen2.5-14B-Instruct-GGUF",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Model"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "Q4_K_M · 8.9 GB",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "Q4_K_M · 8.9 GB"
+     ]
+    }
+   ],
+   "label": "Quantization"
+  },
+  {
+   "k": "note",
+   "text": "Needs about 12 GB of free memory to load."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Import",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

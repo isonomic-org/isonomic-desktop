@@ -1,0 +1,40 @@
+{
+ "id": "trusted-contact",
+ "kind": "page",
+ "name": [
+  "Trusted contact"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Trusted contact",
+   "sub": "Someone who knows you well and can check in if you need support"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "how-it-works",
+     "ctl": [],
+     "title": "How it works",
+     "desc": "If a conversation in Isonomic indicates a serious safety concern, we may notify your trusted contact so they can check in with you. They must be 18 or older."
+    }
+   ]
+  },
+  {
+   "k": "empty",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add contact",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "No trusted contact",
+   "text": "Add someone you trust. They will be asked to accept."
+  }
+ ]
+}

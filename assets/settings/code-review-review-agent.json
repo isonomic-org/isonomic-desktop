@@ -1,0 +1,128 @@
+{
+ "id": "code-review-review-agent",
+ "kind": "sub",
+ "name": [
+  "Code Review",
+  "Review agent"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Code Review"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Preferences",
+    "Review agent"
+   ],
+   "active": 1
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Automatic reviews"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "review-new-pull-requests",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Review new pull requests",
+     "desc": "Isonomic reviews each pull request opened in the repositories below"
+    },
+    {
+     "id": "review-draft-pull-requests",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Review draft pull requests"
+    },
+    {
+     "id": "post-feedback-as",
+     "ctl": [
+      {
+       "c": "seg",
+       "options": [
+        "Comments",
+        "Suggested changes"
+       ],
+       "active": 0
+      }
+     ],
+     "title": "Post feedback as"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Add repository",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "Repositories"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic-org-isonomic-desktop",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "github"
+     },
+     "title": "isonomic-org/isonomic-desktop",
+     "desc": "Rust · last review 2 hours ago"
+    },
+    {
+     "id": "isonomic-org-isonomic-inference",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "lead": {
+      "logo": "github"
+     },
+     "title": "isonomic-org/isonomic-inference",
+     "desc": "Python · last review yesterday"
+    },
+    {
+     "id": "isonomic-org-website",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "lead": {
+      "logo": "github"
+     },
+     "title": "isonomic-org/website",
+     "desc": "TypeScript · never reviewed"
+    }
+   ]
+  }
+ ]
+}

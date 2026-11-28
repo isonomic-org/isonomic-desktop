@@ -1,0 +1,88 @@
+{
+ "id": "mini-pets",
+ "kind": "page",
+ "name": [
+  "Mini & Pets"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Show mini",
+     "style": "white"
+    }
+   ],
+   "title": "Mini & Pets",
+   "sub": "Show and focus your pet by pressing ⌥Space"
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "iconbtn",
+     "name": "renew"
+    },
+    {
+     "c": "button",
+     "label": "Create pet",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "My pets"
+  },
+  {
+   "k": "cards",
+   "cards": [
+    [
+     "–",
+     "None",
+     "The lightweight companion"
+    ],
+    [
+     "I",
+     "Iso",
+     "The original Isonomic companion"
+    ],
+    [
+     "D",
+     "Dewey",
+     "A calm companion for focused days"
+    ],
+    [
+     "F",
+     "Fireball",
+     "Hot-path energy for fast iteration"
+    ],
+    [
+     "H",
+     "Hoots",
+     "A sharp-eyed owl for polished work"
+    ],
+    [
+     "R",
+     "Rocky",
+     "Steady when the diff gets large"
+    ],
+    [
+     "S",
+     "Seedy",
+     "Small green shoots for new ideas"
+    ],
+    [
+     "St",
+     "Stacky",
+     "A balanced stack for deep work"
+    ],
+    [
+     "N",
+     "Null Signal",
+     "Quiet signal from the void"
+    ]
+   ]
+  }
+ ]
+}

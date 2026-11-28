@@ -1,0 +1,40 @@
+{
+ "id": "cells-delete-cell",
+ "kind": "dialog",
+ "name": [
+  "Cells",
+  "Delete Cell"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Delete this Cell?"
+  },
+  {
+   "k": "note",
+   "text": "The Cell stops and its disk is deleted. Files you saved to your Capsule are kept."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Delete",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

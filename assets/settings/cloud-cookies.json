@@ -1,0 +1,75 @@
+{
+ "id": "cloud-cookies",
+ "kind": "sub",
+ "name": [
+  "Cloud cookies"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Cloud computer"
+  },
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Clear all",
+     "style": "white",
+     "red": "text"
+    }
+   ],
+   "title": "Cloud cookies",
+   "sub": "Cookies the cloud computer keeps so you stay signed in between tasks."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "github-com",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "github.com",
+     "desc": "3 cookies · expire in 30 days"
+    },
+    {
+     "id": "notion-so",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "notion.so",
+     "desc": "5 cookies · expire in 14 days"
+    },
+    {
+     "id": "figma-com",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "figma.com",
+     "desc": "2 cookies · expire in 90 days"
+    },
+    {
+     "id": "linear-app",
+     "ctl": [
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "linear.app",
+     "desc": "4 cookies · expire in 30 days"
+    }
+   ]
+  }
+ ]
+}

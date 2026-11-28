@@ -1,0 +1,62 @@
+{
+ "id": "keyboard-shortcuts-engine",
+ "kind": "sub",
+ "name": [
+  "Keyboard shortcuts",
+  "Engine"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Keyboard shortcuts"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "All",
+    "Chats",
+    "Navigation",
+    "Engine",
+    "Editor"
+   ],
+   "search": "Search shortcuts",
+   "active": 3
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "start-or-stop-engine",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Unassigned"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Start or stop engine",
+     "desc": "Starts or stops all Capsule services"
+    },
+    {
+     "id": "open-app-store",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Unassigned"
+      },
+      {
+       "c": "iconbtn",
+       "name": "edit"
+      }
+     ],
+     "title": "Open App Store",
+     "desc": "Browse and install apps"
+    }
+   ]
+  }
+ ]
+}

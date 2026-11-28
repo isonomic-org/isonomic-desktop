@@ -1,0 +1,189 @@
+{
+ "id": "file-viewers",
+ "kind": "page",
+ "name": [
+  "File viewers"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "File viewers",
+   "sub": "Choose what opens each file type in Isonomic"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "-avif",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".avif"
+    },
+    {
+     "id": "-gif",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".gif"
+    },
+    {
+     "id": "-jpeg",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".jpeg"
+    },
+    {
+     "id": "-jpg",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".jpg"
+    },
+    {
+     "id": "-md",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".md"
+    },
+    {
+     "id": "-mp4",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".mp4"
+    },
+    {
+     "id": "-pdf",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".pdf"
+    },
+    {
+     "id": "-png",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".png"
+    },
+    {
+     "id": "-webm",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".webm"
+    },
+    {
+     "id": "-webp",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Built-in",
+       "options": [
+        "Built-in",
+        "Preview",
+        "System default"
+       ]
+      }
+     ],
+     "title": ".webp"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "couldn-t-load-file-handlers",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Retry",
+       "style": "white",
+       "icon": "renew",
+       "at": "lead"
+      }
+     ],
+     "title": "Couldn't load file handlers",
+     "desc": "Isonomic could not read the list of apps on this Mac"
+    }
+   ]
+  }
+ ]
+}

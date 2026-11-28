@@ -1,0 +1,82 @@
+{
+ "id": "backups-destination",
+ "kind": "dialog",
+ "name": [
+  "Backups",
+  "Destination"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Backup destination"
+  },
+  {
+   "k": "note",
+   "text": "Backups are encrypted on this Mac before they leave it."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "isonomic-cloud",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "gray",
+       "text": "Current"
+      }
+     ],
+     "lead": {
+      "icon": "cloud"
+     },
+     "title": "Isonomic Cloud",
+     "desc": "200 GB included with Pro"
+    },
+    {
+     "id": "external-drive",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "hard-drive"
+     },
+     "title": "External drive",
+     "desc": "Studio SSD · 1.2 TB free"
+    },
+    {
+     "id": "s3-compatible-storage",
+     "ctl": [
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "cube"
+     },
+     "title": "S3-compatible storage",
+     "desc": "Use your own bucket"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

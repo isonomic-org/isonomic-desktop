@@ -1,0 +1,116 @@
+{
+ "id": "configuration-diagnostics",
+ "kind": "dialog",
+ "name": [
+  "Configuration",
+  "Diagnostics"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Workspace diagnostics"
+  },
+  {
+   "k": "note",
+   "text": "Checked 6 items in 1.2 seconds."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "sandbox-profile",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "OK"
+      }
+     ],
+     "title": "Sandbox profile",
+     "desc": "Read only · matches your policy"
+    },
+    {
+     "id": "git",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "OK"
+      }
+     ],
+     "title": "Git",
+     "desc": "2.47.1 at /usr/bin/git"
+    },
+    {
+     "id": "node-js",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "OK"
+      }
+     ],
+     "title": "Node.js",
+     "desc": "22.11.0 · managed by Isonomic"
+    },
+    {
+     "id": "python",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "OK"
+      }
+     ],
+     "title": "Python",
+     "desc": "3.12.7 · managed by Isonomic"
+    },
+    {
+     "id": "disk-space",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "OK"
+      }
+     ],
+     "title": "Disk space",
+     "desc": "38 GB free on Macintosh HD"
+    },
+    {
+     "id": "shell-profile",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "yellow",
+       "text": "Warning"
+      }
+     ],
+     "title": "Shell profile",
+     "desc": "~/.zshrc sets PATH twice"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Copy report",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

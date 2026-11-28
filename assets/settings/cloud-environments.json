@@ -1,0 +1,52 @@
+{
+ "id": "cloud-environments",
+ "kind": "page",
+ "name": [
+  "Cloud environments"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Cloud environments",
+   "sub": "Repositories, tools, and settings agents need to work on your projects in the cloud"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Environments",
+    "Personal vault"
+   ],
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Search",
+     "wide": 160,
+     "ph": true
+    },
+    {
+     "c": "button",
+     "label": "Create environment",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "active": 0
+  },
+  {
+   "k": "empty",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Create environment",
+     "style": "white",
+     "icon": "add",
+     "at": "lead"
+    }
+   ],
+   "title": "No saved environments",
+   "text": "Create one to run agents on the Isonomic network"
+  }
+ ]
+}

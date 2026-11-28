@@ -1,0 +1,89 @@
+{
+ "id": "connections-add-ssh-host",
+ "kind": "dialog",
+ "name": [
+  "Connections",
+  "Add SSH host"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add SSH host"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "build-box.lan",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Host"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "ubuntu",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "User"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "22",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Port"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "~/.ssh/id_ed25519",
+     "logo": false,
+     "wide": 432,
+     "options": [
+      "~/.ssh/id_ed25519"
+     ]
+    }
+   ],
+   "label": "Key"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add host",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

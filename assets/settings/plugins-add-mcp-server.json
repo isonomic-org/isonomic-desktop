@@ -1,0 +1,92 @@
+{
+ "id": "plugins-add-mcp-server",
+ "kind": "dialog",
+ "name": [
+  "Plugins",
+  "Add MCP server"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Add MCP server"
+  },
+  {
+   "k": "note",
+   "text": "Connect a local or remote Model Context Protocol server."
+  },
+  {
+   "k": "controls",
+   "ctl": [
+    {
+     "c": "seg",
+     "options": [
+      "Local (stdio)",
+      "Remote (HTTP)"
+     ],
+     "active": 0
+    }
+   ]
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "postgres",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Name"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "npx -y @modelcontextprotocol/server-postgres",
+     "mono": true,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Command"
+  },
+  {
+   "k": "field",
+   "ctl": [
+    {
+     "c": "textarea",
+     "text": "DATABASE_URL=postgres://localhost/capsule",
+     "mono": true,
+     "tall": 64,
+     "wide": 432,
+     "ph": true
+    }
+   ],
+   "label": "Environment variables"
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Add server",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

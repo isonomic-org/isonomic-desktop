@@ -1,0 +1,123 @@
+{
+ "id": "plugin-detail",
+ "kind": "sub",
+ "name": [
+  "Plugin detail"
+ ],
+ "blocks": [
+  {
+   "k": "back",
+   "label": "Plugins"
+  },
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Uninstall",
+     "style": "white",
+     "red": "text"
+    }
+   ],
+   "title": "Figma",
+   "sub": "Create designs, ship to code"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "enabled",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Enabled",
+     "desc": "Isonomic can use this plugin in chats and tasks"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Permissions"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "read-files-in-your-capsule",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Read files in your Capsule"
+    },
+    {
+     "id": "make-network-requests",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Make network requests"
+    },
+    {
+     "id": "run-commands-on-this-mac",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Run commands on this Mac"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "About"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "version",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "1.4.2",
+       "mono": true
+      }
+     ],
+     "title": "Version"
+    },
+    {
+     "id": "publisher",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Verified"
+      }
+     ],
+     "title": "Publisher"
+    },
+    {
+     "id": "installed",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "Oct 2"
+      }
+     ],
+     "title": "Installed"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,68 @@
+{
+ "id": "voice-set-up-dictation",
+ "kind": "dialog",
+ "name": [
+  "Voice",
+  "Set up dictation"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Dictate anywhere"
+  },
+  {
+   "k": "note",
+   "text": "Hold the dictation shortcut in any app to speak instead of type. Isonomic needs Accessibility access to insert the text."
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "accessibility",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "yellow",
+       "text": "Not granted"
+      }
+     ],
+     "title": "Accessibility",
+     "desc": "Lets Isonomic type into other apps"
+    },
+    {
+     "id": "microphone",
+     "ctl": [
+      {
+       "c": "badge",
+       "theme": "green",
+       "text": "Granted"
+      }
+     ],
+     "title": "Microphone",
+     "desc": "Already granted"
+    }
+   ]
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Open System Settings",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 480
+}

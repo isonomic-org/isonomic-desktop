@@ -1,0 +1,123 @@
+{
+ "id": "archived-chats",
+ "kind": "page",
+ "name": [
+  "Archived chats"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Archived chats"
+  },
+  {
+   "k": "filter",
+   "ctl": [
+    {
+     "c": "input",
+     "text": "Search archived chats",
+     "wide": 479,
+     "ph": true
+    },
+    {
+     "c": "select",
+     "label": "All chats",
+     "options": [
+      "All chats",
+      "Chats",
+      "Code tasks",
+      "Cell runs"
+     ]
+    },
+    {
+     "c": "select",
+     "label": "All projects",
+     "options": [
+      "All projects",
+      "Isonomic Desktop",
+      "Capsule format",
+      "No project"
+     ]
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "text",
+     "text": "1 chat"
+    }
+   ],
+   "title": "Isonomic Hub"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "plan-the-app-store-launch",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Unarchive",
+       "style": "white"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Plan the App Store launch",
+     "desc": "Jul 26, 2026, 8:53 PM"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "text",
+     "text": "2 chats"
+    }
+   ],
+   "title": "No project"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "compare-local-and-hosted-models",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Unarchive",
+       "style": "white"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Compare local and hosted models",
+     "desc": "Jul 23, 2026, 5:32 PM"
+    },
+    {
+     "id": "draft-the-capsule-backup-format",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Unarchive",
+       "style": "white"
+      },
+      {
+       "c": "iconbtn",
+       "name": "trash-can"
+      }
+     ],
+     "title": "Draft the Capsule backup format",
+     "desc": "May 15, 2026, 4:24 PM"
+    }
+   ]
+  }
+ ]
+}

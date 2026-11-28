@@ -1,0 +1,169 @@
+{
+ "id": "configuration",
+ "kind": "page",
+ "name": [
+  "Configuration"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "select",
+     "label": "This Mac",
+     "options": [
+      "This Mac",
+      "This project"
+     ]
+    }
+   ],
+   "title": "Configuration",
+   "sub": "Choose how Isonomic works on your tasks"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "approval-policy",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "On request",
+       "options": [
+        "Untrusted",
+        "On failure",
+        "On request",
+        "Never"
+       ]
+      }
+     ],
+     "title": "Approval policy",
+     "desc": "When Isonomic asks before acting"
+    },
+    {
+     "id": "sandbox",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Read only",
+       "options": [
+        "Read only",
+        "Workspace write",
+        "Full access"
+       ]
+      }
+     ],
+     "title": "Sandbox",
+     "desc": "What commands can do when they run"
+    },
+    {
+     "id": "web-access",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Cached",
+       "options": [
+        "Off",
+        "Cached",
+        "Live"
+       ]
+      }
+     ],
+     "title": "Web access",
+     "desc": "Off keeps every prompt on this Mac"
+    },
+    {
+     "id": "output-detail",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Model default",
+       "options": [
+        "Model default",
+        "Concise",
+        "Detailed"
+       ]
+      }
+     ],
+     "title": "Output detail",
+     "desc": "How much detail responses include"
+    },
+    {
+     "id": "reasoning-summary",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Auto",
+       "options": [
+        "Auto",
+        "Concise",
+        "Detailed",
+        "None"
+       ]
+      }
+     ],
+     "title": "Reasoning summary",
+     "desc": "How Isonomic summarizes its reasoning"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Open config.toml",
+     "style": "white",
+     "icon": "launch",
+     "at": "trail"
+    }
+   ],
+   "title": "Workspace dependencies"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "bundled-runtimes",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      }
+     ],
+     "title": "Bundled runtimes",
+     "desc": "Install and expose bundled Node.js and Python tools"
+    },
+    {
+     "id": "diagnose-workspace",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Diagnose",
+       "style": "white"
+      }
+     ],
+     "title": "Diagnose workspace",
+     "desc": "Checks the current bundle and records diagnostic logs"
+    },
+    {
+     "id": "reset-and-reinstall-workspace",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Reinstall",
+       "style": "white",
+       "red": "text"
+      }
+     ],
+     "title": "Reset and reinstall workspace",
+     "desc": "Downloads a fresh bundle, installs it, and reloads tools"
+    }
+   ]
+  },
+  {
+   "k": "note",
+   "text": "Isonomic 0.3.0 · engine 0.3.0"
+  }
+ ]
+}

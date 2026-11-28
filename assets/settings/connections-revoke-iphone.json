@@ -1,0 +1,40 @@
+{
+ "id": "connections-revoke-iphone",
+ "kind": "dialog",
+ "name": [
+  "Connections",
+  "Revoke iPhone"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Revoke access for iPhone?"
+  },
+  {
+   "k": "note",
+   "text": "iPhone can no longer start tasks on this Mac."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Cancel",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Revoke",
+     "style": "primary",
+     "red": "fill"
+    }
+   ]
+  }
+ ],
+ "wide": 440
+}

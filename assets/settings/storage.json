@@ -1,0 +1,146 @@
+{
+ "id": "storage",
+ "kind": "page",
+ "name": [
+  "Storage"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [],
+   "title": "Storage"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "This Mac",
+   "sub": "Capsule data, models, chats, and worktrees stored on this computer"
+  },
+  {
+   "k": "storage",
+   "parts": [
+    166,
+    396,
+    108,
+    43
+   ],
+   "legend": [
+    [
+     "Capsule data",
+     "10.7 GB"
+    ],
+    [
+     "Models",
+     "25.3 GB"
+    ],
+    [
+     "Chats",
+     "6.8 GB"
+    ],
+    [
+     "Other",
+     "2.9 GB"
+    ]
+   ],
+   "used": "45.7 GB used by Isonomic",
+   "free": "312 GB free"
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Storage by folder"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "app-data-folder",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "20.4 GB"
+      },
+      {
+       "c": "button",
+       "label": "Show in Finder",
+       "style": "white",
+       "icon": "folder-open",
+       "at": "lead"
+      }
+     ],
+     "title": "App data folder",
+     "desc": "~/Library/Application Support/Isonomic"
+    },
+    {
+     "id": "models-folder",
+     "ctl": [
+      {
+       "c": "text",
+       "text": "25.3 GB"
+      },
+      {
+       "c": "button",
+       "label": "Change",
+       "style": "white"
+      }
+     ],
+     "title": "Models folder",
+     "desc": "~/.isonomic/models"
+    }
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "clean-up-old-chats",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Review",
+       "style": "white"
+      }
+     ],
+     "title": "Clean up old chats",
+     "desc": "Review chats and their subagents before permanently deleting them"
+    },
+    {
+     "id": "unused-models",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Review",
+       "style": "white"
+      }
+     ],
+     "title": "Unused models",
+     "desc": "3 models not used in the last 30 days"
+    },
+    {
+     "id": "manage-worktrees",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      }
+     ],
+     "title": "Manage worktrees",
+     "desc": "Working copies and how many old worktrees to keep"
+    },
+    {
+     "id": "archived-chats",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Manage",
+       "style": "white"
+      }
+     ],
+     "title": "Archived chats",
+     "desc": "Restore or delete individual archived chats"
+    }
+   ]
+  }
+ ]
+}

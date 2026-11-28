@@ -1,0 +1,196 @@
+{
+ "id": "plugins",
+ "kind": "page",
+ "name": [
+  "Plugins"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Browse directory",
+     "style": "white",
+     "icon": "launch",
+     "at": "trail"
+    },
+    {
+     "c": "button",
+     "label": "Add",
+     "style": "primary",
+     "icon": "add",
+     "at": "lead",
+     "menu": [
+      [
+       "Plugin from repository",
+       "d:plugins-add-plugin"
+      ],
+      [
+       "Connect an app",
+       "d:plugins-connect-app"
+      ],
+      [
+       "MCP server",
+       "d:plugins-add-mcp-server"
+      ],
+      [
+       "Skill",
+       "d:plugins-add-skill"
+      ]
+     ]
+    }
+   ],
+   "title": "Plugins",
+   "sub": "Manage plugins, skills, and MCP servers"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Plugins",
+    "Apps",
+    "MCPs",
+    "Skills"
+   ],
+   "search": "Search plugins",
+   "active": 0,
+   "counts": [
+    "7",
+    "13",
+    "4",
+    "8"
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "data",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "icon": "chart-bar"
+     },
+     "title": "Data",
+     "desc": "Answer questions with data"
+    },
+    {
+     "id": "figma",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "figma"
+     },
+     "title": "Figma",
+     "desc": "Create designs, ship to code"
+    },
+    {
+     "id": "google-drive",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "google-drive"
+     },
+     "title": "Google Drive",
+     "desc": "Drive, Docs, Sheets or Slides"
+    },
+    {
+     "id": "notion",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "notion"
+     },
+     "title": "Notion",
+     "desc": "Docs, tasks, and databases"
+    },
+    {
+     "id": "linear",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "linear"
+     },
+     "title": "Linear",
+     "desc": "Issues, projects, and cycles"
+    },
+    {
+     "id": "github",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "github"
+     },
+     "title": "GitHub",
+     "desc": "Repos, pull requests, and reviews"
+    },
+    {
+     "id": "wolfram",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": true
+      },
+      {
+       "c": "icon",
+       "name": "chevron-right"
+      }
+     ],
+     "lead": {
+      "logo": "wolfram"
+     },
+     "title": "Wolfram",
+     "desc": "Computation and knowledge"
+    }
+   ]
+  }
+ ]
+}

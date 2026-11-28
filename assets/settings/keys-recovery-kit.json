@@ -1,0 +1,47 @@
+{
+ "id": "keys-recovery-kit",
+ "kind": "dialog",
+ "name": [
+  "Keys",
+  "Recovery kit"
+ ],
+ "blocks": [
+  {
+   "k": "title",
+   "ctl": [
+    {
+     "c": "close"
+    }
+   ],
+   "title": "Recovery kit"
+  },
+  {
+   "k": "note",
+   "text": "These 12 words restore your account and Capsule keys if you lose every device. Keep them offline, somewhere safe."
+  },
+  {
+   "k": "words",
+   "count": 12
+  },
+  {
+   "k": "note",
+   "text": "Isonomic will never ask you for these words."
+  },
+  {
+   "k": "actions",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Copy",
+     "style": "white"
+    },
+    {
+     "c": "button",
+     "label": "Done",
+     "style": "primary"
+    }
+   ]
+  }
+ ],
+ "wide": 520
+}

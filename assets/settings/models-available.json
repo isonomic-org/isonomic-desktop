@@ -1,0 +1,241 @@
+{
+ "id": "models-available",
+ "kind": "sub",
+ "name": [
+  "Models",
+  "Available"
+ ],
+ "blocks": [
+  {
+   "k": "header",
+   "ctl": [
+    {
+     "c": "button",
+     "label": "Import model",
+     "style": "white",
+     "icon": "download",
+     "at": "lead"
+    }
+   ],
+   "title": "Models",
+   "sub": "Models run on this Mac and start only when an app needs them"
+  },
+  {
+   "k": "tabs",
+   "tabs": [
+    "Installed",
+    "Available"
+   ],
+   "search": "Search models",
+   "active": 1,
+   "counts": [
+    "4",
+    "38"
+   ]
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "mistral-7b-instruct",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Download",
+       "style": "white",
+       "icon": "download",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "mistral"
+     },
+     "title": "Mistral 7B Instruct",
+     "desc": "Chat · 4.1 GB · Q4_K_M"
+    },
+    {
+     "id": "gemma-2-9b",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Download",
+       "style": "white",
+       "icon": "download",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "google"
+     },
+     "title": "Gemma 2 9B",
+     "desc": "Chat · 5.4 GB · Q4_K_M"
+    },
+    {
+     "id": "deepseek-coder-v2-lite",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Download",
+       "style": "white",
+       "icon": "download",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "deepseek"
+     },
+     "title": "DeepSeek Coder V2 Lite",
+     "desc": "Code · 8.9 GB · Q4_K_M"
+    },
+    {
+     "id": "phi-3-5-mini",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Download",
+       "style": "white",
+       "icon": "download",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "microsoft"
+     },
+     "title": "Phi-3.5 mini",
+     "desc": "Chat · 2.2 GB · Q4_K_M"
+    },
+    {
+     "id": "bge-m3",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Download",
+       "style": "white",
+       "icon": "download",
+       "at": "lead"
+      }
+     ],
+     "lead": {
+      "logo": "baai"
+     },
+     "title": "bge-m3",
+     "desc": "Embeddings · 1.2 GB"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Routing"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "default-chat-model",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Llama 3.1 8B",
+       "logo": true,
+       "wide": 154,
+       "options": [
+        "Llama 3.1 8B",
+        "Qwen 2.5 7B",
+        "Mistral 7B",
+        "Gemma 2 9B"
+       ]
+      }
+     ],
+     "title": "Default chat model"
+    },
+    {
+     "id": "default-code-model",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "Qwen 2.5 Coder 7B",
+       "logo": true,
+       "wide": 194,
+       "options": [
+        "Qwen 2.5 Coder 7B",
+        "DeepSeek Coder V2 Lite",
+        "Codestral 22B"
+       ]
+      }
+     ],
+     "title": "Default code model"
+    },
+    {
+     "id": "allow-remote-models",
+     "ctl": [
+      {
+       "c": "toggle",
+       "on": false
+      }
+     ],
+     "title": "Allow remote models",
+     "desc": "Off means prompts never leave this Mac. Remote keys live in your vault and every call is logged."
+    },
+    {
+     "id": "unload-idle-models-after",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "10 minutes",
+       "options": [
+        "5 minutes",
+        "10 minutes",
+        "30 minutes",
+        "1 hour",
+        "Never"
+       ]
+      }
+     ],
+     "title": "Unload idle models after"
+    }
+   ]
+  },
+  {
+   "k": "section",
+   "ctl": [],
+   "title": "Memory"
+  },
+  {
+   "k": "group",
+   "rows": [
+    {
+     "id": "ram-gate",
+     "ctl": [
+      {
+       "c": "select",
+       "label": "4 GB",
+       "options": [
+        "2 GB",
+        "4 GB",
+        "8 GB",
+        "16 GB"
+       ]
+      }
+     ],
+     "title": "RAM gate",
+     "desc": "Never load a model that would leave less than this much free memory"
+    },
+    {
+     "id": "hardware-profile",
+     "ctl": [
+      {
+       "c": "button",
+       "label": "Re-detect",
+       "style": "white",
+       "icon": "renew",
+       "at": "lead"
+      }
+     ],
+     "title": "Hardware profile",
+     "desc": "Standard profile · 16 GB · 10 cores"
+    }
+   ]
+  }
+ ]
+}
