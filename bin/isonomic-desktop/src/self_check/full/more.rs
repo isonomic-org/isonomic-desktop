@@ -318,8 +318,16 @@ pub async fn notice_screen(
         .save(&sample, 1)
         .map_err(|e| format!("keeping the sample report: {e}"))?;
     let kept = Arc::new(reports::kept::Kept::in_capsule(capsule));
+    // Review at once rather than on the shell's next draw: a window that
+    // is not on screen may not draw within the step's time.
     let _ = window.update(cx, |_, window, cx| {
-        shell.update(cx, |s, cx| s.watch_reports(kept, cx));
+        let reports = shell.update(cx, |s, cx| {
+            s.watch_reports(kept, cx);
+            s.reports().cloned()
+        });
+        if let Some(reports) = reports {
+            reports.update(cx, |r, cx| r.review(window, cx));
+        }
         window.refresh();
     });
     for _ in 0..50 {
